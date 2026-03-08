@@ -1,12 +1,10 @@
 <% content_for :title, "Synthwaves.fm — Your Music, Your Server, Your Rules" %>
-
 <!-- Hero Section -->
 <section class="min-h-screen flex flex-col relative overflow-hidden">
   <!-- Retro grid background on hero only -->
   <div class="absolute inset-0 retro-grid opacity-40"></div>
   <!-- Extra radial glow for hero -->
   <div class="absolute inset-0" style="background: radial-gradient(ellipse at 50% 30%, rgba(255, 45, 149, 0.12) 0%, transparent 60%);"></div>
-
   <!-- Auth Bar -->
   <nav class="relative z-10 w-full py-5 px-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -17,7 +15,6 @@
       </div>
     </div>
   </nav>
-
   <!-- Hero Content -->
   <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-20">
     <!-- Glowing music icon -->
@@ -28,12 +25,10 @@
         </svg>
       </div>
     </div>
-
     <!-- Title -->
     <h1 class="text-center mb-6 leading-tight">
       <%= render(LogoComponent.new(size: :lg)) %>
     </h1>
-
     <!-- Tagline -->
     <p class="text-xl md:text-2xl text-center mb-4 max-w-3xl leading-relaxed">
       <span class="text-neon-pink">Self-hosted music streaming</span>
@@ -45,7 +40,6 @@
       <span class="text-neon-purple">Your server.</span>
       <span class="text-white/80">No subscriptions, no algorithms, no compromises.</span>
     </p>
-
     <!-- CTA Buttons -->
     <div class="flex flex-col sm:flex-row gap-4">
       <%= link_to new_registration_path, class: "bg-sunset-gradient hover:shadow-neon-pink text-white px-10 py-4 rounded-xl font-semibold text-lg transition-shadow shadow-lg text-center" do %>
@@ -56,7 +50,6 @@
       </a>
     </div>
   </div>
-
   <!-- Scroll indicator -->
   <div class="relative z-10 pb-8 flex justify-center">
     <a href="#features" class="text-gray-500 hover:text-neon-cyan transition-colors animate-bounce">
@@ -66,7 +59,6 @@
     </a>
   </div>
 </section>
-
 <!-- Features Section -->
 <section id="features" class="py-24 px-6 bg-gray-800/50 border-t border-neon-purple/10">
   <div class="max-w-7xl mx-auto">
@@ -76,7 +68,6 @@
     <p class="text-gray-500 text-center mb-16 text-lg max-w-2xl mx-auto">
       A complete music platform running on your own hardware.
     </p>
-
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <!-- Feature: Music Library -->
       <div class="bg-gray-800/80 border border-neon-purple/15 rounded-2xl p-8 hover:border-neon-pink/30 transition-colors group">
@@ -88,7 +79,6 @@
         <h3 class="text-xl font-bold mb-2 text-neon-pink">Music Library</h3>
         <p class="text-gray-400 leading-relaxed">Upload your collection and browse by artist, album, or track. Cover art and metadata extracted automatically.</p>
       </div>
-
       <!-- Feature: Playlists -->
       <div class="bg-gray-800/80 border border-neon-purple/15 rounded-2xl p-8 hover:border-neon-cyan/30 transition-colors group">
         <div class="w-14 h-14 bg-neon-cyan/10 border border-neon-cyan/20 rounded-xl flex items-center justify-center mb-5 group-hover:shadow-neon-cyan transition-shadow">
@@ -99,7 +89,6 @@
         <h3 class="text-xl font-bold mb-2 text-neon-cyan">Playlists</h3>
         <p class="text-gray-400 leading-relaxed">Create, reorder, and share playlists. Build them manually or generate from albums with one click.</p>
       </div>
-
       <!-- Feature: Streaming -->
       <div class="bg-gray-800/80 border border-neon-purple/15 rounded-2xl p-8 hover:border-neon-purple/30 transition-colors group">
         <div class="w-14 h-14 bg-neon-purple/10 border border-neon-purple/20 rounded-xl flex items-center justify-center mb-5 group-hover:shadow-neon-pink transition-shadow">
@@ -111,7 +100,6 @@
         <h3 class="text-xl font-bold mb-2 text-neon-purple">Stream Anywhere</h3>
         <p class="text-gray-400 leading-relaxed">Full player with queue, shuffle, and repeat. Native media controls on desktop and mobile via MediaSession API.</p>
       </div>
-
       <!-- Feature: Podcasts -->
       <div class="bg-gray-800/80 border border-neon-purple/15 rounded-2xl p-8 hover:border-laser-green/30 transition-colors group">
         <div class="w-14 h-14 bg-laser-green/10 border border-laser-green/20 rounded-xl flex items-center justify-center mb-5 group-hover:shadow-[0_0_10px_rgba(57,255,20,0.3)] transition-shadow">
@@ -122,7 +110,6 @@
         <h3 class="text-xl font-bold mb-2 text-laser-green">Podcasts</h3>
         <p class="text-gray-400 leading-relaxed">Subscribe to podcast feeds and stream episodes alongside your music. Episodes auto-refresh on schedule.</p>
       </div>
-
       <!-- Feature: Radio -->
       <div class="bg-gray-800/80 border border-neon-purple/15 rounded-2xl p-8 hover:border-sunset-orange/30 transition-colors group">
         <div class="w-14 h-14 bg-sunset-orange/10 border border-sunset-orange/20 rounded-xl flex items-center justify-center mb-5 group-hover:shadow-[0_0_10px_rgba(255,107,53,0.3)] transition-shadow">
@@ -133,7 +120,6 @@
         <h3 class="text-xl font-bold mb-2 text-sunset-orange">Internet Radio</h3>
         <p class="text-gray-400 leading-relaxed">Add any internet radio stream URL. Live indicator shows what's playing in real time.</p>
       </div>
-
       <!-- Feature: AI Chat -->
       <div class="bg-gray-800/80 border border-neon-purple/15 rounded-2xl p-8 hover:border-neon-cyan/30 transition-colors group">
         <div class="w-14 h-14 bg-neon-cyan/10 border border-neon-cyan/20 rounded-xl flex items-center justify-center mb-5 group-hover:shadow-neon-cyan transition-shadow">
@@ -147,21 +133,33 @@
     </div>
   </div>
 </section>
-
 <!-- Subsonic Compatibility Section -->
 <section class="py-24 px-6 border-t border-neon-purple/10">
   <div class="max-w-5xl mx-auto text-center">
     <h2 class="text-3xl md:text-4xl font-bold mb-4 font-display">
-      <span class="text-neon-cyan">Subsonic</span> compatible
+      Built for <a href="https://github.com/bjarneo/cliamp" target="_blank" rel="noopener noreferrer" class="text-laser-green hover:underline">cliamp</a>
     </h2>
     <p class="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">
-      Use your favourite Subsonic-compatible app to stream your library on the go.
+      Synthwaves.fm was built to stream music to <a href="https://github.com/bjarneo/cliamp" target="_blank" rel="noopener noreferrer" class="text-laser-green hover:underline">cliamp</a>, a Subsonic-compatible CLI music player.
+      But it works with any Subsonic client &mdash;
       <span class="text-neon-pink">DSub</span>,
       <span class="text-neon-cyan">play:Sub</span>,
-      <span class="text-neon-purple">Ultrasonic</span>
-      &mdash; they all work.
+      <span class="text-neon-purple">Ultrasonic</span>,
+      and more.
     </p>
-
+    <!-- Terminal mockup -->
+    <div class="max-w-lg mx-auto mb-12 bg-gray-900/80 border border-laser-green/20 rounded-xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-700/50">
+        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+      </div>
+      <div class="p-5 font-mono text-sm text-left space-y-1">
+        <p class="text-gray-500">$ cliamp</p>
+        <p class="text-laser-green">Connected to synthwaves.fm. 1,247 tracks ready.</p>
+        <p class="text-gray-400">> playing: Kavinsky &mdash; Nightcall</p>
+      </div>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
       <div class="bg-gray-800/60 border border-neon-purple/15 rounded-xl p-6">
         <div class="text-3xl font-display text-neon-pink mb-2">22</div>
@@ -178,7 +176,6 @@
     </div>
   </div>
 </section>
-
 <!-- Tech Stack Section -->
 <section class="py-24 px-6 bg-gray-800/30 border-t border-neon-purple/10">
   <div class="max-w-5xl mx-auto text-center">
@@ -188,7 +185,6 @@
     <p class="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">
       Modern stack, zero complexity. SQLite for everything, Hotwire for interactivity, Solid Queue for background jobs.
     </p>
-
     <div class="flex flex-wrap justify-center gap-3">
       <% %w[Ruby\ on\ Rails Hotwire SQLite Tailwind\ CSS Stimulus Turbo Solid\ Queue Solid\ Cache Importmap ViewComponent].each do |tech| %>
         <span class="bg-gray-800/80 border border-neon-purple/20 text-gray-400 px-4 py-2 rounded-full text-sm font-medium hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors cursor-default">
@@ -198,12 +194,10 @@
     </div>
   </div>
 </section>
-
 <!-- Final CTA Section -->
 <section class="py-24 px-6 border-t border-neon-purple/10 relative overflow-hidden">
   <div class="absolute inset-0 retro-grid opacity-20"></div>
   <div class="absolute inset-0" style="background: radial-gradient(ellipse at 50% 50%, rgba(255, 45, 149, 0.08) 0%, transparent 60%);"></div>
-
   <div class="relative z-10 max-w-3xl mx-auto text-center">
     <h2 class="text-3xl md:text-4xl font-bold mb-4 font-display text-sunset">
       Ready to groove?
@@ -216,7 +210,6 @@
     <% end %>
   </div>
 </section>
-
 <!-- Footer -->
 <footer class="py-10 px-6 bg-gray-800/50 border-t border-neon-purple/20">
   <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
