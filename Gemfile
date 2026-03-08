@@ -87,3 +87,5 @@ gem "ahoy_matey"
 gem "quarterdeck"
 
 gem "wahwah"
+
+gem "aws-sdk-s3", require: false
