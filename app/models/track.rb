@@ -9,6 +9,9 @@ class Track < ApplicationRecord
 
   validates :title, presence: true
 
+  scope :music, -> { joins(:artist).merge(Artist.music) }
+  scope :podcast, -> { joins(:artist).merge(Artist.podcast) }
+
   ALBUM_SORT_OPTIONS = {
     "disc_number" => "Track Number",
     "created_at" => "Date Added",

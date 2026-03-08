@@ -43,6 +43,17 @@ RSpec.describe "Tracks", type: :request do
       expect(response.body).to include("Track Beta")
     end
 
+    it "excludes podcast tracks from index" do
+      music_track = create(:track, title: "Music Song")
+      podcast_artist = create(:artist, :podcast)
+      podcast_track = create(:track, title: "Podcast Episode", artist: podcast_artist)
+
+      get tracks_path
+
+      expect(response.body).to include("Music Song")
+      expect(response.body).not_to include("Podcast Episode")
+    end
+
     it "shows empty state when no tracks match" do
       create(:track, title: "Something Else")
 

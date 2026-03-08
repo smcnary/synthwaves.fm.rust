@@ -18,6 +18,11 @@
         </ul>
       </div>
 
+      <div>
+        <%= f.label :category, "Content Type", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.select :category, Artist::CATEGORIES.map { |c| [c.titleize, c] }, { selected: params[:category] || "music" }, class: "w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+
       <div class="pt-2">
         <%= f.submit "Import Playlist", class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer" %>
       </div>

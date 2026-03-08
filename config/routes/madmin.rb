@@ -5,6 +5,7 @@ constraints AdminConstraint.new do
     mount MissionControl::Jobs::Engine, at: "/jobs"
     resources :sessions
     resources :users
+    resources :artists
     resources :api_keys
     root to: "dashboard#show"
   end

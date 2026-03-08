@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   resources :playlists do
     resources :tracks, controller: "playlist_tracks", only: [:create, :destroy], as: :tracks
   end
+  resources :podcasts, only: [:index, :show]
   resources :radio_stations, only: [:index, :new, :create, :destroy]
   resources :youtube_imports, only: [:new, :create]
   resources :favorites, only: [:index, :create, :destroy]

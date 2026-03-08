@@ -5,4 +5,7 @@ class Album < ApplicationRecord
   has_many :favorites, as: :favorable, dependent: :destroy
 
   validates :title, presence: true, uniqueness: {scope: :artist_id}
+
+  scope :music, -> { joins(:artist).merge(Artist.music) }
+  scope :podcast, -> { joins(:artist).merge(Artist.podcast) }
 end

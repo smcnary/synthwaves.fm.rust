@@ -1,12 +1,13 @@
 class YoutubePlaylistImportService
   class Error < StandardError; end
 
-  def self.call(url)
-    new(url).call
+  def self.call(url, category: "music")
+    new(url, category: category).call
   end
 
-  def initialize(url)
+  def initialize(url, category: "music")
     @url = url
+    @category = category
     @playlist_id = YoutubeUrlParser.extract_playlist_id(url)
     raise Error, "Invalid YouTube playlist URL" if @playlist_id.blank?
   end
@@ -23,7 +24,9 @@ class YoutubePlaylistImportService
     video_details = api.fetch_video_details(video_ids)
     details_by_id = video_details.index_by { |v| v[:video_id] }
 
-    artist = Artist.find_or_create_by!(name: playlist_info[:channel_name] || "Unknown Artist")
+    artist = Artist.find_or_create_by!(name: playlist_info[:channel_name] || "Unknown Artist") do |a|
+      a.category = @category
+    end
 
     album = Album.find_or_create_by!(title: playlist_info[:title], artist: artist)
 

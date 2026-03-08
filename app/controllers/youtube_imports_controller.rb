@@ -13,7 +13,8 @@ class YoutubeImportsController < ApplicationController
       return
     end
 
-    album = YoutubePlaylistImportService.call(url)
+    category = params[:category].presence || "music"
+    album = YoutubePlaylistImportService.call(url, category: category)
     redirect_to album_path(album), notice: "Playlist imported successfully! #{album.tracks.count} tracks added."
   rescue YoutubePlaylistImportService::Error, YoutubeAPIService::Error => e
     flash.now[:alert] = e.message

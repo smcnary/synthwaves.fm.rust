@@ -59,6 +59,21 @@ RSpec.describe Track, type: :model do
     end
   end
 
+  describe "category scopes" do
+    let!(:music_track) { create(:track, artist: create(:artist, category: "music")) }
+    let!(:podcast_track) { create(:track, artist: create(:artist, :podcast)) }
+
+    it ".music returns only tracks belonging to music artists" do
+      expect(Track.music).to include(music_track)
+      expect(Track.music).not_to include(podcast_track)
+    end
+
+    it ".podcast returns only tracks belonging to podcast artists" do
+      expect(Track.podcast).to include(podcast_track)
+      expect(Track.podcast).not_to include(music_track)
+    end
+  end
+
   describe "callbacks" do
     it "enqueues AudioConversionJob for webm files" do
       track = build(:track, file_format: "webm")

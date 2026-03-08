@@ -35,6 +35,31 @@ RSpec.describe SearchService, type: :service do
       expect(results[:tracks]).to be_empty
     end
 
+    context "category filter" do
+      let!(:podcast_artist) { create(:artist, :podcast, name: "Podcast Show") }
+      let!(:podcast_album) { create(:album, title: "Podcast Season 1", artist: podcast_artist) }
+      let!(:podcast_track) { create(:track, title: "Podcast Episode 1", album: podcast_album, artist: podcast_artist) }
+
+      it "defaults to music and excludes podcast content" do
+        results = described_class.call(query: "Podcast")
+        expect(results[:artists]).to be_empty
+        expect(results[:albums]).to be_empty
+        expect(results[:tracks]).to be_empty
+      end
+
+      it "finds podcast content when category is podcast" do
+        results = described_class.call(query: "Podcast", category: "podcast")
+        expect(results[:artists]).to include(podcast_artist)
+        expect(results[:albums]).to include(podcast_album)
+        expect(results[:tracks]).to include(podcast_track)
+      end
+
+      it "finds music content with default category" do
+        results = described_class.call(query: "Beatles")
+        expect(results[:artists]).to include(artist)
+      end
+    end
+
     context "genre filter" do
       let!(:electronic_album) { create(:album, title: "Synthwave Dreams", artist: artist, genre: "Electronic") }
       let!(:electronic_track) { create(:track, title: "Neon Pulse", album: electronic_album, artist: artist) }

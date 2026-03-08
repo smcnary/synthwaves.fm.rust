@@ -43,6 +43,32 @@ RSpec.describe YoutubePlaylistImportService do
       expect(Track.where(youtube_video_id: "vid1").count).to eq(1)
     end
 
+    it "creates a music artist by default" do
+      stub_playlist_api_calls
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+
+      expect(album.artist).to be_music
+    end
+
+    it "creates a podcast artist when category is podcast" do
+      stub_playlist_api_calls
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "podcast")
+
+      expect(album.artist).to be_podcast
+    end
+
+    it "does not overwrite existing artist category on re-import" do
+      stub_playlist_api_calls
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "music")
+      expect(album.artist).to be_music
+
+      album2 = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "podcast")
+      expect(album2.artist).to be_music
+    end
+
     it "downloads and attaches the thumbnail" do
       stub_playlist_api_calls
       stub_request(:get, "https://i.ytimg.com/vi/abc/hqdefault.jpg")
