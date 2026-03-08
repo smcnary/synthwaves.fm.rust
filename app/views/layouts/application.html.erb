@@ -21,10 +21,13 @@
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
-  </head>
+    <meta name="turbo-refresh-method" content="morph">
+  <meta name="turbo-refresh-scroll" content="preserve">
+</head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
+
+  <body class="dark:bg-gray-900 dark:text-white">
+    <main class="container mx-auto my-28 px-5 flex">
       <%= yield %>
     </main>
   </body>
