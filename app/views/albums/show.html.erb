@@ -16,11 +16,11 @@
       <p class="text-lg text-gray-600 dark:text-gray-400"><%= link_to @album.artist.name, artist_path(@album.artist), class: "hover:underline" %></p>
       <% if @album.year %><p class="text-gray-500"><%= @album.year %></p><% end %>
       <% if @album.genre %><p class="text-gray-500"><%= @album.genre %></p><% end %>
-      <p class="text-sm text-gray-400 mt-2"><%= pluralize(@tracks.size, "track") %></p>
+      <p class="text-sm text-gray-400 mt-2"><%= pluralize(@total_tracks, "track") %></p>
 
       <div class="mt-3">
         <%= render BulkPlaylistMenuComponent.new(
-              tracks: @tracks,
+              tracks: @all_tracks,
               playlists: current_user_playlists,
               new_playlist_name: @album.title
             ) %>
@@ -28,13 +28,35 @@
     </div>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-    <% @tracks.each do |track| %>
-      <%= render TrackRowComponent.new(track: track, number: track.track_number, show_album: false, hide_artist_if: @album.artist) do |c| %>
-        <% c.with_trailing do %>
-          <%= render "playlist_tracks/add_menu", track: track, playlists: current_user_playlists %>
+  <turbo-frame id="album-tracks" data-turbo-action="advance">
+    <form action="<%= album_path(@album) %>" method="get" data-controller="search" data-search-target="form" class="mb-4 flex items-center gap-3">
+      <label for="sort" class="text-sm text-gray-500 dark:text-gray-400">Sort by</label>
+      <select name="sort" id="sort" data-action="change->search#submit" class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+        <% Track::ALBUM_SORT_OPTIONS.each do |value, label| %>
+          <option value="<%= value %>" <%= "selected" if value == @sort %>><%= label %></option>
+        <% end %>
+      </select>
+
+      <select name="direction" id="direction" data-action="change->search#submit" class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+        <option value="asc" <%= "selected" if @direction == "asc" %>>Ascending</option>
+        <option value="desc" <%= "selected" if @direction == "desc" %>>Descending</option>
+      </select>
+    </form>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <% @tracks.each do |track| %>
+        <%= render TrackRowComponent.new(track: track, number: (@sort == "disc_number" ? track.track_number : nil), show_album: false, hide_artist_if: @album.artist) do |c| %>
+          <% c.with_trailing do %>
+            <%= render "playlist_tracks/add_menu", track: track, playlists: current_user_playlists %>
+          <% end %>
         <% end %>
       <% end %>
+    </div>
+
+    <% if @pagy.pages > 1 %>
+      <div class="mt-6 flex justify-center">
+        <%== @pagy.series_nav %>
+      </div>
     <% end %>
-  </div>
+  </turbo-frame>
 </div>

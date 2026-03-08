@@ -9,6 +9,13 @@ class Track < ApplicationRecord
 
   validates :title, presence: true
 
+  ALBUM_SORT_OPTIONS = {
+    "disc_number" => "Track Number",
+    "created_at" => "Date Added",
+    "title" => "Title",
+    "duration" => "Duration"
+  }.freeze
+
   def youtube?
     youtube_video_id.present?
   end

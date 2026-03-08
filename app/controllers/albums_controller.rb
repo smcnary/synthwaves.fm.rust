@@ -5,7 +5,18 @@ class AlbumsController < ApplicationController
 
   def show
     @album = Album.includes(:artist, tracks: :artist).find(params[:id])
-    @tracks = @album.tracks.order(:disc_number, :track_number)
+    @sort = sort_column(Track, default: "disc_number")
+    @direction = sort_direction
+
+    scope = if @sort == "disc_number"
+      @album.tracks.order(disc_number: @direction, track_number: @direction)
+    else
+      @album.tracks.order(@sort => @direction)
+    end
+
+    @total_tracks = scope.count
+    @all_tracks = @album.tracks
+    @pagy, @tracks = pagy(:offset, scope)
   end
 
   def create_playlist
