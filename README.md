@@ -75,6 +75,38 @@ bin/dev
 
 **Default login:** admin@example.com / abc123
 
+## Uploading Your Library
+
+Once your server is running, use these rake tasks to upload music and playlists from your local machine. Both require an API key — create one from the web UI under your account settings.
+
+### Push Music
+
+Upload a directory of audio files (mp3, flac, ogg, m4a, aac, wav, wma, opus, webm):
+
+```
+GROOVY_REMOTE_URL=https://groovy.example.com \
+GROOVY_CLIENT_ID=bc_xxxx \
+GROOVY_SECRET_KEY=xxxx \
+MUSIC_PATH=/path/to/music \
+bundle exec rake library:push
+```
+
+`MUSIC_PATH` defaults to `/Volumes/music` if not set. Metadata and cover art are extracted automatically. Duplicate tracks are skipped.
+
+### Push CLIamp Playlists
+
+Upload playlists from CLIamp's TOML playlist files:
+
+```
+GROOVY_REMOTE_URL=https://groovy.example.com \
+GROOVY_CLIENT_ID=bc_xxxx \
+GROOVY_SECRET_KEY=xxxx \
+CLIAMP_PLAYLISTS_PATH=~/.config/cliamp/playlists \
+bundle exec rake playlists:push
+```
+
+`CLIAMP_PLAYLISTS_PATH` defaults to `~/.config/cliamp/playlists`. Tracks are matched against your existing library by title, artist, and album. YouTube-only tracks are filtered out. Duplicate playlists are skipped.
+
 ---
 
 Built with Rails 8, Hotwire, Tailwind CSS, and ViewComponent. Generated with [Boilercode](https://boilercode.io).
