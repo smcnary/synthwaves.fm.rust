@@ -19,7 +19,7 @@ RSpec.describe "Static::Landing", type: :request do
       let(:user) { User.create!(email_address: "test@example.com", password: "password123") }
 
       before do
-        post session_path, params: { email_address: user.email_address, password: "password123" }
+        post session_path, params: {email_address: user.email_address, password: "password123"}
       end
 
       it "redirects to home page" do

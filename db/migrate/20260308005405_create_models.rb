@@ -20,8 +20,6 @@ class CreateModels < ActiveRecord::Migration[8.1]
       t.index [:provider, :model_id], unique: true
       t.index :provider
       t.index :family
-
     end
-
   end
 end

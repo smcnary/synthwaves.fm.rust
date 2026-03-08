@@ -7,6 +7,6 @@ class Message < ApplicationRecord
     broadcast_append_to "chat_#{chat_id}",
       target: "message_#{id}_content",
       partial: "messages/content",
-      locals: { content: content }
+      locals: {content: content}
   end
 end
