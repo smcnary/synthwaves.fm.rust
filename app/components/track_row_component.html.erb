@@ -5,7 +5,7 @@
      data-song-row-artist-value="<%= track.artist.name %>"
      data-song-row-stream-url-value="<%= stream_track_path(track) %>">
   <div class="flex items-center gap-3">
-    <button data-action="song-row#play" class="<%= number ? 'w-8 text-center' : '' %> text-gray-400 hover:text-blue-600">
+    <button type="button" data-action="song-row#play" class="<%= number ? 'w-8 text-center' : '' %> text-gray-400 hover:text-blue-600">
       <% if number %>
         <span data-song-row-target="trackNumber"><%= number %></span>
       <% else %>

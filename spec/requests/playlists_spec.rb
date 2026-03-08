@@ -35,6 +35,39 @@ RSpec.describe "Playlists", type: :request do
     end
   end
 
+  describe "GET /playlists/:id" do
+    let(:playlist) { create(:playlist, user: user) }
+    let(:track) { create(:track) }
+
+    before do
+      create(:playlist_track, playlist: playlist, track: track, position: 1)
+      get playlist_path(playlist)
+    end
+
+    it "renders song-row controller on each track" do
+      expect(response.body).to include('data-controller="song-row"')
+    end
+
+    it "renders play button with correct data-action" do
+      expect(response.body).to include('data-action="song-row#play"')
+    end
+
+    it "renders stream URL value" do
+      expect(response.body).to include("data-song-row-stream-url-value")
+    end
+
+    it "renders track id value" do
+      expect(response.body).to include("data-song-row-track-id-value=\"#{track.id}\"")
+    end
+
+    it "does not nest the play button inside a form" do
+      doc = Nokogiri::HTML(response.body)
+      play_button = doc.at_css('button[data-action="song-row#play"]')
+      expect(play_button).to be_present
+      expect(play_button.ancestors("form")).to be_empty
+    end
+  end
+
   describe "DELETE /playlists/:id" do
     let!(:playlist) { create(:playlist, user: user) }
 
