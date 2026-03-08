@@ -83,3 +83,7 @@ gem "ruby_llm"
 gem "ahoy_matey"
 
 gem "quarterdeck"
+
+group :development do
+  gem "standard"
+end
