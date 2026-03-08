@@ -2,10 +2,26 @@ class RadioStation < ApplicationRecord
   belongs_to :user
 
   validates :name, presence: true
-  validates :youtube_url, presence: true
-  validate :youtube_url_must_contain_video_id
+  validates :source_type, presence: true, inclusion: { in: %w[youtube stream] }
 
-  before_validation :extract_video_id, if: -> { youtube_url.present? && youtube_video_id.blank? }
+  validates :youtube_url, presence: true, if: :youtube?
+  validate :youtube_url_must_contain_video_id, if: :youtube?
+
+  validates :stream_url, presence: true, if: :stream?
+
+  before_validation :extract_video_id, if: -> { youtube? && youtube_url.present? && youtube_video_id.blank? }
+
+  def youtube?
+    source_type == "youtube"
+  end
+
+  def stream?
+    source_type == "stream"
+  end
+
+  def needs_proxy?
+    stream? && stream_url.present? && !stream_url.start_with?("https://")
+  end
 
   private
 

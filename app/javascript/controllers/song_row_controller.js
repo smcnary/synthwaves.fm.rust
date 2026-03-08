@@ -22,11 +22,12 @@ export default class extends Controller {
       artist: this.artistValue
     }
 
+    if (this.isLiveValue) {
+      track.isLive = true
+    }
+
     if (this.youtubeVideoIdValue) {
       track.youtubeVideoId = this.youtubeVideoIdValue
-      if (this.isLiveValue) {
-        track.isLive = true
-      }
     } else {
       track.streamUrl = this.streamUrlValue
     }

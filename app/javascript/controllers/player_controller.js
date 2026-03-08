@@ -182,32 +182,42 @@ export default class extends Controller {
 
   // Playback
 
-  playTrack({ trackId, title, artist, streamUrl }) {
+  playTrack({ trackId, title, artist, streamUrl, isLive }) {
     if (this.youtubeActive) {
       document.dispatchEvent(new CustomEvent("youtube:stop"))
       this.youtubeActive = false
       this.youtubePlaying = false
     }
 
-    this.currentIsLive = false
+    this.currentIsLive = isLive || false
     this.currentTrackId = trackId
     this._currentYouTubeVideoId = null
     this.titleTarget.textContent = title
-    this.artistTarget.textContent = artist
-    this.showNormalMode()
+    this.artistTarget.textContent = isLive ? "Live" : artist
+
+    if (this.currentIsLive) {
+      this.showLiveMode()
+    } else {
+      this.showNormalMode()
+    }
 
     this.audio.src = streamUrl
     this.audio.play()
 
-    this.saveCurrentTrack({ trackId, title, artist, streamUrl })
+    this.saveCurrentTrack({ trackId, title, artist, streamUrl, isLive: isLive || false })
     this.startPositionSave()
     this.dispatchNowPlaying(trackId)
 
     if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title, artist })
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title,
+        artist: isLive ? "Live" : artist
+      })
     }
 
-    this.recordPlay(trackId)
+    if (!isLive) {
+      this.recordPlay(trackId)
+    }
   }
 
   playYouTube({ trackId, title, artist, youtubeVideoId, isLive }) {
@@ -344,7 +354,7 @@ export default class extends Controller {
   // Local audio events
 
   onTimeUpdate() {
-    if (this.youtubeActive) return
+    if (this.youtubeActive || this.currentIsLive) return
     if (this.audio.duration) {
       const percent = (this.audio.currentTime / this.audio.duration) * 100
       this.progressTarget.style.width = `${percent}%`
@@ -353,7 +363,7 @@ export default class extends Controller {
   }
 
   onLoadedMetadata() {
-    if (this.youtubeActive) return
+    if (this.youtubeActive || this.currentIsLive) return
     this.durationTarget.textContent = this.formatTime(this.audio.duration)
   }
 

@@ -2,8 +2,11 @@ class RadioStationResource < Madmin::Resource
   attribute :id, form: false
   attribute :name
   attribute :user
+  attribute :source_type
   attribute :youtube_url, index: false
   attribute :youtube_video_id
+  attribute :stream_url, index: false
+  attribute :original_url, index: false
   attribute :thumbnail_url, index: false
   attribute :description, index: false
   attribute :created_at, form: false, index: false

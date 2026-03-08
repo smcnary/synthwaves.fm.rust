@@ -29,52 +29,136 @@ RSpec.describe "RadioStations", type: :request do
   end
 
   describe "POST /radio_stations" do
-    it "creates a radio station with valid YouTube URL" do
-      stub_request(:get, %r{youtube\.com/oembed})
-        .to_return(
-          status: 200,
-          headers: { "Content-Type" => "application/json" },
-          body: { title: "Lo-Fi Beats", thumbnail_url: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg" }.to_json
-        )
+    context "youtube source type" do
+      it "creates a radio station with valid YouTube URL" do
+        stub_request(:get, %r{youtube\.com/oembed})
+          .to_return(
+            status: 200,
+            headers: { "Content-Type" => "application/json" },
+            body: { title: "Lo-Fi Beats", thumbnail_url: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg" }.to_json
+          )
 
-      expect {
+        expect {
+          post radio_stations_path, params: { radio_station: {
+            source_type: "youtube",
+            youtube_url: "https://www.youtube.com/watch?v=jfKfPfyJRdk"
+          } }
+        }.to change(RadioStation, :count).by(1)
+
+        station = RadioStation.last
+        expect(station.source_type).to eq("youtube")
+        expect(station.youtube_video_id).to eq("jfKfPfyJRdk")
+        expect(station.name).to eq("Lo-Fi Beats")
+        expect(response).to redirect_to(radio_stations_path)
+      end
+
+      it "creates a radio station with manual name and still fetches thumbnail" do
+        stub_request(:get, %r{youtube\.com/oembed})
+          .to_return(
+            status: 200,
+            headers: { "Content-Type" => "application/json" },
+            body: { title: "Lo-Fi Beats", thumbnail_url: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg" }.to_json
+          )
+
+        expect {
+          post radio_stations_path, params: { radio_station: {
+            source_type: "youtube",
+            youtube_url: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+            name: "My Radio"
+          } }
+        }.to change(RadioStation, :count).by(1)
+
+        station = RadioStation.last
+        expect(station.name).to eq("My Radio")
+        expect(station.thumbnail_url).to eq("https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg")
+      end
+
+      it "rejects invalid URL" do
         post radio_stations_path, params: { radio_station: {
-          youtube_url: "https://www.youtube.com/watch?v=jfKfPfyJRdk"
+          source_type: "youtube",
+          youtube_url: "https://example.com/not-youtube",
+          name: "Bad Station"
         } }
-      }.to change(RadioStation, :count).by(1)
-
-      station = RadioStation.last
-      expect(station.youtube_video_id).to eq("jfKfPfyJRdk")
-      expect(station.name).to eq("Lo-Fi Beats")
-      expect(response).to redirect_to(radio_stations_path)
+        expect(response).to have_http_status(:unprocessable_content)
+      end
     end
 
-    it "creates a radio station with manual name and still fetches thumbnail" do
-      stub_request(:get, %r{youtube\.com/oembed})
-        .to_return(
-          status: 200,
-          headers: { "Content-Type" => "application/json" },
-          body: { title: "Lo-Fi Beats", thumbnail_url: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg" }.to_json
-        )
+    context "stream source type" do
+      it "creates a stream station with a direct URL" do
+        stub_request(:get, "https://radio.example.com/stream")
+          .to_return(
+            status: 200,
+            headers: { "Content-Type" => "audio/mpeg" },
+            body: "fake audio data"
+          )
 
-      expect {
+        expect {
+          post radio_stations_path, params: { radio_station: {
+            source_type: "stream",
+            stream_url: "https://radio.example.com/stream",
+            name: "My Stream"
+          } }
+        }.to change(RadioStation, :count).by(1)
+
+        station = RadioStation.last
+        expect(station.source_type).to eq("stream")
+        expect(station.stream_url).to eq("https://radio.example.com/stream")
+        expect(station.name).to eq("My Stream")
+        expect(response).to redirect_to(radio_stations_path)
+      end
+
+      it "creates a stream station from a .pls URL and resolves it" do
+        pls_body = <<~PLS
+          [playlist]
+          NumberOfEntries=1
+          File1=https://radio.example.com/actual-stream
+          Title1=Cool Radio
+        PLS
+
+        stub_request(:get, "https://example.com/station.pls")
+          .to_return(
+            status: 200,
+            headers: { "Content-Type" => "audio/x-scpls" },
+            body: pls_body
+          )
+
+        stub_request(:head, "https://radio.example.com/actual-stream")
+          .to_return(status: 200)
+
+        expect {
+          post radio_stations_path, params: { radio_station: {
+            source_type: "stream",
+            stream_url: "https://example.com/station.pls"
+          } }
+        }.to change(RadioStation, :count).by(1)
+
+        station = RadioStation.last
+        expect(station.stream_url).to eq("https://radio.example.com/actual-stream")
+        expect(station.original_url).to eq("https://example.com/station.pls")
+        expect(station.name).to eq("Cool Radio")
+      end
+
+      it "rejects a stream with a resolver error" do
+        stub_request(:get, "https://example.com/broken")
+          .to_raise(HTTP::ConnectionError.new("Connection refused"))
+
         post radio_stations_path, params: { radio_station: {
-          youtube_url: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
-          name: "My Radio"
+          source_type: "stream",
+          stream_url: "https://example.com/broken",
+          name: "Broken Stream"
         } }
-      }.to change(RadioStation, :count).by(1)
 
-      station = RadioStation.last
-      expect(station.name).to eq("My Radio")
-      expect(station.thumbnail_url).to eq("https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg")
-    end
+        expect(response).to have_http_status(:unprocessable_content)
+      end
 
-    it "rejects invalid URL" do
-      post radio_stations_path, params: { radio_station: {
-        youtube_url: "https://example.com/not-youtube",
-        name: "Bad Station"
-      } }
-      expect(response).to have_http_status(:unprocessable_content)
+      it "rejects a stream station without a stream_url" do
+        post radio_stations_path, params: { radio_station: {
+          source_type: "stream",
+          name: "No URL"
+        } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
     end
   end
 
