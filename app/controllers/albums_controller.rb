@@ -19,6 +19,41 @@ class AlbumsController < ApplicationController
     @pagy, @tracks = pagy(:offset, scope)
   end
 
+  def refresh
+    album = Album.find(params[:id])
+
+    unless Flipper.enabled?(:youtube_import, Current.user)
+      redirect_to album, alert: "This feature is not available."
+      return
+    end
+
+    unless album.youtube_playlist_url.present?
+      redirect_to album, alert: "This album has no YouTube playlist URL to refresh from."
+      return
+    end
+
+    track_count_before = album.tracks.count
+    YoutubePlaylistImportService.call(album.youtube_playlist_url, category: album.artist.category)
+    new_count = album.tracks.reload.count - track_count_before
+
+    if new_count > 0
+      redirect_to album, notice: "#{new_count} new #{"episode".pluralize(new_count)} added."
+    else
+      redirect_to album, notice: "No new episodes found."
+    end
+  rescue YoutubePlaylistImportService::Error => e
+    redirect_to album, alert: "Refresh failed: #{e.message}"
+  end
+
+  def update
+    album = Album.find(params[:id])
+    if album.update(album_params)
+      redirect_to album, notice: "Album updated."
+    else
+      redirect_to album, alert: "Failed to update album."
+    end
+  end
+
   def create_playlist
     album = Album.find(params[:id])
     tracks = album.tracks.order(:disc_number, :track_number)
@@ -29,5 +64,11 @@ class AlbumsController < ApplicationController
     end
 
     redirect_to playlist, notice: "Playlist created from #{album.title}"
+  end
+
+  private
+
+  def album_params
+    params.require(:album).permit(:youtube_playlist_url)
   end
 end

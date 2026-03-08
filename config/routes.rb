@@ -13,8 +13,9 @@ Rails.application.routes.draw do
   end
   # Music routes
   resources :artists, only: [:index, :show]
-  resources :albums, only: [:index, :show] do
+  resources :albums, only: [:index, :show, :update] do
     post :create_playlist, on: :member
+    post :refresh, on: :member
   end
   resources :tracks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
     member { get :stream }

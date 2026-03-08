@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_08_174202) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_183253) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -88,6 +88,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_174202) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.integer "year"
+    t.string "youtube_playlist_url"
     t.index ["artist_id", "title"], name: "index_albums_on_artist_id_and_title", unique: true
     t.index ["artist_id"], name: "index_albums_on_artist_id"
   end

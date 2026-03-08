@@ -82,6 +82,98 @@ RSpec.describe "Albums", type: :request do
     end
   end
 
+  describe "POST /albums/:id/refresh" do
+    let(:album) { create(:album, youtube_playlist_url: "https://www.youtube.com/playlist?list=PLtest123") }
+
+    before do
+      Flipper.enable(:youtube_import)
+    end
+
+    it "refreshes episodes and reports new count" do
+      create(:track, album: album, youtube_video_id: "vid1")
+
+      allow(YoutubePlaylistImportService).to receive(:call) do
+        create(:track, album: album, youtube_video_id: "vid2")
+        album
+      end
+
+      post refresh_album_path(album)
+
+      expect(YoutubePlaylistImportService).to have_received(:call)
+        .with(album.youtube_playlist_url, category: album.artist.category)
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("1 new episode added")
+    end
+
+    it "reports when no new episodes found" do
+      allow(YoutubePlaylistImportService).to receive(:call).and_return(album)
+
+      post refresh_album_path(album)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("No new episodes found")
+    end
+
+    it "redirects with error when album has no youtube_playlist_url" do
+      album_without_url = create(:album, youtube_playlist_url: nil)
+
+      post refresh_album_path(album_without_url)
+
+      expect(response).to redirect_to(album_path(album_without_url))
+      follow_redirect!
+      expect(response.body).to include("no YouTube playlist URL")
+    end
+
+    it "redirects with error when youtube import fails" do
+      allow(YoutubePlaylistImportService).to receive(:call)
+        .and_raise(YoutubePlaylistImportService::Error, "API quota exceeded")
+
+      post refresh_album_path(album)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("Refresh failed: API quota exceeded")
+    end
+
+    it "redirects with error when feature flag is disabled" do
+      Flipper.disable(:youtube_import)
+
+      post refresh_album_path(album)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("This feature is not available")
+    end
+  end
+
+  describe "PATCH /albums/:id" do
+    it "saves the youtube_playlist_url" do
+      album = create(:album, youtube_playlist_url: nil)
+
+      patch album_path(album), params: {album: {youtube_playlist_url: "https://www.youtube.com/playlist?list=PLnew"}}
+
+      expect(response).to redirect_to(album_path(album))
+      expect(album.reload.youtube_playlist_url).to eq("https://www.youtube.com/playlist?list=PLnew")
+    end
+
+    it "clears the youtube_playlist_url" do
+      album = create(:album, youtube_playlist_url: "https://www.youtube.com/playlist?list=PLold")
+
+      patch album_path(album), params: {album: {youtube_playlist_url: ""}}
+
+      expect(album.reload.youtube_playlist_url).to eq("")
+    end
+
+    it "requires authentication" do
+      album = create(:album)
+      reset!
+      patch album_path(album), params: {album: {youtube_playlist_url: "https://example.com"}}
+      expect(response).to redirect_to(new_session_path)
+    end
+  end
+
   describe "POST /albums/:id/create_playlist" do
     it "creates a playlist named after the album with all tracks in disc/track order" do
       album = create(:album, title: "Great Album")

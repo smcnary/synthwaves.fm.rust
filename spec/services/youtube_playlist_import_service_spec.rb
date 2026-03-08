@@ -59,6 +59,26 @@ RSpec.describe YoutubePlaylistImportService do
       expect(album.artist).to be_podcast
     end
 
+    it "saves youtube_playlist_url on the album" do
+      stub_playlist_api_calls
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+
+      expect(album.youtube_playlist_url).to eq("https://www.youtube.com/playlist?list=PLtest123")
+    end
+
+    it "does not overwrite existing youtube_playlist_url on re-import" do
+      stub_playlist_api_calls
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album.update!(youtube_playlist_url: "https://www.youtube.com/playlist?list=PLoriginal")
+
+      described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album.reload
+
+      expect(album.youtube_playlist_url).to eq("https://www.youtube.com/playlist?list=PLoriginal")
+    end
+
     it "does not overwrite existing artist category on re-import" do
       stub_playlist_api_calls
 

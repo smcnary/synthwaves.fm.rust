@@ -29,6 +29,7 @@ class YoutubePlaylistImportService
     end
 
     album = Album.find_or_create_by!(title: playlist_info[:title], artist: artist)
+    album.update!(youtube_playlist_url: @url) if album.youtube_playlist_url.blank?
 
     if playlist_info[:thumbnail_url].present? && !album.cover_image.attached?
       attach_thumbnail(album, playlist_info[:thumbnail_url])
