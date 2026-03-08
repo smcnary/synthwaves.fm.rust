@@ -1,8 +1,7 @@
-class SessionResource < Madmin::Resource
+class FavoriteResource < Madmin::Resource
   attribute :id, form: false
   attribute :user
-  attribute :ip_address
-  attribute :user_agent, index: false
+  attribute :favorable
   attribute :created_at, form: false
   attribute :updated_at, form: false, index: false
 
