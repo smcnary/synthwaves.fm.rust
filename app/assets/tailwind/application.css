@@ -1,5 +1,166 @@
 @import "tailwindcss";
 
+@theme {
+  /* Synthwave gray scale */
+  --color-gray-50: #1a1535;
+  --color-gray-100: #171230;
+  --color-gray-200: #2a1f4e;
+  --color-gray-300: #3d2d6b;
+  --color-gray-400: #8b7aab;
+  --color-gray-500: #a99bc7;
+  --color-gray-600: #c4b5de;
+  --color-gray-700: #2a1f4e;
+  --color-gray-800: #12082a;
+  --color-gray-900: #0a0a1a;
+  --color-gray-950: #060612;
+
+  /* Neon cyan (replaces blue) */
+  --color-blue-50: #0a2a2e;
+  --color-blue-100: #0d3d42;
+  --color-blue-200: #106068;
+  --color-blue-300: #15888e;
+  --color-blue-400: #00d4e0;
+  --color-blue-500: #00e5f2;
+  --color-blue-600: #00f0ff;
+  --color-blue-700: #33f3ff;
+  --color-blue-800: #66f6ff;
+  --color-blue-900: #0a2a2e;
+
+  /* Synthwave red */
+  --color-red-50: #2a0a15;
+  --color-red-100: #3d0f1e;
+  --color-red-200: #5c1530;
+  --color-red-300: #8b1d48;
+  --color-red-400: #e0355a;
+  --color-red-500: #ff2d55;
+  --color-red-600: #ff4d70;
+  --color-red-700: #ff6d8a;
+  --color-red-800: #ff8da5;
+  --color-red-900: #2a0a15;
+
+  /* Synthwave green */
+  --color-green-50: #0a2a0f;
+  --color-green-100: #0d3d14;
+  --color-green-200: #105c1a;
+  --color-green-300: #158b25;
+  --color-green-400: #39ff14;
+  --color-green-500: #39ff14;
+  --color-green-600: #50ff35;
+  --color-green-700: #70ff5c;
+  --color-green-800: #90ff80;
+  --color-green-900: #0a2a0f;
+
+  /* Synthwave purple */
+  --color-purple-50: #1a0a2a;
+  --color-purple-100: #250d3d;
+  --color-purple-200: #38155c;
+  --color-purple-300: #4e1d8b;
+  --color-purple-400: #9026e0;
+  --color-purple-500: #b026ff;
+  --color-purple-600: #c04dff;
+  --color-purple-700: #cc6dff;
+  --color-purple-800: #d98dff;
+  --color-purple-900: #1a0a2a;
+
+  /* Custom synthwave colors */
+  --color-neon-pink: #ff2d95;
+  --color-neon-cyan: #00f0ff;
+  --color-neon-purple: #b026ff;
+  --color-laser-green: #39ff14;
+  --color-sunset-orange: #ff6b35;
+
+  /* Display font */
+  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  /* Neon text glow effects */
+  .glow-cyan {
+    text-shadow: 0 0 7px #00f0ff, 0 0 10px #00f0ff, 0 0 21px #00f0ff, 0 0 42px #0fa;
+  }
+  .glow-pink {
+    text-shadow: 0 0 7px #ff2d95, 0 0 10px #ff2d95, 0 0 21px #ff2d95, 0 0 42px #ff2d95;
+  }
+  .glow-purple {
+    text-shadow: 0 0 7px #b026ff, 0 0 10px #b026ff, 0 0 21px #b026ff, 0 0 42px #b026ff;
+  }
+
+  /* Neon box-shadow effects */
+  .shadow-neon-cyan {
+    box-shadow: 0 0 5px #00f0ff, 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+  .shadow-neon-pink {
+    box-shadow: 0 0 5px #ff2d95, 0 0 10px #ff2d95, 0 0 20px rgba(255, 45, 149, 0.3);
+  }
+
+  /* Metallic chrome gradient text */
+  .text-chrome {
+    background: linear-gradient(180deg, #e8e8e8 0%, #b8b8b8 40%, #e8e8e8 50%, #a0a0a0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Sunset gradient text */
+  .text-sunset {
+    background: linear-gradient(90deg, #ff6b35, #ff2d95, #b026ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Sunset gradient background */
+  .bg-sunset-gradient {
+    background: linear-gradient(135deg, #ff6b35, #ff2d95, #b026ff);
+  }
+
+  /* CRT scanline overlay */
+  .scanlines {
+    position: relative;
+  }
+  .scanlines::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+  }
+
+  /* Perspective retro grid */
+  .retro-grid {
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.07) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+  }
+
+  /* Subtle synthwave background pattern */
+  .synthwave-bg {
+    background:
+      /* Subtle grid lines */
+      linear-gradient(rgba(176, 38, 255, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(176, 38, 255, 0.12) 1px, transparent 1px),
+      /* Soft radial glow from center — gives depth */
+      radial-gradient(ellipse at 50% 0%, rgba(176, 38, 255, 0.22) 0%, transparent 60%),
+      /* Base color */
+      #0a0a1a;
+    background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+  }
+}
+
+/* Now-playing highlight */
 [data-now-playing="true"] {
-  @apply bg-blue-50 dark:bg-blue-900/20;
+  @apply bg-neon-cyan/10;
 }
