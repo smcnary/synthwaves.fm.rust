@@ -1,4 +1,14 @@
 Rails.application.routes.draw do
+# API routes
+namespace :api do
+  namespace :v1 do
+    post "auth/token", to: "auth#create"
+  end
+end
+
+# API keys management
+resources :api_keys, only: [:index, :new, :create, :destroy]
+
   resource :profile, only: [:show, :edit, :update]
   resource :registration, only: [:new, :create]
   resource :session

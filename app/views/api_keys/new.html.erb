@@ -1,0 +1,38 @@
+<div class="mx-auto max-w-2xl">
+  <div class="mb-8">
+    <h1 class="font-bold text-4xl text-gray-900 dark:text-white">New API Key</h1>
+    <p class="mt-2 text-gray-600 dark:text-gray-400">Create a new API key for programmatic access</p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+    <%= form_with model: @api_key, local: true, class: "space-y-6" do |form| %>
+      <% if @api_key.errors.any? %>
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <h2 class="text-red-800 dark:text-red-200 font-medium"><%= pluralize(@api_key.errors.count, "error") %> prohibited this API key from being saved:</h2>
+          <ul class="mt-2 list-disc list-inside text-sm text-red-700 dark:text-red-300">
+            <% @api_key.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= form.text_field :name, class: "w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500", placeholder: "e.g., Production Server, Mobile App" %>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A descriptive name to identify this key</p>
+      </div>
+
+      <div>
+        <%= form.label :expires_at, "Expiration (optional)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= form.datetime_local_field :expires_at, class: "w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Leave blank for a key that never expires</p>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <%= link_to "Cancel", api_keys_path, class: "px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-500" %>
+        <%= form.submit "Create API Key", class: "rounded-md px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>
