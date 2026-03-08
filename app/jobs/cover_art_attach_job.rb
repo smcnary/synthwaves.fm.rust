@@ -5,7 +5,7 @@ class CoverArtAttachJob < ApplicationJob
     return if album.cover_image.attached?
 
     album.cover_image.attach(
-      io: StringIO.new(cover_art_data),
+      io: StringIO.new(Base64.strict_decode64(cover_art_data)),
       filename: "cover.jpg",
       content_type: mime_type || "image/jpeg"
     )

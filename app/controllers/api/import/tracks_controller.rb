@@ -17,7 +17,7 @@ class API::Import::TracksController < API::Import::BaseController
     end
 
     if metadata[:cover_art] && !album.cover_image.attached?
-      CoverArtAttachJob.perform_later(album, metadata[:cover_art][:data], metadata[:cover_art][:mime_type])
+      CoverArtAttachJob.perform_later(album, Base64.strict_encode64(metadata[:cover_art][:data]), metadata[:cover_art][:mime_type])
     end
 
     title = metadata[:title] || uploaded_file.original_filename.sub(/\.\w+$/, "")
