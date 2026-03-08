@@ -35,4 +35,3 @@ linode:
   region: <%= Rails.application.credentials.dig(:linode, :region) %>
   bucket: <%= Rails.application.credentials.dig(:linode, :bucket) %>
   endpoint: <%= Rails.application.credentials.dig(:linode, :endpoint) %>
-  force_path_style: true

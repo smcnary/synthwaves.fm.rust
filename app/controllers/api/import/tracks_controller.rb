@@ -30,7 +30,7 @@ class API::Import::TracksController < API::Import::BaseController
       track_number: track_number
     )
 
-    if existing
+    if existing&.audio_file&.attached?
       render json: {
         id: existing.id,
         title: existing.title,
@@ -40,6 +40,8 @@ class API::Import::TracksController < API::Import::BaseController
       }
       return
     end
+
+    existing&.destroy
 
     track = Track.new(
       title: title,
@@ -53,7 +55,12 @@ class API::Import::TracksController < API::Import::BaseController
       file_size: uploaded_file.size
     )
 
-    track.audio_file.attach(uploaded_file)
+    begin
+      track.audio_file.attach(uploaded_file)
+    rescue => e
+      render json: { error: "Upload failed: #{e.message}" }, status: :service_unavailable
+      return
+    end
 
     if track.save
       render json: {
