@@ -28,6 +28,23 @@
       <p class="mt-1 text-sm text-gray-400">Used by Subsonic-compatible music players (e.g. cliamp, DSub).</p>
     </div>
 
+    <div class="my-5">
+      <span class="block text-sm font-medium text-gray-400 mb-3">Theme</span>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <% Themeable::THEMES.each do |key, config| %>
+          <label data-theme-card="<%= key %>"
+                 class="relative cursor-pointer rounded-lg border border-gray-700 bg-gray-800 p-4 text-center transition hover:border-gray-500 <%= 'ring-2 ring-neon-cyan' if @user.theme == key %>">
+            <input type="radio" name="user[theme]" value="<%= key %>"
+                   class="sr-only"
+                   data-action="change->theme#switch"
+                   <%= 'checked' if @user.theme == key %>>
+            <span class="block text-sm font-semibold text-white"><%= config[:label] %></span>
+            <span class="block text-xs text-gray-400 mt-1"><%= config[:font_family] %></span>
+          </label>
+        <% end %>
+      </div>
+    </div>
+
     <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
       <div class="inline">
         <%= form.submit "Save Changes", class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-neon-pink hover:shadow-neon-pink text-white inline-block font-medium cursor-pointer" %>

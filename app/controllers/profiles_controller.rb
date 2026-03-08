@@ -11,15 +11,21 @@ class ProfilesController < ApplicationController
     @user = Current.user
 
     if @user.update(user_params)
-      redirect_to profile_path, notice: "Profile updated successfully."
+      respond_to do |format|
+        format.html { redirect_to profile_path, notice: "Profile updated successfully." }
+        format.json { render json: { status: "ok", theme: @user.theme } }
+      end
     else
-      render :edit, status: :unprocessable_content
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
   end
 
   private
 
   def user_params
-    params.require(:user).permit(:name, :email_address, :subsonic_password)
+    params.require(:user).permit(:name, :email_address, :subsonic_password, :theme)
   end
 end

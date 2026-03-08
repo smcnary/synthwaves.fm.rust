@@ -25,6 +25,26 @@ RSpec.describe User, type: :model do
       user = build(:user, email_address: "valid@example.com")
       expect(user).to be_valid
     end
+
+    describe "theme" do
+      it "defaults to synthwave" do
+        user = User.new
+        expect(user.theme).to eq("synthwave")
+      end
+
+      it "accepts valid themes" do
+        Themeable::THEMES.each_key do |theme|
+          user = build(:user, theme: theme)
+          expect(user).to be_valid
+        end
+      end
+
+      it "rejects invalid themes" do
+        user = build(:user, theme: "vaporwave")
+        expect(user).not_to be_valid
+        expect(user.errors[:theme]).to be_present
+      end
+    end
   end
 
   describe "normalizes :email_address" do

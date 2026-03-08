@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include Themeable
+
   has_many :api_keys, class_name: "APIKey", dependent: :destroy
 
   has_secure_password

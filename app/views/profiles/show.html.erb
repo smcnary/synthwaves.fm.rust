@@ -11,9 +11,19 @@
       <p class="mt-1 text-white"><%= @user.name.presence || "Not set" %></p>
     </div>
 
-    <div class="px-4 py-5 sm:px-6">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
       <p class="text-sm font-medium text-gray-400">Email</p>
       <p class="mt-1 text-white"><%= @user.email_address %></p>
+    </div>
+
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
+      <p class="text-sm font-medium text-gray-400">Subsonic Password</p>
+      <p class="mt-1 text-white"><%= @user.subsonic_password.present? ? "********" : "Not set" %></p>
+    </div>
+
+    <div class="px-4 py-5 sm:px-6">
+      <p class="text-sm font-medium text-gray-400">Theme</p>
+      <p class="mt-1 text-white"><%= Themeable::THEMES.dig(@user.theme, :label) %></p>
     </div>
   </div>
 

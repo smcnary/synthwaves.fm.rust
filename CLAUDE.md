@@ -63,8 +63,10 @@ Playlist
 PlaylistTrack  -- join table with position column
 
 User
+  include Themeable
   has_many :playlists, :favorites, :play_histories, :api_keys, :sessions
   has_secure_password
+  theme (string, default: "synthwave") — validated against Themeable::THEMES
 
 Favorite  -- polymorphic (favorable: Track | Album | Artist)
 PlayHistory  -- records play events per user/track
@@ -87,6 +89,25 @@ Three authentication layers:
 2. **JWT API** (`/api/v1/`) - Client authenticates with `client_id` + `secret_key` to `POST /api/v1/auth/token`. Returns HS256 JWT (1-hour expiry) using `JWTService`. API requests use `Authorization: Bearer <token>` header. Validated in `API::V1::BaseController`.
 
 3. **Subsonic API** (`/rest/` and `/api/rest/`) - Username via `:u` param (email_address). Two auth methods: MD5 token (`:t` + `:s` salt) or plaintext password (`:p` param, optional hex encoding with `enc:` prefix). Uses `subsonic_password` field on User. Response format controlled by `:f` param (JSON or XML).
+
+## Theming
+
+Four music-genre-inspired themes: **Synthwave** (default), **Reggae**, **Punk**, **Jazz**. Themes swap CSS custom properties via `[data-theme]` selectors — no template changes needed.
+
+### How It Works
+
+- `Themeable` concern (`app/models/concerns/themeable.rb`) is the single source of truth for the theme registry (label, font, meta color per theme)
+- `ThemeHelper` provides `current_theme`, `current_theme_font_url`, etc. to layouts
+- `@theme` vars in `app/assets/tailwind/application.css` define the default (synthwave) palette; `[data-theme="reggae|punk|jazz"]` blocks override the same `--color-*` vars
+- `theme_controller.js` handles instant client-side switching (CSS var swap + font swap + localStorage + server persist via JSON PATCH)
+- Users choose their theme on the profile edit page
+
+### Adding a New Theme
+
+1. Add an entry to `Themeable::THEMES` in `app/models/concerns/themeable.rb`
+2. Add a `[data-theme="name"]` CSS block in `app/assets/tailwind/application.css` overriding `--color-*` and `--theme-*` vars
+
+No template changes, no new controllers, no new routes.
 
 ## Key Patterns
 

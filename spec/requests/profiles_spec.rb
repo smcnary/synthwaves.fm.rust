@@ -80,6 +80,50 @@ RSpec.describe "Profiles", type: :request do
       end
     end
 
+    context "with theme param" do
+      it "updates the user theme" do
+        user = create(:user, theme: "synthwave")
+        login_user(user)
+
+        patch profile_path, params: {user: {theme: "jazz"}}
+
+        expect(response).to redirect_to(profile_path)
+        expect(user.reload.theme).to eq("jazz")
+      end
+
+      it "rejects invalid theme values" do
+        user = create(:user)
+        login_user(user)
+
+        patch profile_path, params: {user: {theme: "vaporwave"}}
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "responds with JSON when requested" do
+        user = create(:user, theme: "synthwave")
+        login_user(user)
+
+        patch profile_path, params: {user: {theme: "reggae"}}, as: :json
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["theme"]).to eq("reggae")
+        expect(user.reload.theme).to eq("reggae")
+      end
+
+      it "returns JSON errors for invalid theme" do
+        user = create(:user)
+        login_user(user)
+
+        patch profile_path, params: {user: {theme: "invalid"}}, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        body = JSON.parse(response.body)
+        expect(body["errors"]).to be_present
+      end
+    end
+
     context "with invalid data" do
       it "re-renders form with blank email" do
         user = create(:user)
