@@ -3,7 +3,7 @@ class TracksController < ApplicationController
   before_action :require_admin, only: [:edit, :update, :destroy]
 
   def index
-    @tracks = Track.includes(:artist, :album).order(:title)
+    @pagy, @tracks = pagy(:offset, Track.includes(:artist, :album).order(:title))
   end
 
   def show

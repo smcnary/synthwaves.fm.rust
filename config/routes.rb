@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   end
   resources :favorites, only: [:index, :create, :destroy]
   resources :play_histories, only: [:index, :create]
+  get "search/dropdown", to: "search#dropdown"
   get :search, to: "search#index"
   get :library, to: "library#show"
 

@@ -13,10 +13,33 @@
             <%= link_to "Albums", albums_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
             <%= link_to "Tracks", tracks_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
             <%= link_to "Playlists", playlists_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
-            <%= link_to "Search", search_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
           </nav>
         <% end %>
       </div>
+      <% if authenticated? %>
+        <!-- Desktop search widget -->
+        <div class="hidden md:block relative" data-controller="global-search" data-global-search-url-value="<%= search_dropdown_path %>">
+          <div class="relative">
+            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" placeholder="Search..."
+                   class="w-48 lg:w-64 pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   data-global-search-target="input"
+                   data-action="input->global-search#search keydown->global-search#keydown">
+          </div>
+          <div class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto"
+               data-global-search-target="dropdown">
+            <turbo-frame id="navbar-search-results" data-global-search-target="frame"></turbo-frame>
+          </div>
+        </div>
+        <!-- Mobile search icon -->
+        <%= link_to search_path, class: "md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        <% end %>
+      <% end %>
       <!-- Right side: User Dropdown or Auth links -->
       <% if authenticated? %>
         <details class="relative">

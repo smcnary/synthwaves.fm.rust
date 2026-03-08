@@ -16,7 +16,7 @@
         <div class="space-y-2 mb-6">
           <% @results[:artists].each do |artist| %>
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-              <%= link_to artist.name, artist_path(artist), class: "font-medium text-gray-900 dark:text-white hover:text-blue-600" %>
+              <%= link_to artist.name, artist_path(artist), data: { turbo_frame: "_top" }, class: "font-medium text-gray-900 dark:text-white hover:text-blue-600" %>
             </div>
           <% end %>
         </div>
@@ -27,7 +27,7 @@
         <div class="space-y-2 mb-6">
           <% @results[:albums].each do |album| %>
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-              <%= link_to album.title, album_path(album), class: "font-medium text-gray-900 dark:text-white hover:text-blue-600" %>
+              <%= link_to album.title, album_path(album), data: { turbo_frame: "_top" }, class: "font-medium text-gray-900 dark:text-white hover:text-blue-600" %>
               <span class="text-sm text-gray-500">by <%= album.artist.name %></span>
             </div>
           <% end %>

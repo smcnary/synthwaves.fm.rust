@@ -10,6 +10,18 @@ RSpec.describe "Tracks", type: :request do
       get tracks_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "paginates results" do
+      create_list(:track, 25)
+      get tracks_path
+      expect(response.body).to include("series-nav")
+    end
+
+    it "respects page parameter" do
+      tracks = create_list(:track, 25)
+      get tracks_path, params: {page: 2}
+      expect(response).to have_http_status(:ok)
+    end
   end
 
   describe "GET /tracks/:id" do
