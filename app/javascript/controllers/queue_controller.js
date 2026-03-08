@@ -29,7 +29,7 @@ export default class extends Controller {
   }
 
   playNow(track) {
-    const index = this.queue.findIndex(t => t.trackId === track.trackId)
+    const index = this.queue.findIndex(t => t.trackId === track.trackId && t.trackId !== 0)
     if (index >= 0) {
       this.currentIndex = index
     } else {
@@ -59,7 +59,11 @@ export default class extends Controller {
   playCurrent() {
     const track = this.queue[this.currentIndex]
     if (track) {
-      document.dispatchEvent(new CustomEvent("player:play", { detail: track }))
+      if (track.youtubeVideoId) {
+        document.dispatchEvent(new CustomEvent("player:playYouTube", { detail: track }))
+      } else {
+        document.dispatchEvent(new CustomEvent("player:play", { detail: track }))
+      }
     }
   }
 

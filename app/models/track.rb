@@ -9,7 +9,16 @@ class Track < ApplicationRecord
 
   validates :title, presence: true
 
-  scope :search, ->(query) { where("title LIKE ?", "%#{query}%") if query.present? }
+  def youtube?
+    youtube_video_id.present?
+  end
+
+  scope :search, ->(query) {
+    if query.present?
+      joins(:artist, :album)
+        .where("tracks.title LIKE :q OR artists.name LIKE :q OR albums.title LIKE :q", q: "%#{query}%")
+    end
+  }
 
   after_create_commit :convert_audio_if_needed
 

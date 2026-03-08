@@ -16,11 +16,33 @@ RSpec.describe Track, type: :model do
   end
 
   describe ".search" do
-    it "returns tracks matching the query" do
+    it "returns tracks matching by title" do
       matching = create(:track, title: "Bohemian Rhapsody")
       non_matching = create(:track, title: "Stairway to Heaven")
 
       results = Track.search("Bohemian")
+
+      expect(results).to include(matching)
+      expect(results).not_to include(non_matching)
+    end
+
+    it "returns tracks matching by artist name" do
+      artist = create(:artist, name: "Led Zeppelin")
+      matching = create(:track, artist: artist, title: "Kashmir")
+      non_matching = create(:track, title: "Yesterday")
+
+      results = Track.search("Zeppelin")
+
+      expect(results).to include(matching)
+      expect(results).not_to include(non_matching)
+    end
+
+    it "returns tracks matching by album title" do
+      album = create(:album, title: "Abbey Road")
+      matching = create(:track, album: album, title: "Come Together")
+      non_matching = create(:track, title: "Yesterday")
+
+      results = Track.search("Abbey")
 
       expect(results).to include(matching)
       expect(results).not_to include(non_matching)

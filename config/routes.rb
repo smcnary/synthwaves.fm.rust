@@ -22,6 +22,8 @@ Rails.application.routes.draw do
   resources :playlists do
     resources :tracks, controller: "playlist_tracks", only: [:create, :destroy], as: :tracks
   end
+  resources :radio_stations, only: [:index, :new, :create, :destroy]
+  resources :youtube_imports, only: [:new, :create]
   resources :favorites, only: [:index, :create, :destroy]
   resources :play_histories, only: [:index, :create]
   get "search/dropdown", to: "search#dropdown"
@@ -38,6 +40,7 @@ Rails.application.routes.draw do
     end
     namespace :import do
       resources :tracks, only: [:create]
+      resources :playlists, only: [:create]
     end
   end
 

@@ -3,7 +3,11 @@
      data-song-row-track-id-value="<%= track.id %>"
      data-song-row-title-value="<%= track.title %>"
      data-song-row-artist-value="<%= track.artist.name %>"
-     data-song-row-stream-url-value="<%= stream_track_path(track) %>">
+     <% if track.youtube? %>
+     data-song-row-youtube-video-id-value="<%= track.youtube_video_id %>"
+     <% else %>
+     data-song-row-stream-url-value="<%= stream_track_path(track) %>"
+     <% end %>>
   <div class="flex items-center gap-3">
     <button type="button" data-action="song-row#play" class="w-8 text-center text-gray-400 hover:text-blue-600 group/play">
       <% if number %>

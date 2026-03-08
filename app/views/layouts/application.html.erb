@@ -34,6 +34,22 @@
       <%= yield %>
     </main>
 
+    <!-- YouTube PiP window -->
+    <div id="youtube-pip"
+         class="hidden fixed bottom-28 right-4 z-50 rounded-lg shadow-2xl overflow-hidden"
+         data-turbo-permanent
+         data-controller="youtube-player"
+         data-youtube-player-target="container">
+      <div class="relative">
+        <div data-youtube-player-target="iframe"></div>
+        <button type="button"
+                class="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                data-action="youtube-player#close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Persistent player bar -->
     <div id="player-bar" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50"
          data-turbo-permanent
@@ -42,7 +58,7 @@
       <audio data-player-target="audio" preload="auto"></audio>
 
       <!-- Progress bar -->
-      <div class="h-1 bg-gray-200 dark:bg-gray-700 cursor-pointer" data-action="click->player#seek">
+      <div data-player-target="progressBar" class="h-1 bg-gray-200 dark:bg-gray-700 cursor-pointer" data-action="click->player#seek">
         <div class="h-full bg-blue-600 transition-all duration-200" data-player-target="progress" style="width: 0%"></div>
       </div>
 
@@ -57,6 +73,10 @@
               <div class="text-sm font-medium text-gray-900 dark:text-white truncate" data-player-target="title">Not playing</div>
               <div class="text-xs text-gray-500 truncate" data-player-target="artist"></div>
             </div>
+            <span data-player-target="liveIndicator" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+              LIVE
+            </span>
           </div>
 
           <!-- Controls -->

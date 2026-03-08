@@ -22,6 +22,9 @@
 
   <div class="flex gap-4 mb-8">
     <%= link_to "Upload Track", new_track_path, class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" %>
+    <% if Flipper.enabled?(:youtube_import, Current.user) %>
+      <%= link_to "Import from YouTube", new_youtube_import_path, class: "px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700" %>
+    <% end %>
     <%= link_to "Browse Artists", artists_path, class: "px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600" %>
     <%= link_to "Browse Albums", albums_path, class: "px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600" %>
   </div>

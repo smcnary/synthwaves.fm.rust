@@ -80,7 +80,9 @@ class TracksController < ApplicationController
   end
 
   def stream
-    if @track.audio_file.attached?
+    if @track.youtube?
+      head :not_found
+    elsif @track.audio_file.attached?
       redirect_to rails_blob_url(@track.audio_file), allow_other_host: true
     else
       head :not_found

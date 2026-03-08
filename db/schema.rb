@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_08_150724) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_162429) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -240,6 +240,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150724) do
     t.index ["user_id"], name: "index_playlists_on_user_id"
   end
 
+  create_table "radio_stations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "thumbnail_url"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "youtube_url", null: false
+    t.string "youtube_video_id", null: false
+    t.index ["user_id"], name: "index_radio_stations_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -274,9 +286,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150724) do
     t.string "title", null: false
     t.integer "track_number"
     t.datetime "updated_at", null: false
+    t.string "youtube_video_id"
     t.index ["album_id", "disc_number", "track_number"], name: "index_tracks_on_album_id_and_disc_number_and_track_number"
     t.index ["album_id"], name: "index_tracks_on_album_id"
     t.index ["artist_id"], name: "index_tracks_on_artist_id"
+    t.index ["youtube_video_id"], name: "index_tracks_on_youtube_video_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -304,6 +318,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150724) do
   add_foreign_key "playlist_tracks", "playlists"
   add_foreign_key "playlist_tracks", "tracks"
   add_foreign_key "playlists", "users"
+  add_foreign_key "radio_stations", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "tool_calls", "messages"
   add_foreign_key "tracks", "albums"

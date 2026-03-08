@@ -1,0 +1,37 @@
+<div class="w-full max-w-lg">
+  <div class="mb-6">
+    <%= link_to "&larr; Back to Radio".html_safe, radio_stations_path, class: "text-blue-600 hover:underline" %>
+  </div>
+
+  <h1 class="text-3xl font-bold mb-8">Add Radio Station</h1>
+
+  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <%= form_with model: @radio_station, class: "space-y-4" do |f| %>
+      <% if @radio_station.errors.any? %>
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <ul class="text-sm text-red-600 dark:text-red-400 list-disc list-inside">
+            <% @radio_station.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :youtube_url, "YouTube URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.text_field :youtube_url, placeholder: "https://youtube.com/watch?v=...", class: "w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500" %>
+        <p class="mt-1 text-xs text-gray-500">Paste a YouTube live stream URL (e.g., lo-fi radio channels).</p>
+      </div>
+
+      <div>
+        <%= f.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.text_field :name, placeholder: "Station name (auto-filled from YouTube)", class: "w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500" %>
+        <p class="mt-1 text-xs text-gray-500">Leave blank to use the YouTube video title.</p>
+      </div>
+
+      <div class="pt-2">
+        <%= f.submit "Add Station", class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>
