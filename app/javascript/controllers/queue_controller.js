@@ -29,7 +29,6 @@ export default class extends Controller {
   }
 
   playNow(track) {
-    console.log("[queue] playNow received", track)
     const index = this.queue.findIndex(t => t.trackId === track.trackId)
     if (index >= 0) {
       this.currentIndex = index
@@ -59,7 +58,6 @@ export default class extends Controller {
 
   playCurrent() {
     const track = this.queue[this.currentIndex]
-    console.log("[queue] playCurrent", { track, index: this.currentIndex, queueLength: this.queue.length })
     if (track) {
       document.dispatchEvent(new CustomEvent("player:play", { detail: track }))
     }
