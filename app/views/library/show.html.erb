@@ -72,7 +72,7 @@
 
   <%# Podcasts %>
   <% if @podcasts.any? %>
-    <%= render "library/section", title: "Podcasts", see_all_path: podcasts_path do %>
+    <%= render "library/section", title: "Podcasts", see_all_path: music_path(tab: "podcasts") do %>
       <% @podcasts.each do |podcast| %>
         <%= render "library/podcast_card", podcast: podcast %>
       <% end %>
@@ -84,28 +84,28 @@
     <h2 class="text-xl font-semibold text-white mb-4">Browse</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <%= render "library/browse_card",
-        path: artists_path,
+        path: music_path(tab: "artists"),
         label: "Artists",
         count: @artist_count,
         item_name: "artist",
         color: "blue",
         icon: tag.svg(tag.path(d: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", stroke_linecap: "round", stroke_linejoin: "round", stroke_width: "2"), class: "w-5 h-5 text-blue-400", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24") %>
       <%= render "library/browse_card",
-        path: albums_path,
+        path: music_path(tab: "albums"),
         label: "Albums",
         count: @album_count,
         item_name: "album",
         color: "green",
         icon: tag.svg(tag.path(d: "M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"), class: "w-5 h-5 text-green-400", fill: "currentColor", viewBox: "0 0 20 20") %>
       <%= render "library/browse_card",
-        path: tracks_path,
+        path: music_path(tab: "tracks"),
         label: "Tracks",
         count: @track_count,
         item_name: "track",
         color: "purple",
         icon: tag.svg(tag.path(d: "M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3", stroke_linecap: "round", stroke_linejoin: "round", stroke_width: "2"), class: "w-5 h-5 text-purple-400", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24") %>
       <%= render "library/browse_card",
-        path: podcasts_path,
+        path: music_path(tab: "podcasts"),
         label: "Podcasts",
         count: @podcast_count,
         item_name: "podcast",

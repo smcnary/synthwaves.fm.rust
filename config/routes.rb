@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     end
   end
   # Music routes
+  get :music, to: "music#show"
   resources :artists, only: [:index, :show]
   resources :albums, only: [:index, :show, :update] do
     post :create_playlist, on: :member
@@ -24,7 +25,7 @@ Rails.application.routes.draw do
   resources :playlists do
     resources :tracks, controller: "playlist_tracks", only: [:create, :destroy], as: :tracks
   end
-  resources :podcasts, only: [:index, :show]
+  resources :podcasts, only: [:show]
   resources :radio_stations, only: [:index, :new, :create, :destroy] do
     resource :stream, only: [:show], controller: "radio_streams"
   end
