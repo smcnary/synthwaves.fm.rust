@@ -12,7 +12,9 @@ class RadioStationsController < ApplicationController
   def create
     @radio_station = Current.user.radio_stations.new(radio_station_params)
 
-    if @radio_station.youtube_url.present? && @radio_station.name.blank?
+    video_id = YoutubeUrlParser.extract_video_id(@radio_station.youtube_url)
+    if video_id.present?
+      @radio_station.youtube_video_id = video_id
       fetch_oembed_metadata
     end
 

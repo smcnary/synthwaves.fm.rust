@@ -49,7 +49,14 @@ RSpec.describe "RadioStations", type: :request do
       expect(response).to redirect_to(radio_stations_path)
     end
 
-    it "creates a radio station with manual name" do
+    it "creates a radio station with manual name and still fetches thumbnail" do
+      stub_request(:get, %r{youtube\.com/oembed})
+        .to_return(
+          status: 200,
+          headers: { "Content-Type" => "application/json" },
+          body: { title: "Lo-Fi Beats", thumbnail_url: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg" }.to_json
+        )
+
       expect {
         post radio_stations_path, params: { radio_station: {
           youtube_url: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
@@ -57,7 +64,9 @@ RSpec.describe "RadioStations", type: :request do
         } }
       }.to change(RadioStation, :count).by(1)
 
-      expect(RadioStation.last.name).to eq("My Radio")
+      station = RadioStation.last
+      expect(station.name).to eq("My Radio")
+      expect(station.thumbnail_url).to eq("https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg")
     end
 
     it "rejects invalid URL" do

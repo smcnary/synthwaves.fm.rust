@@ -21,6 +21,30 @@ RSpec.describe "Podcasts", type: :request do
       expect(response.body).not_to include("My Band")
     end
 
+    it "displays album cover image as podcast thumbnail" do
+      artist = create(:artist, :podcast, name: "Cover Podcast")
+      album = create(:album, artist: artist)
+      album.cover_image.attach(
+        io: StringIO.new("fake image data"),
+        filename: "cover.jpg",
+        content_type: "image/jpeg"
+      )
+
+      get podcasts_path
+
+      expect(response.body).to include("Cover Podcast")
+      expect(response.body).not_to include("M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z")
+    end
+
+    it "shows fallback icon when podcast has no album cover" do
+      create(:artist, :podcast, name: "No Cover Podcast")
+
+      get podcasts_path
+
+      expect(response.body).to include("No Cover Podcast")
+      expect(response.body).to include("M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z")
+    end
+
     it "shows empty state when no podcasts exist" do
       get podcasts_path
       expect(response.body).to include("No podcasts yet")

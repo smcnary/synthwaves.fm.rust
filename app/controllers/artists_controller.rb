@@ -1,6 +1,6 @@
 class ArtistsController < ApplicationController
   def index
-    @artists = Artist.music.order(:name)
+    @artists = Artist.music.includes(albums: { cover_image_attachment: :blob }).order(:name)
   end
 
   def show

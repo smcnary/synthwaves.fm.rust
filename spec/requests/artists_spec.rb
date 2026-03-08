@@ -12,6 +12,30 @@ RSpec.describe "Artists", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "displays album cover image as artist thumbnail" do
+      artist = create(:artist, name: "Cover Artist")
+      album = create(:album, artist: artist)
+      album.cover_image.attach(
+        io: StringIO.new("fake image data"),
+        filename: "cover.jpg",
+        content_type: "image/jpeg"
+      )
+
+      get artists_path
+
+      expect(response.body).to include("Cover Artist")
+      expect(response.body).not_to include("M10 9a3 3 0 100-6 3 3 0 000 6z")
+    end
+
+    it "shows fallback icon when artist has no album cover" do
+      create(:artist, name: "No Cover Artist")
+
+      get artists_path
+
+      expect(response.body).to include("No Cover Artist")
+      expect(response.body).to include("M10 9a3 3 0 100-6 3 3 0 000 6z")
+    end
+
     it "excludes podcast artists from index" do
       music_artist = create(:artist, name: "Music Band")
       podcast_artist = create(:artist, :podcast, name: "Podcast Show")
