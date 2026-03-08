@@ -1,4 +1,4 @@
-# Synthwaves.fm
+# Groovy Tunes
 
 Music streaming web application built with Rails 8.
 
