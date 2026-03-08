@@ -73,7 +73,14 @@
       <% end %>
 
       <% if @results[:tracks].any? %>
-        <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-semibold">Tracks</h2>
+          <%= render BulkPlaylistMenuComponent.new(
+                tracks: @results[:tracks],
+                playlists: current_user_playlists,
+                new_playlist_name: "Search: #{@query}"
+              ) %>
+        </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <% @results[:tracks].each do |track| %>
             <%= render TrackRowComponent.new(track: track) do |c| %>

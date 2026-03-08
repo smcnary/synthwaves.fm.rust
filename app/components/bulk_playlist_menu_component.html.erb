@@ -1,0 +1,32 @@
+<div class="relative" data-controller="playlist-menu" data-action="click@window->playlist-menu#close">
+  <button data-action="click->playlist-menu#toggle" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add All to Playlist
+  </button>
+  <div data-playlist-menu-target="menu" class="hidden absolute right-0 z-10 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+    <form action="<%= playlists_path %>" method="post">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="playlist[name]" value="<%= new_playlist_name %>">
+      <% track_ids.each do |id| %>
+        <input type="hidden" name="track_ids[]" value="<%= id %>">
+      <% end %>
+      <button type="submit" class="block w-full text-left px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg">
+        New Playlist
+      </button>
+    </form>
+    <% if playlists.any? %>
+      <div class="border-t border-gray-200 dark:border-gray-700"></div>
+      <% playlists.each do |playlist| %>
+        <form action="<%= playlist_tracks_path(playlist) %>" method="post">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <% track_ids.each do |id| %>
+            <input type="hidden" name="track_ids[]" value="<%= id %>">
+          <% end %>
+          <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg">
+            <%= playlist.name %>
+          </button>
+        </form>
+      <% end %>
+    <% end %>
+  </div>
+</div>

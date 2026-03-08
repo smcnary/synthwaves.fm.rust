@@ -24,6 +24,28 @@ RSpec.describe "Playlists", type: :request do
       post playlists_path, params: {playlist: {name: ""}}
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "creates a playlist and populates with tracks when track_ids present" do
+      track1 = create(:track)
+      track2 = create(:track)
+
+      expect {
+        post playlists_path, params: { playlist: { name: "Bulk Playlist" }, track_ids: [track1.id, track2.id] }
+      }.to change(Playlist, :count).by(1)
+
+      playlist = Playlist.last
+      expect(playlist.name).to eq("Bulk Playlist")
+      expect(playlist.tracks).to eq([track1, track2])
+      expect(playlist.playlist_tracks.order(:position).pluck(:position)).to eq([1, 2])
+    end
+
+    it "creates a playlist without tracks when track_ids absent" do
+      expect {
+        post playlists_path, params: { playlist: { name: "Empty Playlist" } }
+      }.to change(Playlist, :count).by(1)
+
+      expect(Playlist.last.tracks).to be_empty
+    end
   end
 
   describe "PATCH /playlists/:id" do

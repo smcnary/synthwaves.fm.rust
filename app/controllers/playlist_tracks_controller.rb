@@ -2,7 +2,9 @@ class PlaylistTracksController < ApplicationController
   before_action :set_playlist
 
   def create
-    if params[:album_id].present?
+    if params[:track_ids].present?
+      add_multiple_tracks
+    elsif params[:album_id].present?
       add_album_tracks
     else
       add_single_track
@@ -17,6 +19,21 @@ class PlaylistTracksController < ApplicationController
   end
 
   private
+
+  def add_multiple_tracks
+    tracks = Track.where(id: params[:track_ids])
+    track_ids_ordered = params[:track_ids].map(&:to_i)
+    next_position = (@playlist.playlist_tracks.maximum(:position) || 0) + 1
+
+    track_ids_ordered.each do |track_id|
+      track = tracks.find { |t| t.id == track_id }
+      next unless track
+      unless @playlist.playlist_tracks.exists?(track: track)
+        @playlist.playlist_tracks.create!(track: track, position: next_position)
+        next_position += 1
+      end
+    end
+  end
 
   def add_single_track
     track = Track.find(params[:track_id])

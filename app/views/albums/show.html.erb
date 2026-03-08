@@ -18,27 +18,12 @@
       <% if @album.genre %><p class="text-gray-500"><%= @album.genre %></p><% end %>
       <p class="text-sm text-gray-400 mt-2"><%= pluralize(@tracks.size, "track") %></p>
 
-      <div class="relative mt-3" data-controller="playlist-menu" data-action="click@window->playlist-menu#close">
-        <button data-action="click->playlist-menu#toggle" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Add to Playlist
-        </button>
-        <div data-playlist-menu-target="menu" class="hidden absolute left-0 z-10 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-          <%= button_to "New Playlist", create_playlist_album_path(@album),
-                method: :post,
-                class: "block w-full text-left px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg" %>
-          <% if current_user_playlists.any? %>
-            <div class="border-t border-gray-200 dark:border-gray-700"></div>
-            <% current_user_playlists.each do |playlist| %>
-              <%= button_to playlist_tracks_path(playlist),
-                    params: { album_id: @album.id },
-                    method: :post,
-                    class: "block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg" do %>
-                <%= playlist.name %>
-              <% end %>
-            <% end %>
-          <% end %>
-        </div>
+      <div class="mt-3">
+        <%= render BulkPlaylistMenuComponent.new(
+              tracks: @tracks,
+              playlists: current_user_playlists,
+              new_playlist_name: @album.title
+            ) %>
       </div>
     </div>
   </div>

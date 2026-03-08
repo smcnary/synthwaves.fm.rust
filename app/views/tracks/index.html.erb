@@ -6,7 +6,7 @@
 
   <div data-controller="search" class="mb-6">
     <%= form_with url: tracks_path, method: :get, data: { turbo_frame: "tracks-list", search_target: "form", action: "input->search#submit" } do |f| %>
-      <input type="text" name="q" value="<%= @query %>" placeholder="Search tracks..."
+      <input type="text" name="q" value="<%= @query %>" placeholder="Search by title, artist, or album..."
              class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-lg px-4 py-3"
              data-search-target="input" autofocus>
     <% end %>
@@ -14,6 +14,15 @@
 
   <turbo-frame id="tracks-list" data-turbo-action="advance">
     <% if @tracks.any? %>
+      <% if @query.present? %>
+        <div class="flex justify-end mb-3">
+          <%= render BulkPlaylistMenuComponent.new(
+                tracks: @tracks,
+                playlists: current_user_playlists,
+                new_playlist_name: "Search: #{@query}"
+              ) %>
+        </div>
+      <% end %>
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <% @tracks.each do |track| %>
           <%= render TrackRowComponent.new(track: track, link_title: true, link_subtitle: true) do |c| %>

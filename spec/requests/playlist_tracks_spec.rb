@@ -111,6 +111,65 @@ RSpec.describe "PlaylistTracks", type: :request do
     end
   end
 
+  describe "POST /playlists/:playlist_id/tracks with track_ids" do
+    it "adds multiple tracks to the playlist" do
+      user = create(:user)
+      login_user(user)
+      playlist = create(:playlist, user: user)
+      track1 = create(:track)
+      track2 = create(:track)
+      track3 = create(:track)
+
+      expect {
+        post playlist_tracks_path(playlist), params: { track_ids: [track1.id, track2.id, track3.id] }
+      }.to change(playlist.playlist_tracks, :count).by(3)
+
+      expect(playlist.playlist_tracks.order(:position).map(&:track)).to eq([track1, track2, track3])
+    end
+
+    it "skips tracks already in the playlist" do
+      user = create(:user)
+      login_user(user)
+      playlist = create(:playlist, user: user)
+      track1 = create(:track)
+      track2 = create(:track)
+      create(:playlist_track, playlist: playlist, track: track1, position: 1)
+
+      expect {
+        post playlist_tracks_path(playlist), params: { track_ids: [track1.id, track2.id] }
+      }.to change(playlist.playlist_tracks, :count).by(1)
+
+      expect(playlist.playlist_tracks.order(:position).map(&:track)).to eq([track1, track2])
+    end
+
+    it "assigns positions after existing tracks" do
+      user = create(:user)
+      login_user(user)
+      playlist = create(:playlist, user: user)
+      existing_track = create(:track)
+      create(:playlist_track, playlist: playlist, track: existing_track, position: 5)
+
+      track1 = create(:track)
+      track2 = create(:track)
+
+      post playlist_tracks_path(playlist), params: { track_ids: [track1.id, track2.id] }
+
+      positions = playlist.playlist_tracks.order(:position).pluck(:position)
+      expect(positions).to eq([5, 6, 7])
+    end
+
+    it "ignores invalid track IDs" do
+      user = create(:user)
+      login_user(user)
+      playlist = create(:playlist, user: user)
+      track = create(:track)
+
+      expect {
+        post playlist_tracks_path(playlist), params: { track_ids: [track.id, 999999] }
+      }.to change(playlist.playlist_tracks, :count).by(1)
+    end
+  end
+
   describe "DELETE /playlists/:playlist_id/tracks/:id" do
     it "requires authentication" do
       playlist = create(:playlist)
