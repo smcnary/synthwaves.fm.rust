@@ -34,6 +34,18 @@
       <%= yield %>
     </main>
 
+    <!-- Queue panel (slide-out) -->
+    <div id="queue-panel-container" data-turbo-permanent data-controller="queue-panel">
+      <div data-queue-panel-target="panel"
+           class="fixed right-0 bottom-16 w-80 max-h-[60vh] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-tl-lg rounded-bl-lg shadow-xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Queue</h3>
+          <button type="button" data-action="queue-panel#clear" class="text-xs text-red-500 hover:text-red-700">Clear</button>
+        </div>
+        <div data-queue-panel-target="list" class="overflow-y-auto flex-1"></div>
+      </div>
+    </div>
+
     <!-- Persistent player bar -->
     <div id="player-bar" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50"
          data-turbo-permanent
@@ -63,21 +75,48 @@
             </span>
           </div>
 
-          <!-- Controls -->
-          <div class="flex items-center gap-3">
-            <button data-action="player#previous" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+          <!-- Controls: shuffle, prev, play/pause, next, repeat -->
+          <div class="flex items-center gap-2">
+            <!-- Shuffle -->
+            <button data-action="player#toggleShuffle" class="p-1" title="Shuffle">
+              <svg data-player-target="shuffleIcon" class="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 4l3 3-3 3M18 20l3-3-3-3M2 7h6.5c2 0 3.5 2 5 5s3 5 5 5H21M2 17h6.5c2 0 3.5-2 5-5s3-5 5-5H21"/>
+              </svg>
+            </button>
+            <!-- Prev -->
+            <button data-action="player#previous" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/></svg>
             </button>
+            <!-- Play/Pause -->
             <button data-action="player#toggle" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700">
               <svg data-player-target="playIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
               <svg data-player-target="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z"/></svg>
             </button>
-            <button data-action="player#next" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <!-- Next -->
+            <button data-action="player#next" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 5.168A1 1 0 0010 6v2.798l-5.445-3.63A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4z"/></svg>
+            </button>
+            <!-- Repeat -->
+            <button data-action="player#cycleRepeat" class="p-1 relative" title="Repeat">
+              <!-- Repeat off (gray) -->
+              <svg data-player-target="repeatOff" class="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/>
+              </svg>
+              <!-- Repeat all (blue) -->
+              <svg data-player-target="repeatAll" class="w-4 h-4 text-blue-500 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/>
+              </svg>
+              <!-- Repeat one (blue + badge) -->
+              <span data-player-target="repeatOne" class="hidden">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/>
+                </svg>
+                <span class="absolute -top-1 -right-1 text-[9px] font-bold text-blue-500">1</span>
+              </span>
             </button>
           </div>
 
-          <!-- Time & volume -->
+          <!-- Time & volume & queue toggle -->
           <div class="flex items-center gap-3 flex-1 justify-end">
             <span class="text-xs text-gray-500 tabular-nums" data-player-target="currentTime">0:00</span>
             <span class="text-xs text-gray-500">/</span>
@@ -86,6 +125,12 @@
                    class="w-20 h-1 accent-blue-600"
                    data-player-target="volume"
                    data-action="input->player#setVolume">
+            <!-- Queue toggle -->
+            <button data-action="player#toggleQueue" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1" title="Queue">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ RSpec.describe TrackRowComponent, type: :component do
   describe "hover styling" do
     it "uses valid Tailwind dark mode hover class" do
       html = render_component
-      row = html.at_css("[data-controller='song-row']")
+      row = html.at_css("[data-controller]")
       classes = row["class"]
       expect(classes).to include("dark:hover:bg-gray-700")
       expect(classes).not_to include("gray-750")
@@ -23,12 +23,14 @@ RSpec.describe TrackRowComponent, type: :component do
 
   describe "stimulus wiring" do
     it "sets data-controller on the outer div" do
-      expect(render_component.css("[data-controller='song-row']")).to be_present
+      html = render_component
+      row = html.at_css("[data-controller]")
+      expect(row["data-controller"]).to include("song-row")
     end
 
     it "sets track data values" do
       html = render_component
-      row = html.at_css("[data-controller='song-row']")
+      row = html.at_css("[data-controller]")
       expect(row["data-song-row-track-id-value"]).to eq(track.id.to_s)
       expect(row["data-song-row-title-value"]).to eq("Test Song")
       expect(row["data-song-row-artist-value"]).to eq("Test Artist")
@@ -37,6 +39,20 @@ RSpec.describe TrackRowComponent, type: :component do
 
     it "has a play button with the correct data-action" do
       expect(render_component.css("button[data-action='song-row#play']")).to be_present
+    end
+  end
+
+  describe "now-playing wiring" do
+    it "includes now-playing in data-controller" do
+      html = render_component
+      row = html.at_css("[data-controller]")
+      expect(row["data-controller"]).to include("now-playing")
+    end
+
+    it "sets data-now-playing-track-id-value to the track id" do
+      html = render_component
+      row = html.at_css("[data-controller]")
+      expect(row["data-now-playing-track-id-value"]).to eq(track.id.to_s)
     end
   end
 

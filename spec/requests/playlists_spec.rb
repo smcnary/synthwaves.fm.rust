@@ -67,7 +67,7 @@ RSpec.describe "Playlists", type: :request do
     end
 
     it "renders song-row controller on each track" do
-      expect(response.body).to include('data-controller="song-row"')
+      expect(response.body).to include('data-controller="song-row now-playing"')
     end
 
     it "renders play button with correct data-action" do

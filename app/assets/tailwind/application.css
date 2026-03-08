@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+[data-now-playing="true"] {
+  @apply bg-blue-50 dark:bg-blue-900/20;
+}

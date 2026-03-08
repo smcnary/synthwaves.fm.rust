@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["audio", "progress", "title", "artist", "artwork", "playIcon", "pauseIcon", "currentTime", "duration", "volume", "progressBar", "liveIndicator", "prevButton", "nextButton"]
+  static targets = ["audio", "progress", "title", "artist", "artwork", "playIcon", "pauseIcon", "currentTime", "duration", "volume", "progressBar", "liveIndicator", "prevButton", "nextButton", "repeatOff", "repeatAll", "repeatOne", "shuffleIcon"]
   static values = { playHistoryUrl: String }
 
   connect() {
@@ -9,24 +9,38 @@ export default class extends Controller {
     this.youtubeActive = false
     this.youtubePlaying = false
     this.currentIsLive = false
+    this.repeatMode = "off"
+    this.shuffleEnabled = false
+    this.youtubeCurrentTime = 0
+    this.youtubeDuration = 0
 
     this.audio.addEventListener("timeupdate", () => this.onTimeUpdate())
     this.audio.addEventListener("ended", () => this.onEnded())
     this.audio.addEventListener("loadedmetadata", () => this.onLoadedMetadata())
-    this.audio.addEventListener("play", () => this.updatePlayPauseIcon())
-    this.audio.addEventListener("pause", () => this.updatePlayPauseIcon())
+    this.audio.addEventListener("play", () => {
+      this.updatePlayPauseIcon()
+      this.startPositionSave()
+    })
+    this.audio.addEventListener("pause", () => {
+      this.updatePlayPauseIcon()
+      this.stopPositionSave()
+    })
 
     this.playTrackHandler = (e) => this.playTrack(e.detail)
     this.playYouTubeHandler = (e) => this.playYouTube(e.detail)
     this.youtubeStateHandler = (e) => this.onYouTubeState(e.detail)
     this.youtubeTimeHandler = (e) => this.onYouTubeTime(e.detail)
     this.youtubeStoppedHandler = () => this.onYouTubeStopped()
+    this.repeatChangedHandler = (e) => this.onRepeatChanged(e.detail)
+    this.shuffleChangedHandler = (e) => this.onShuffleChanged(e.detail)
 
     document.addEventListener("player:play", this.playTrackHandler)
     document.addEventListener("player:playYouTube", this.playYouTubeHandler)
     document.addEventListener("youtube:stateChange", this.youtubeStateHandler)
     document.addEventListener("youtube:timeUpdate", this.youtubeTimeHandler)
     document.addEventListener("youtube:stopped", this.youtubeStoppedHandler)
+    document.addEventListener("queue:repeatChanged", this.repeatChangedHandler)
+    document.addEventListener("queue:shuffleChanged", this.shuffleChangedHandler)
 
     if ("mediaSession" in navigator) {
       navigator.mediaSession.setActionHandler("play", () => this.toggle())
@@ -34,18 +48,118 @@ export default class extends Controller {
       navigator.mediaSession.setActionHandler("previoustrack", () => this.previous())
       navigator.mediaSession.setActionHandler("nexttrack", () => this.next())
     }
+
+    this.restoreSession()
   }
 
   disconnect() {
+    this.stopPositionSave()
     document.removeEventListener("player:play", this.playTrackHandler)
     document.removeEventListener("player:playYouTube", this.playYouTubeHandler)
     document.removeEventListener("youtube:stateChange", this.youtubeStateHandler)
     document.removeEventListener("youtube:timeUpdate", this.youtubeTimeHandler)
     document.removeEventListener("youtube:stopped", this.youtubeStoppedHandler)
+    document.removeEventListener("queue:repeatChanged", this.repeatChangedHandler)
+    document.removeEventListener("queue:shuffleChanged", this.shuffleChangedHandler)
   }
 
+  // Session restore
+
+  restoreSession() {
+    const savedVolume = localStorage.getItem("playerVolume")
+    if (savedVolume !== null) {
+      this.audio.volume = parseFloat(savedVolume)
+      this.volumeTarget.value = savedVolume
+    }
+
+    this.repeatMode = localStorage.getItem("playerRepeatMode") || "off"
+    this.updateRepeatIcon()
+
+    this.shuffleEnabled = localStorage.getItem("playerShuffle") === "true"
+    this.updateShuffleIcon()
+
+    const savedTrack = localStorage.getItem("playerCurrentTrack")
+    if (!savedTrack) return
+
+    try {
+      const track = JSON.parse(savedTrack)
+      this.currentTrackId = track.trackId
+      this.titleTarget.textContent = track.title || "Not playing"
+      this.artistTarget.textContent = track.artist || ""
+      this.currentIsLive = track.isLive || false
+
+      if (this.currentIsLive) {
+        this.showLiveMode()
+      } else {
+        this.showNormalMode()
+      }
+
+      const savedTime = parseFloat(localStorage.getItem("playerCurrentTime") || "0")
+
+      if (track.youtubeVideoId) {
+        this.youtubeActive = true
+        this._currentYouTubeVideoId = track.youtubeVideoId
+        if (savedTime > 0 && !track.isLive) {
+          this.currentTimeTarget.textContent = this.formatTime(savedTime)
+        }
+      } else if (track.streamUrl) {
+        this.audio.src = track.streamUrl
+        if (savedTime > 0) {
+          this.audio.addEventListener("loadedmetadata", () => {
+            this.audio.currentTime = savedTime
+          }, { once: true })
+          this.currentTimeTarget.textContent = this.formatTime(savedTime)
+        }
+      }
+
+      this.dispatchNowPlaying(track.trackId)
+
+      if ("mediaSession" in navigator && track.title) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: track.isLive ? "Live" : (track.artist || "")
+        })
+      }
+    } catch (e) {
+      // Ignore invalid saved data
+    }
+  }
+
+  // Position persistence
+
+  savePosition() {
+    if (this.currentIsLive) return
+
+    let currentTime = 0
+    if (this.youtubeActive) {
+      currentTime = this.youtubeCurrentTime || 0
+    } else {
+      currentTime = this.audio.currentTime || 0
+    }
+
+    localStorage.setItem("playerCurrentTime", currentTime.toString())
+  }
+
+  startPositionSave() {
+    this.stopPositionSave()
+    this._positionInterval = setInterval(() => this.savePosition(), 5000)
+  }
+
+  stopPositionSave() {
+    if (this._positionInterval) {
+      clearInterval(this._positionInterval)
+      this._positionInterval = null
+    }
+  }
+
+  saveCurrentTrack(track) {
+    localStorage.setItem("playerCurrentTrack", JSON.stringify(track))
+    localStorage.setItem("playerCurrentTime", "0")
+  }
+
+  // Playback
+
   playTrack({ trackId, title, artist, streamUrl }) {
-    // Switch from YouTube to local
     if (this.youtubeActive) {
       document.dispatchEvent(new CustomEvent("youtube:stop"))
       this.youtubeActive = false
@@ -54,12 +168,17 @@ export default class extends Controller {
 
     this.currentIsLive = false
     this.currentTrackId = trackId
+    this._currentYouTubeVideoId = null
     this.titleTarget.textContent = title
     this.artistTarget.textContent = artist
     this.showNormalMode()
 
     this.audio.src = streamUrl
     this.audio.play()
+
+    this.saveCurrentTrack({ trackId, title, artist, streamUrl })
+    this.startPositionSave()
+    this.dispatchNowPlaying(trackId)
 
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({ title, artist })
@@ -69,13 +188,15 @@ export default class extends Controller {
   }
 
   playYouTube({ trackId, title, artist, youtubeVideoId, isLive }) {
-    // Pause local audio
     this.audio.pause()
     this.audio.removeAttribute("src")
 
     this.youtubeActive = true
     this.currentIsLive = isLive || false
     this.currentTrackId = trackId
+    this._currentYouTubeVideoId = youtubeVideoId
+    this.youtubeCurrentTime = 0
+    this.youtubeDuration = 0
     this.titleTarget.textContent = title
     this.artistTarget.textContent = artist
 
@@ -85,10 +206,13 @@ export default class extends Controller {
       this.showNormalMode()
     }
 
-    // Delegate to YouTube player
     document.dispatchEvent(new CustomEvent("youtube:play", {
       detail: { videoId: youtubeVideoId, isLive: this.currentIsLive }
     }))
+
+    this.saveCurrentTrack({ trackId, title, artist, youtubeVideoId, isLive: isLive || false })
+    this.startPositionSave()
+    this.dispatchNowPlaying(trackId)
 
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -97,7 +221,6 @@ export default class extends Controller {
       })
     }
 
-    // Don't record play history for live streams
     if (!isLive && trackId) {
       this.recordPlay(trackId)
     }
@@ -124,7 +247,7 @@ export default class extends Controller {
   }
 
   seek(event) {
-    if (this.youtubeActive) return // YouTube seeking not supported via progress bar
+    if (this.youtubeActive) return
     const rect = event.currentTarget.getBoundingClientRect()
     const percent = (event.clientX - rect.left) / rect.width
     this.audio.currentTime = percent * this.audio.duration
@@ -132,6 +255,67 @@ export default class extends Controller {
 
   setVolume() {
     this.audio.volume = this.volumeTarget.value
+    localStorage.setItem("playerVolume", this.volumeTarget.value)
+  }
+
+  // Repeat
+
+  cycleRepeat() {
+    document.dispatchEvent(new CustomEvent("queue:cycleRepeat"))
+  }
+
+  onRepeatChanged({ mode }) {
+    this.repeatMode = mode
+    this.updateRepeatIcon()
+  }
+
+  updateRepeatIcon() {
+    if (this.hasRepeatOffTarget) {
+      this.repeatOffTarget.classList.toggle("hidden", this.repeatMode !== "off")
+    }
+    if (this.hasRepeatAllTarget) {
+      this.repeatAllTarget.classList.toggle("hidden", this.repeatMode !== "all")
+    }
+    if (this.hasRepeatOneTarget) {
+      this.repeatOneTarget.classList.toggle("hidden", this.repeatMode !== "one")
+    }
+  }
+
+  // Shuffle
+
+  toggleShuffle() {
+    document.dispatchEvent(new CustomEvent("queue:toggleShuffle"))
+  }
+
+  onShuffleChanged({ enabled }) {
+    this.shuffleEnabled = enabled
+    this.updateShuffleIcon()
+  }
+
+  updateShuffleIcon() {
+    if (this.hasShuffleIconTarget) {
+      if (this.shuffleEnabled) {
+        this.shuffleIconTarget.classList.remove("text-gray-500")
+        this.shuffleIconTarget.classList.add("text-blue-500")
+      } else {
+        this.shuffleIconTarget.classList.remove("text-blue-500")
+        this.shuffleIconTarget.classList.add("text-gray-500")
+      }
+    }
+  }
+
+  // Queue panel
+
+  toggleQueue() {
+    document.dispatchEvent(new CustomEvent("queue-panel:toggle"))
+  }
+
+  // Now playing
+
+  dispatchNowPlaying(trackId) {
+    document.dispatchEvent(new CustomEvent("player:nowPlaying", {
+      detail: { trackId }
+    }))
   }
 
   // Local audio events
@@ -151,6 +335,11 @@ export default class extends Controller {
   }
 
   onEnded() {
+    if (this.repeatMode === "one") {
+      this.audio.currentTime = 0
+      this.audio.play()
+      return
+    }
     document.dispatchEvent(new CustomEvent("queue:next"))
   }
 
@@ -163,18 +352,30 @@ export default class extends Controller {
       this.youtubePlaying = true
       this.playIconTarget.classList.add("hidden")
       this.pauseIconTarget.classList.remove("hidden")
+      this.startPositionSave()
     } else if (state === "paused") {
       this.youtubePlaying = false
       this.playIconTarget.classList.remove("hidden")
       this.pauseIconTarget.classList.add("hidden")
+      this.stopPositionSave()
     } else if (state === "ended") {
       this.youtubePlaying = false
+      this.stopPositionSave()
+      if (this.repeatMode === "one" && this._currentYouTubeVideoId) {
+        document.dispatchEvent(new CustomEvent("youtube:play", {
+          detail: { videoId: this._currentYouTubeVideoId, isLive: false }
+        }))
+        return
+      }
       document.dispatchEvent(new CustomEvent("queue:next"))
     }
   }
 
   onYouTubeTime({ currentTime, duration }) {
     if (!this.youtubeActive || this.currentIsLive) return
+
+    this.youtubeCurrentTime = currentTime
+    this.youtubeDuration = duration
 
     if (duration > 0) {
       const percent = (currentTime / duration) * 100
@@ -187,6 +388,7 @@ export default class extends Controller {
   onYouTubeStopped() {
     this.youtubeActive = false
     this.youtubePlaying = false
+    this.stopPositionSave()
     this.showNormalMode()
     this.updatePlayPauseIcon()
   }
@@ -215,7 +417,7 @@ export default class extends Controller {
   }
 
   updatePlayPauseIcon() {
-    if (this.youtubeActive) return // YouTube state change handles this
+    if (this.youtubeActive) return
 
     if (this.audio.paused) {
       this.playIconTarget.classList.remove("hidden")
