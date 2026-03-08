@@ -15,6 +15,28 @@ RSpec.describe Track, type: :model do
     it { should validate_presence_of(:title) }
   end
 
+  describe ".search" do
+    it "returns tracks matching the query" do
+      matching = create(:track, title: "Bohemian Rhapsody")
+      non_matching = create(:track, title: "Stairway to Heaven")
+
+      results = Track.search("Bohemian")
+
+      expect(results).to include(matching)
+      expect(results).not_to include(non_matching)
+    end
+
+    it "returns all tracks when query is nil" do
+      tracks = create_list(:track, 3)
+      expect(Track.search(nil)).to match_array(tracks)
+    end
+
+    it "returns all tracks when query is blank" do
+      tracks = create_list(:track, 3)
+      expect(Track.search("")).to match_array(tracks)
+    end
+  end
+
   describe "callbacks" do
     it "enqueues AudioConversionJob for webm files" do
       track = build(:track, file_format: "webm")

@@ -4,20 +4,34 @@
     <%= link_to "Upload", new_track_path, class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" %>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-    <% @tracks.each do |track| %>
-      <%= render TrackRowComponent.new(track: track, link_title: true, link_subtitle: true) do |c| %>
-        <% c.with_trailing do %>
-          <%= render "playlist_tracks/add_menu", track: track, playlists: current_user_playlists %>
-          <%= link_to edit_track_path(track), class: "text-gray-400 hover:text-gray-600" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-          <% end %>
-        <% end %>
-      <% end %>
+  <div data-controller="search" class="mb-6">
+    <%= form_with url: tracks_path, method: :get, data: { turbo_frame: "tracks-list", search_target: "form", action: "input->search#submit" } do |f| %>
+      <input type="text" name="q" value="<%= @query %>" placeholder="Search tracks..."
+             class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-lg px-4 py-3"
+             data-search-target="input" autofocus>
     <% end %>
   </div>
 
-  <div class="mt-6 flex justify-center">
-    <%== @pagy.series_nav %>
-  </div>
+  <turbo-frame id="tracks-list" data-turbo-action="advance">
+    <% if @tracks.any? %>
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <% @tracks.each do |track| %>
+          <%= render TrackRowComponent.new(track: track, link_title: true, link_subtitle: true) do |c| %>
+            <% c.with_trailing do %>
+              <%= render "playlist_tracks/add_menu", track: track, playlists: current_user_playlists %>
+              <%= link_to edit_track_path(track), data: { turbo_frame: "_top" }, class: "text-gray-400 hover:text-gray-600" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="mt-6 flex justify-center">
+        <%== @pagy.series_nav %>
+      </div>
+    <% else %>
+      <p class="text-gray-500">No tracks found for "<%= @query %>".</p>
+    <% end %>
+  </turbo-frame>
 </div>

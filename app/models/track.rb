@@ -9,6 +9,8 @@ class Track < ApplicationRecord
 
   validates :title, presence: true
 
+  scope :search, ->(query) { where("title LIKE ?", "%#{query}%") if query.present? }
+
   after_create_commit :convert_audio_if_needed
 
   private

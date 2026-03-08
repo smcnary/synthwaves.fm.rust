@@ -22,6 +22,34 @@ RSpec.describe "Tracks", type: :request do
       get tracks_path, params: {page: 2}
       expect(response).to have_http_status(:ok)
     end
+
+    it "filters tracks by search query" do
+      matching = create(:track, title: "Bohemian Rhapsody")
+      non_matching = create(:track, title: "Stairway to Heaven")
+
+      get tracks_path, params: {q: "Bohemian"}
+
+      expect(response.body).to include("Bohemian Rhapsody")
+      expect(response.body).not_to include("Stairway to Heaven")
+    end
+
+    it "returns all tracks when query is empty" do
+      track1 = create(:track, title: "Track Alpha")
+      track2 = create(:track, title: "Track Beta")
+
+      get tracks_path, params: {q: ""}
+
+      expect(response.body).to include("Track Alpha")
+      expect(response.body).to include("Track Beta")
+    end
+
+    it "shows empty state when no tracks match" do
+      create(:track, title: "Something Else")
+
+      get tracks_path, params: {q: "xyznonexistent"}
+
+      expect(response.body).to include("No tracks found")
+    end
   end
 
   describe "GET /tracks/:id" do

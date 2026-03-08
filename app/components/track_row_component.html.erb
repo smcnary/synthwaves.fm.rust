@@ -14,7 +14,7 @@
     <div>
       <div class="font-medium text-gray-900 dark:text-white">
         <% if link_title? %>
-          <%= link_to track.title, track_path(track), class: "hover:underline" %>
+          <%= link_to track.title, track_path(track), data: { turbo_frame: "_top" }, class: "hover:underline" %>
         <% else %>
           <%= track.title %>
         <% end %>
@@ -24,14 +24,14 @@
           <% parts = [] %>
           <% if show_artist? %>
             <% if link_subtitle? %>
-              <% parts << link_to(track.artist.name, artist_path(track.artist), class: "hover:underline") %>
+              <% parts << link_to(track.artist.name, artist_path(track.artist), data: { turbo_frame: "_top" }, class: "hover:underline") %>
             <% else %>
               <% parts << track.artist.name %>
             <% end %>
           <% end %>
           <% if show_album? %>
             <% if link_subtitle? %>
-              <% parts << link_to(track.album.title, album_path(track.album), class: "hover:underline") %>
+              <% parts << link_to(track.album.title, album_path(track.album), data: { turbo_frame: "_top" }, class: "hover:underline") %>
             <% else %>
               <% parts << track.album.title %>
             <% end %>
