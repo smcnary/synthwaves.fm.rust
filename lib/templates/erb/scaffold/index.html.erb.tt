@@ -1,0 +1,28 @@
+<%% content_for :title, "<%= human_name.pluralize %>" %>
+<%%= turbo_stream_from :<%= plural_table_name %> %>
+
+<div class="w-full">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1 class="font-bold text-4xl dark:text-white"><%= human_name.pluralize %></h1>
+    <%%= link_to "New <%= human_name.downcase %>", new_<%= singular_route_name %>_path, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 text-white font-medium" %>
+  </div>
+
+  <%% if @<%= plural_table_name %>.any? %>
+    <!-- Sort Links -->
+    <div class="mb-6">
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Sort by:</p>
+      <div class="flex flex-wrap gap-2">
+<% attributes.reject{|attr| attr.password_digest?}.each do |attribute| -%>
+        <%%= sort_link(@<%= plural_table_name %>, :<%= attribute.name %>, "<%= attribute.human_name %>", class: "inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors") %>
+<% end -%>
+      </div>
+    </div>
+
+    <!-- Records Container -->
+    <div id="<%= plural_table_name %>" class="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <%%= render @<%= plural_table_name %> %>
+    </div>
+  <%% else %>
+    <p class="text-center my-10 dark:text-gray-300">No <%= human_name.downcase.pluralize %> found.</p>
+  <%% end %>
+</div>

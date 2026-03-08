@@ -1,0 +1,13 @@
+<%% content_for :title, "New <%= human_name.downcase %>" %>
+
+<div class="max-w-4xl w-full mx-auto">
+  <h1 class="font-bold text-4xl mb-6 dark:text-white">New <%= human_name.downcase %></h1>
+
+  <div class="mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+    <%%= render "form", <%= singular_table_name %>: @<%= singular_table_name %> %>
+  </div>
+
+  <div class="flex flex-col sm:flex-row gap-4">
+    <%%= link_to "Back to <%= human_name.pluralize.downcase %>", <%= index_helper(type: :path) %>, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-medium" %>
+  </div>
+</div>
