@@ -2,11 +2,10 @@ class PlaylistTracksController < ApplicationController
   before_action :set_playlist
 
   def create
-    track = Track.find(params[:track_id])
-
-    unless @playlist.playlist_tracks.exists?(track: track)
-      next_position = (@playlist.playlist_tracks.maximum(:position) || 0) + 1
-      @playlist.playlist_tracks.create!(track: track, position: next_position)
+    if params[:album_id].present?
+      add_album_tracks
+    else
+      add_single_track
     end
 
     redirect_back fallback_location: @playlist
@@ -18,6 +17,28 @@ class PlaylistTracksController < ApplicationController
   end
 
   private
+
+  def add_single_track
+    track = Track.find(params[:track_id])
+
+    unless @playlist.playlist_tracks.exists?(track: track)
+      next_position = (@playlist.playlist_tracks.maximum(:position) || 0) + 1
+      @playlist.playlist_tracks.create!(track: track, position: next_position)
+    end
+  end
+
+  def add_album_tracks
+    album = Album.find(params[:album_id])
+    tracks = album.tracks.order(:disc_number, :track_number)
+    next_position = (@playlist.playlist_tracks.maximum(:position) || 0) + 1
+
+    tracks.each do |track|
+      unless @playlist.playlist_tracks.exists?(track: track)
+        @playlist.playlist_tracks.create!(track: track, position: next_position)
+        next_position += 1
+      end
+    end
+  end
 
   def set_playlist
     @playlist = Current.user.playlists.find(params[:playlist_id])
