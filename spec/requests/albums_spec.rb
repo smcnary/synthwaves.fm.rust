@@ -11,6 +11,87 @@ RSpec.describe "Albums", type: :request do
       get albums_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "filters albums by search query" do
+      create(:album, title: "Abbey Road")
+      create(:album, title: "Dark Side of the Moon")
+
+      get albums_path, params: {q: "Abbey"}
+
+      expect(response.body).to include("Abbey Road")
+      expect(response.body).not_to include("Dark Side of the Moon")
+    end
+
+    it "shows no albums found message when search has no results" do
+      create(:album, title: "Abbey Road")
+
+      get albums_path, params: {q: "Nonexistent"}
+
+      expect(response.body).to include("No albums found")
+      expect(response.body).to include("Nonexistent")
+    end
+
+    it "sorts albums by title ascending by default" do
+      create(:album, title: "Zebra Album")
+      create(:album, title: "Alpha Album")
+
+      get albums_path
+
+      expect(response.body.index("Alpha Album")).to be < response.body.index("Zebra Album")
+    end
+
+    it "sorts albums by title descending" do
+      create(:album, title: "Zebra Album")
+      create(:album, title: "Alpha Album")
+
+      get albums_path, params: {sort: "title", direction: "desc"}
+
+      expect(response.body.index("Zebra Album")).to be < response.body.index("Alpha Album")
+    end
+
+    it "sorts albums by recently added" do
+      create(:album, title: "Older Album", created_at: 2.days.ago)
+      create(:album, title: "Newer Album", created_at: 1.hour.ago)
+
+      get albums_path, params: {sort: "created_at", direction: "desc"}
+
+      expect(response.body.index("Newer Album")).to be < response.body.index("Older Album")
+    end
+
+    it "sorts albums by year" do
+      create(:album, title: "Old Album", year: 1970)
+      create(:album, title: "New Album", year: 2020)
+
+      get albums_path, params: {sort: "year", direction: "desc"}
+
+      expect(response.body.index("New Album")).to be < response.body.index("Old Album")
+    end
+
+    it "excludes podcast albums from index" do
+      create(:album, title: "Music Album", artist: create(:artist, category: "music"))
+      create(:album, title: "Podcast Album", artist: create(:artist, :podcast))
+
+      get albums_path
+
+      expect(response.body).to include("Music Album")
+      expect(response.body).not_to include("Podcast Album")
+    end
+
+    it "paginates results" do
+      26.times { |i| create(:album, title: "Album #{i.to_s.rjust(2, "0")}") }
+
+      get albums_path
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders album links that break out of the turbo frame" do
+      create(:album, title: "Turbo Album")
+
+      get albums_path
+
+      expect(response.body).to include('data-turbo-frame="_top"')
+    end
   end
 
   describe "GET /albums/:id" do
@@ -65,7 +146,7 @@ RSpec.describe "Albums", type: :request do
 
     it "paginates when more than 20 tracks" do
       album = create(:album)
-      21.times { |i| create(:track, album: album, track_number: i + 1, title: "Track #{(i + 1).to_s.rjust(3, '0')}") }
+      21.times { |i| create(:track, album: album, track_number: i + 1, title: "Track #{(i + 1).to_s.rjust(3, "0")}") }
 
       get album_path(album)
 

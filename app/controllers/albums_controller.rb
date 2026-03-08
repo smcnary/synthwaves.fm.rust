@@ -1,6 +1,14 @@
 class AlbumsController < ApplicationController
+  include Orderable
+
   def index
-    @albums = Album.music.includes(:artist).order(:title)
+    @query = params[:q]
+    @sort = sort_column(Album, default: "title")
+    @direction = sort_direction
+    scope = Album.music.includes(:artist, cover_image_attachment: :blob)
+      .search(@query)
+      .order(@sort => @direction)
+    @pagy, @albums = pagy(:offset, scope)
   end
 
   def show

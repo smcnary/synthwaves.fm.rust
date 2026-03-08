@@ -15,6 +15,25 @@ RSpec.describe Album, type: :model do
     it { should validate_uniqueness_of(:title).scoped_to(:artist_id) }
   end
 
+  describe ".search" do
+    let!(:abbey_road) { create(:album, title: "Abbey Road") }
+    let!(:dark_side) { create(:album, title: "Dark Side of the Moon") }
+
+    it "returns albums matching the query" do
+      expect(Album.search("Abbey")).to include(abbey_road)
+      expect(Album.search("Abbey")).not_to include(dark_side)
+    end
+
+    it "returns no albums when nothing matches" do
+      expect(Album.search("Nonexistent")).to be_empty
+    end
+
+    it "returns all albums when query is blank" do
+      expect(Album.search("")).to include(abbey_road, dark_side)
+      expect(Album.search(nil)).to include(abbey_road, dark_side)
+    end
+  end
+
   describe "category scopes" do
     let!(:music_album) { create(:album, artist: create(:artist, category: "music")) }
     let!(:podcast_album) { create(:album, artist: create(:artist, :podcast)) }

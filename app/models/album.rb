@@ -4,8 +4,17 @@ class Album < ApplicationRecord
   has_one_attached :cover_image
   has_many :favorites, as: :favorable, dependent: :destroy
 
+  SORT_OPTIONS = {
+    "title" => "Title",
+    "year" => "Year",
+    "created_at" => "Recently Added"
+  }.freeze
+
   validates :title, presence: true, uniqueness: {scope: :artist_id}
 
   scope :music, -> { joins(:artist).merge(Artist.music) }
   scope :podcast, -> { joins(:artist).merge(Artist.podcast) }
+  scope :search, ->(query) {
+    where("albums.title LIKE :q", q: "%#{query}%") if query.present?
+  }
 end
