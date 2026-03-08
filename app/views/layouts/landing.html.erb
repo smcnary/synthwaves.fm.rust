@@ -1,37 +1,30 @@
 <!DOCTYPE html>
 <html data-theme="<%= current_theme %>">
   <head>
-    <title><%= content_for(:title) || "Synthwaves.fm" %></title>
-
+    <title><%= content_for(:title) || "SynthWaves.fm" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Synthwaves.fm">
+    <meta name="application-name" content="SynthWaves.fm">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="turbo-refresh-method" content="morph">
     <meta name="turbo-refresh-scroll" content="preserve">
-
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
-    <script>var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;</script>
-
+    <script>
+      var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;
+    </script>
     <%= yield :head %>
-
     <!-- Theme fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link id="theme-font" href="<%= current_theme_font_url %>" rel="stylesheet">
-
     <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
     <meta name="theme-color" content="<%= current_theme_meta_color %>">
-
     <link rel="icon" href="/icon-512.png" type="image/png">
     <link rel="apple-touch-icon" href="/icon-512.png">
-
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-
   <body class="bg-gray-900 synthwave-bg text-white min-h-screen scanlines">
     <%= yield %>
   </body>

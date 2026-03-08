@@ -1,47 +1,38 @@
 <!DOCTYPE html>
 <html data-theme="<%= current_theme %>" data-controller="theme" data-theme-fonts-value="<%= theme_fonts_json %>">
   <head>
-    <title><%= content_for(:title) || "Synthwaves.fm" %></title>
+    <title><%= content_for(:title) || "SynthWaves.fm" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Synthwaves.fm">
+    <meta name="application-name" content="SynthWWves.fm">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
-    <script>var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;</script>
-
+    <script>
+      var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;
+    </script>
     <%= yield :head %>
-
     <!-- Theme fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link id="theme-font" href="<%= current_theme_font_url %>" rel="stylesheet">
-
     <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
     <meta name="theme-color" content="<%= current_theme_meta_color %>">
-
     <link rel="icon" href="/icon-512.png" type="image/png">
     <link rel="apple-touch-icon" href="/icon-512.png">
-
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
     <meta name="turbo-refresh-method" content="morph">
-  <meta name="turbo-refresh-scroll" content="preserve">
-</head>
-
-
+    <meta name="turbo-refresh-scroll" content="preserve">
+  </head>
   <body class="bg-gray-900 synthwave-bg text-white pb-24 scanlines" data-controller="youtube-player">
-
-<%= render 'navbar' %>
+    <%= render 'navbar' %>
     <%= render 'alerts' %>
-
     <main class="container mx-auto my-28 px-5 flex">
       <%= yield %>
     </main>
-
     <!-- Queue panel (slide-out) -->
     <div id="queue-panel-container" data-turbo-permanent data-controller="queue-panel">
       <div data-queue-panel-target="panel"
@@ -53,19 +44,16 @@
         <div data-queue-panel-target="list" class="overflow-y-auto flex-1"></div>
       </div>
     </div>
-
     <!-- Persistent player bar -->
     <div id="player-bar" class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-neon-cyan/20 shadow-neon-cyan z-50"
          data-turbo-permanent
          data-controller="player queue"
          data-player-play-history-url-value="<%= play_histories_path %>">
       <%# <audio> element is created by player_controller.js on <html> so Turbo never detaches it %>
-
       <!-- Progress bar -->
       <div data-player-target="progressBar" class="h-1 bg-gray-700 cursor-pointer" data-action="click->player#seek">
         <div class="h-full bg-gradient-to-r from-neon-pink to-neon-cyan transition-all duration-200" data-player-target="progress" style="width: 0%"></div>
       </div>
-
       <div class="container mx-auto px-4 py-2">
         <div class="flex items-center justify-between gap-4">
           <!-- Track info -->
@@ -82,7 +70,6 @@
               LIVE
             </span>
           </div>
-
           <!-- Controls: shuffle, prev, play/pause, next, repeat -->
           <div class="flex items-center gap-2">
             <!-- Shuffle -->
@@ -123,7 +110,6 @@
               </span>
             </button>
           </div>
-
           <!-- Time & volume & queue toggle -->
           <div class="flex items-center gap-3 flex-1 justify-end">
             <span class="text-xs text-gray-500 tabular-nums" data-player-target="currentTime">0:00</span>
