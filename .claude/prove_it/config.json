@@ -1,8 +1,10 @@
 {
   "enabled": true,
   "sources": [
-    "**/*.*",
-    "replace/these/with/globs/of/your/source/and/test/files.*"
+    "app/**/*.rb",
+    "lib/**/*.rb",
+    "config/**/*.rb",
+    "spec/**/*.rb"
   ],
   "taskAllowedTools": [
     "Read",
