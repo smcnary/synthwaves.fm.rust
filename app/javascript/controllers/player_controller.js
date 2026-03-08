@@ -296,9 +296,9 @@ export default class extends Controller {
     if (this.hasShuffleIconTarget) {
       if (this.shuffleEnabled) {
         this.shuffleIconTarget.classList.remove("text-gray-500")
-        this.shuffleIconTarget.classList.add("text-blue-500")
+        this.shuffleIconTarget.classList.add("text-neon-cyan")
       } else {
-        this.shuffleIconTarget.classList.remove("text-blue-500")
+        this.shuffleIconTarget.classList.remove("text-neon-cyan")
         this.shuffleIconTarget.classList.add("text-gray-500")
       }
     }

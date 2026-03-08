@@ -70,6 +70,13 @@ RSpec.describe "Tracks", type: :request do
       get track_path(track)
       expect(response).to have_http_status(:ok)
     end
+
+    it "renders the add to playlist menu" do
+      playlist = create(:playlist, user: user, name: "My Favorites")
+      get track_path(track)
+      expect(response.body).to include("Add to playlist")
+      expect(response.body).to include("My Favorites")
+    end
   end
 
   describe "GET /tracks/new" do

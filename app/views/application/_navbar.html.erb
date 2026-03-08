@@ -1,20 +1,20 @@
-<nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+<nav class="bg-gray-800/80 backdrop-blur-sm border-b border-neon-cyan/20">
   <div class="container mx-auto py-3">
     <div class="flex items-center justify-between">
       <!-- Left side: App name + nav -->
       <div class="flex items-center space-x-4">
-        <%= link_to root_path, class: "text-xl font-semibold text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300" do %>
+        <%= link_to root_path, class: "text-xl font-display font-semibold text-neon-cyan glow-cyan hover:text-neon-cyan/80" do %>
           Groovy Tunes
         <% end %>
         <% if authenticated? %>
           <nav class="hidden md:flex items-center space-x-3 text-sm">
-            <%= link_to "Artists", artists_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
-            <%= link_to "Albums", albums_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
-            <%= link_to "Tracks", tracks_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
-            <%= link_to "Playlists", playlists_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
-            <%= link_to "Podcasts", podcasts_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
+            <%= link_to "Artists", artists_path, class: "text-gray-400 hover:text-neon-cyan transition-colors" %>
+            <%= link_to "Albums", albums_path, class: "text-gray-400 hover:text-neon-cyan transition-colors" %>
+            <%= link_to "Tracks", tracks_path, class: "text-gray-400 hover:text-neon-cyan transition-colors" %>
+            <%= link_to "Playlists", playlists_path, class: "text-gray-400 hover:text-neon-cyan transition-colors" %>
+            <%= link_to "Podcasts", podcasts_path, class: "text-gray-400 hover:text-neon-cyan transition-colors" %>
             <% if Flipper.enabled?(:youtube_radio, Current.user) %>
-              <%= link_to "Radio", radio_stations_path, class: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
+              <%= link_to "Radio", radio_stations_path, class: "text-gray-400 hover:text-neon-cyan transition-colors" %>
             <% end %>
           </nav>
         <% end %>
@@ -27,17 +27,17 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <input type="text" placeholder="Search..."
-                   class="w-48 lg:w-64 pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   class="w-48 lg:w-64 pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:border-transparent placeholder-gray-500"
                    data-global-search-target="input"
                    data-action="input->global-search#search keydown->global-search#keydown">
           </div>
-          <div class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto"
+          <div class="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50 max-h-96 overflow-y-auto"
                data-global-search-target="dropdown">
             <turbo-frame id="navbar-search-results" data-global-search-target="frame"></turbo-frame>
           </div>
         </div>
         <!-- Mobile search icon -->
-        <%= link_to search_path, class: "md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" do %>
+        <%= link_to search_path, class: "md:hidden text-gray-400 hover:text-neon-cyan" do %>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
@@ -46,29 +46,29 @@
       <!-- Right side: User Dropdown or Auth links -->
       <% if authenticated? %>
         <details class="relative">
-          <summary class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer list-none">
+          <summary class="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-neon-cyan cursor-pointer list-none">
             <%= Current.user.email_address %>
             <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </summary>
-          <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-            <%= link_to "Profile", profile_path, class: "block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" %>
+          <div class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg border border-gray-700 py-1 z-50">
+            <%= link_to "Profile", profile_path, class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-neon-cyan" %>
             <% if Current.user.admin? %>
-              <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-              <%= link_to "Admin", "/admin", class: "block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" %>
-              <%= link_to "Jobs", "/admin/jobs", class: "block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" %>
-              <%= link_to "Feature Flags", "/admin/flipper", class: "block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" %>
-              <%= link_to "Maintenance", "/admin/maintenance_tasks", class: "block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" %>
+              <div class="border-t border-gray-700 my-1"></div>
+              <%= link_to "Admin", "/admin", class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-neon-cyan" %>
+              <%= link_to "Jobs", "/admin/jobs", class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-neon-cyan" %>
+              <%= link_to "Feature Flags", "/admin/flipper", class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-neon-cyan" %>
+              <%= link_to "Maintenance", "/admin/maintenance_tasks", class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-neon-cyan" %>
             <% end %>
-            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-            <%= button_to "Sign Out", session_path, method: :delete, data: { turbo_method: :delete }, class: "w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700" %>
+            <div class="border-t border-gray-700 my-1"></div>
+            <%= button_to "Sign Out", session_path, method: :delete, data: { turbo_method: :delete }, class: "w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700" %>
           </div>
         </details>
       <% else %>
         <div class="flex items-center space-x-1">
-          <%= link_to "Log in", new_session_path, class: "px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" %>
-          <%= link_to "Sign up", new_registration_path, class: "px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200" %>
+          <%= link_to "Log in", new_session_path, class: "px-3 py-2 rounded-md text-sm font-medium bg-gray-700 text-white hover:bg-gray-600 transition-colors duration-200" %>
+          <%= link_to "Sign up", new_registration_path, class: "px-4 py-2 rounded-lg text-sm font-medium text-white bg-sunset-gradient hover:shadow-neon-pink transition-shadow duration-200" %>
         </div>
       <% end %>
     </div>

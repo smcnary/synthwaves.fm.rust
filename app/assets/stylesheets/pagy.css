@@ -1,9 +1,4 @@
 .pagy {
-  --B: 1;
-  --H: 0;
-  --S: 0;
-  --L: 50;
-  --A: 1;
   --spacing: 0.125rem;
   --padding: 0.75rem;
   --rounding: 1.75rem;
@@ -12,13 +7,13 @@
   --font-weight: 600;
   --line-height: 1.75;
 
-  --text:               hsla(var(--H) var(--S) calc(var(--L) - (25 * var(--B))) / var(--A));
-  --text-hover:         hsla(var(--H) var(--S) calc(var(--L) - (30 * var(--B))) / var(--A));
-  --text-current:       hsla(var(--H) var(--S) calc(100 * (var(--B) + 1)) / var(--A));
-  --background:         hsla(var(--H) var(--S) calc(var(--L) + (30 * var(--B))) / var(--A));
-  --background-hover:   hsla(var(--H) var(--S) calc(var(--L) + (20 * var(--B))) / var(--A));
-  --background-current: hsla(var(--H) var(--S) var(--L) / var(--A));
-  --background-input:   hsla(var(--H) var(--S) calc(var(--L) + (45 * var(--B))) / var(--A));
+  --text:               #a99bc7;
+  --text-hover:         #00f0ff;
+  --text-current:       #0a0a1a;
+  --background:         #12082a;
+  --background-hover:   #2a1f4e;
+  --background-current: #ff2d95;
+  --background-input:   #2a1f4e;
 
   color: var(--text);
   font-size: var(--font-size);
@@ -57,7 +52,7 @@
 .pagy a[aria-current] {  /* current page */
   background-color: var(--background-current);
   color: var(--text-current);
-  border-color: var(--text);
+  border-color: var(--background-current);
 }
 
 .pagy label {

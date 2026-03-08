@@ -4,14 +4,14 @@
   <div data-controller="search" class="mb-8">
     <%= form_with url: search_path, method: :get, data: { turbo_frame: "search-results", search_target: "form", action: "input->search#submit" } do |f| %>
       <input type="text" name="q" value="<%= @query %>" placeholder="Search artists, albums, tracks..."
-             class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-lg px-4 py-3"
+             class="w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan text-lg px-4 py-3"
              data-search-target="input" autofocus>
 
       <div class="flex flex-wrap items-end gap-4 mt-4">
         <div class="flex flex-col">
-          <label for="genre" class="text-sm text-gray-500 dark:text-gray-400 mb-1">Genre</label>
+          <label for="genre" class="text-sm text-gray-500 mb-1">Genre</label>
           <select name="genre" id="genre"
-                  class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm"
+                  class="rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan px-3 py-2 text-sm"
                   data-action="change->search#submit">
             <option value="">All Genres</option>
             <% @genres.each do |genre| %>
@@ -21,27 +21,27 @@
         </div>
 
         <div class="flex flex-col">
-          <label for="year_from" class="text-sm text-gray-500 dark:text-gray-400 mb-1">Year From</label>
+          <label for="year_from" class="text-sm text-gray-500 mb-1">Year From</label>
           <input type="number" name="year_from" id="year_from" value="<%= @year_from %>"
                  placeholder="e.g. 2010" min="1900" max="2099"
-                 class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm w-28"
+                 class="rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan px-3 py-2 text-sm w-28"
                  data-action="input->search#submit">
         </div>
 
         <div class="flex flex-col">
-          <label for="year_to" class="text-sm text-gray-500 dark:text-gray-400 mb-1">Year To</label>
+          <label for="year_to" class="text-sm text-gray-500 mb-1">Year To</label>
           <input type="number" name="year_to" id="year_to" value="<%= @year_to %>"
                  placeholder="e.g. 2025" min="1900" max="2099"
-                 class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm w-28"
+                 class="rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan px-3 py-2 text-sm w-28"
                  data-action="input->search#submit">
         </div>
 
         <div class="flex items-center gap-2 pb-2">
           <input type="checkbox" name="favorites_only" id="favorites_only" value="1"
                  <%= "checked" if @favorites_only %>
-                 class="rounded border-gray-300 dark:border-gray-600 text-blue-600"
+                 class="rounded border-gray-700 text-neon-pink"
                  data-action="change->search#submit">
-          <label for="favorites_only" class="text-sm text-gray-500 dark:text-gray-400">Favorites only</label>
+          <label for="favorites_only" class="text-sm text-gray-500">Favorites only</label>
         </div>
       </div>
     <% end %>
@@ -53,8 +53,8 @@
         <h2 class="text-xl font-semibold mb-3">Artists</h2>
         <div class="space-y-2 mb-6">
           <% @results[:artists].each do |artist| %>
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-              <%= link_to artist.name, artist_path(artist), data: { turbo_frame: "_top" }, class: "font-medium text-gray-900 dark:text-white hover:text-blue-600" %>
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-3">
+              <%= link_to artist.name, artist_path(artist), data: { turbo_frame: "_top" }, class: "font-medium text-white hover:text-neon-cyan" %>
             </div>
           <% end %>
         </div>
@@ -64,8 +64,8 @@
         <h2 class="text-xl font-semibold mb-3">Albums</h2>
         <div class="space-y-2 mb-6">
           <% @results[:albums].each do |album| %>
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-              <%= link_to album.title, album_path(album), data: { turbo_frame: "_top" }, class: "font-medium text-gray-900 dark:text-white hover:text-blue-600" %>
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-3">
+              <%= link_to album.title, album_path(album), data: { turbo_frame: "_top" }, class: "font-medium text-white hover:text-neon-cyan" %>
               <span class="text-sm text-gray-500">by <%= album.artist.name %></span>
             </div>
           <% end %>
@@ -81,7 +81,7 @@
                 new_playlist_name: "Search: #{@query}"
               ) %>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="bg-gray-800 rounded-lg border border-gray-700">
           <% @results[:tracks].each do |track| %>
             <%= render TrackRowComponent.new(track: track) do |c| %>
               <% c.with_trailing do %>

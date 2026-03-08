@@ -1,20 +1,20 @@
 <div class="w-full">
-  <h1 class="text-3xl font-bold mb-6">Favorites</h1>
+  <h1 class="text-3xl font-bold font-display mb-6">Favorites</h1>
 
   <% if @favorites.any? %>
     <div class="space-y-2">
       <% @favorites.each do |favorite| %>
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700">
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between hover:bg-gray-700">
           <div>
             <span class="text-xs text-gray-400 uppercase"><%= favorite.favorable_type %></span>
-            <div class="font-medium text-gray-900 dark:text-white">
+            <div class="font-medium text-white">
               <% case favorite.favorable %>
               <% when Track %>
-                <%= link_to favorite.favorable.title, track_path(favorite.favorable), class: "hover:underline" %>
+                <%= link_to favorite.favorable.title, track_path(favorite.favorable), class: "text-neon-cyan hover:underline" %>
               <% when Album %>
-                <%= link_to favorite.favorable.title, album_path(favorite.favorable), class: "hover:underline" %>
+                <%= link_to favorite.favorable.title, album_path(favorite.favorable), class: "text-neon-cyan hover:underline" %>
               <% when Artist %>
-                <%= link_to favorite.favorable.name, artist_path(favorite.favorable), class: "hover:underline" %>
+                <%= link_to favorite.favorable.name, artist_path(favorite.favorable), class: "text-neon-cyan hover:underline" %>
               <% end %>
             </div>
           </div>

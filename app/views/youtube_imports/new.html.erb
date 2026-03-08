@@ -1,15 +1,15 @@
 <div class="w-full max-w-lg">
   <div class="mb-6">
-    <%= link_to "&larr; Back to Library".html_safe, library_path, class: "text-blue-600 hover:underline" %>
+    <%= link_to "&larr; Back to Library".html_safe, library_path, class: "text-neon-cyan hover:underline" %>
   </div>
 
-  <h1 class="text-3xl font-bold mb-8">Import from YouTube</h1>
+  <h1 class="text-3xl font-bold font-display mb-8">Import from YouTube</h1>
 
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+  <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
     <%= form_with url: youtube_imports_path, method: :post, class: "space-y-4" do |f| %>
       <div>
-        <%= f.label :youtube_url, "YouTube URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-        <%= f.text_field :youtube_url, value: params[:youtube_url], placeholder: "https://youtube.com/watch?v=... or playlist?list=...", class: "w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500" %>
+        <%= f.label :youtube_url, "YouTube URL", class: "block text-sm font-medium text-gray-400 mb-1" %>
+        <%= f.text_field :youtube_url, value: params[:youtube_url], placeholder: "https://youtube.com/watch?v=... or playlist?list=...", class: "w-full rounded-lg border-gray-700 bg-gray-800 text-white focus:ring-neon-cyan focus:border-neon-cyan" %>
         <p class="mt-1 text-xs text-gray-500">Supported formats:</p>
         <ul class="mt-1 text-xs text-gray-500 list-disc list-inside">
           <li>youtube.com/watch?v=xxxxx</li>
@@ -21,12 +21,12 @@
       </div>
 
       <div>
-        <%= f.label :category, "Content Type", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-        <%= f.select :category, Artist::CATEGORIES.map { |c| [c.titleize, c] }, { selected: params[:category] || "music" }, class: "w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500" %>
+        <%= f.label :category, "Content Type", class: "block text-sm font-medium text-gray-400 mb-1" %>
+        <%= f.select :category, Artist::CATEGORIES.map { |c| [c.titleize, c] }, { selected: params[:category] || "music" }, class: "w-full rounded-lg border-gray-700 bg-gray-800 text-white focus:ring-neon-cyan focus:border-neon-cyan" %>
       </div>
 
       <div class="pt-2">
-        <%= f.submit "Import", class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer" %>
+        <%= f.submit "Import", class: "px-4 py-2 bg-neon-pink hover:shadow-neon-pink text-white rounded-lg cursor-pointer" %>
       </div>
     <% end %>
   </div>

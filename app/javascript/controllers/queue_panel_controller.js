@@ -40,7 +40,7 @@ export default class extends Controller {
 
     if (queue.length === 0) {
       this.listTarget.innerHTML = `
-        <div class="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+        <div class="p-8 text-center text-gray-500 text-sm">
           Queue is empty
         </div>
       `
@@ -49,11 +49,11 @@ export default class extends Controller {
 
     this.listTarget.innerHTML = queue.map((track, index) => {
       const isCurrent = index === currentIndex
-      const bgClass = isCurrent ? "bg-blue-50 dark:bg-blue-900/20" : ""
-      const titleClass = isCurrent ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-gray-900 dark:text-white"
+      const bgClass = isCurrent ? "bg-neon-cyan/10" : ""
+      const titleClass = isCurrent ? "text-neon-cyan font-semibold" : "text-white"
 
       return `
-        <div class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 ${bgClass}">
+        <div class="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 ${bgClass}">
           <button type="button" data-action="click->queue-panel#playAt" data-index="${index}"
                   class="flex-1 min-w-0 text-left cursor-pointer">
             <div class="text-sm ${titleClass} truncate">${this.escapeHtml(track.title || "Unknown")}</div>
@@ -62,13 +62,13 @@ export default class extends Controller {
           <div class="flex items-center gap-0.5 flex-shrink-0">
             ${index > 0 ? `
               <button type="button" data-action="click->queue-panel#moveUp" data-index="${index}"
-                      class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Move up">
+                      class="p-1 text-gray-400 hover:text-neon-cyan" title="Move up">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
               </button>
             ` : '<div class="w-[26px]"></div>'}
             ${index < queue.length - 1 ? `
               <button type="button" data-action="click->queue-panel#moveDown" data-index="${index}"
-                      class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Move down">
+                      class="p-1 text-gray-400 hover:text-neon-cyan" title="Move down">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
               </button>
             ` : '<div class="w-[26px]"></div>'}

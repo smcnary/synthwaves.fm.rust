@@ -1,4 +1,4 @@
-<div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700"
+<div class="flex items-center justify-between px-4 py-3 border-b border-gray-700 last:border-0 hover:bg-gray-700/50"
      data-controller="song-row now-playing"
      data-song-row-track-id-value="<%= track.id %>"
      data-now-playing-track-id-value="<%= track.id %>"
@@ -10,16 +10,16 @@
      data-song-row-stream-url-value="<%= stream_track_path(track) %>"
      <% end %>>
   <div class="flex items-center gap-3">
-    <button type="button" data-action="song-row#play" class="w-8 text-center text-gray-400 hover:text-blue-600 group/play">
+    <button type="button" data-action="song-row#play" class="w-8 text-center text-gray-400 hover:text-neon-pink group/play">
       <% if number %>
         <span class="group-hover/play:hidden" data-song-row-target="trackNumber"><%= number %></span>
       <% end %>
       <svg class="w-5 h-5 mx-auto <%= 'hidden group-hover/play:block' if number %>" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
     </button>
     <div>
-      <div class="font-medium text-gray-900 dark:text-white">
+      <div class="font-medium text-white">
         <% if link_title? %>
-          <%= link_to track.title, track_path(track), data: { turbo_frame: "_top" }, class: "hover:underline" %>
+          <%= link_to track.title, track_path(track), data: { turbo_frame: "_top" }, class: "hover:text-neon-cyan hover:underline" %>
         <% else %>
           <%= track.title %>
         <% end %>
@@ -29,14 +29,14 @@
           <% parts = [] %>
           <% if show_artist? %>
             <% if link_subtitle? %>
-              <% parts << link_to(track.artist.name, artist_path(track.artist), data: { turbo_frame: "_top" }, class: "hover:underline") %>
+              <% parts << link_to(track.artist.name, artist_path(track.artist), data: { turbo_frame: "_top" }, class: "hover:text-neon-cyan hover:underline") %>
             <% else %>
               <% parts << track.artist.name %>
             <% end %>
           <% end %>
           <% if show_album? %>
             <% if link_subtitle? %>
-              <% parts << link_to(track.album.title, album_path(track.album), data: { turbo_frame: "_top" }, class: "hover:underline") %>
+              <% parts << link_to(track.album.title, album_path(track.album), data: { turbo_frame: "_top" }, class: "hover:text-neon-cyan hover:underline") %>
             <% else %>
               <% parts << track.album.title %>
             <% end %>

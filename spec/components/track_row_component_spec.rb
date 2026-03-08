@@ -12,11 +12,11 @@ RSpec.describe TrackRowComponent, type: :component do
   end
 
   describe "hover styling" do
-    it "uses valid Tailwind dark mode hover class" do
+    it "uses synthwave hover class" do
       html = render_component
       row = html.at_css("[data-controller]")
       classes = row["class"]
-      expect(classes).to include("dark:hover:bg-gray-700")
+      expect(classes).to include("hover:bg-gray-700/50")
       expect(classes).not_to include("gray-750")
     end
   end
