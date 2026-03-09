@@ -10,17 +10,27 @@ class VideoConversionJob < ApplicationJob
       thumbnail_path = "#{source_file.path}_thumb.jpg"
 
       metadata = VideoMetadataExtractor.call(source_file.path)
+      strategy = conversion_strategy(metadata)
 
-      if needs_conversion?(metadata)
+      case strategy
+      when :remux
+        remux_to_mp4(source_file.path, output_path)
+        final_path = output_path
+      when :transcode_audio
+        transcode_audio_to_mp4(source_file.path, output_path)
+        final_path = output_path
+      when :full
         convert_to_mp4(source_file.path, output_path)
         final_path = output_path
       else
         final_path = source_file.path
       end
 
+      converted = strategy != :none
+
       generate_thumbnail(final_path, thumbnail_path, metadata[:duration])
 
-      if needs_conversion?(metadata)
+      if converted
         video.file.attach(
           io: File.open(output_path),
           filename: video.file.filename.to_s.sub(/\.\w+$/, ".mp4"),
@@ -36,7 +46,7 @@ class VideoConversionJob < ApplicationJob
         )
       end
 
-      final_metadata = needs_conversion?(metadata) ? VideoMetadataExtractor.call(output_path) : metadata
+      final_metadata = converted ? VideoMetadataExtractor.call(output_path) : metadata
 
       video.update!(
         status: "ready",
@@ -46,7 +56,7 @@ class VideoConversionJob < ApplicationJob
         video_codec: final_metadata[:video_codec] || video.video_codec,
         audio_codec: final_metadata[:audio_codec] || video.audio_codec,
         bitrate: final_metadata[:bitrate] || video.bitrate,
-        file_format: needs_conversion?(metadata) ? "mp4" : video.file_format,
+        file_format: converted ? "mp4" : video.file_format,
         file_size: File.size(final_path)
       )
     rescue => e
@@ -59,9 +69,46 @@ class VideoConversionJob < ApplicationJob
 
   private
 
-  def needs_conversion?(metadata)
-    return true unless metadata[:video_codec]
-    !(metadata[:video_codec] == "h264" && metadata[:audio_codec]&.match?(/aac/))
+  MP4_CONTAINERS = %w[mov,mp4,m4a,3gp,3g2,mj2 mp4 m4v].freeze
+
+  def conversion_strategy(metadata)
+    return :full unless metadata[:video_codec]
+
+    h264 = metadata[:video_codec] == "h264"
+    aac = metadata[:audio_codec]&.match?(/aac/)
+    mp4_container = MP4_CONTAINERS.any? { |c| metadata[:container]&.include?(c) }
+
+    if h264 && aac && mp4_container
+      :none
+    elsif h264 && aac
+      :remux
+    elsif h264
+      :transcode_audio
+    else
+      :full
+    end
+  end
+
+  def remux_to_mp4(input_path, output_path)
+    success = system(
+      "ffmpeg", "-y", "-i", input_path,
+      "-c", "copy",
+      "-movflags", "+faststart",
+      output_path,
+      out: File::NULL, err: File::NULL
+    )
+    raise "ffmpeg remux failed" unless success
+  end
+
+  def transcode_audio_to_mp4(input_path, output_path)
+    success = system(
+      "ffmpeg", "-y", "-i", input_path,
+      "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
+      "-movflags", "+faststart",
+      output_path,
+      out: File::NULL, err: File::NULL
+    )
+    raise "ffmpeg audio transcode failed" unless success
   end
 
   def convert_to_mp4(input_path, output_path)
