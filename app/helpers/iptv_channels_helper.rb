@@ -34,4 +34,18 @@ module IPTVChannelsHelper
     end
     slots
   end
+
+  def retro_tv_channels_json(channels, programmes_by_channel)
+    channels.map do |channel|
+      programmes = programmes_by_channel[channel.tvg_id] || []
+      {
+        name: channel.name,
+        streamUrl: channel.stream_url,
+        logoUrl: channel.logo_url,
+        programmes: programmes.map { |p|
+          { title: p.title, subtitle: p.subtitle, startsAt: p.starts_at.to_i, endsAt: p.ends_at.to_i }
+        }
+      }
+    end.to_json
+  end
 end
