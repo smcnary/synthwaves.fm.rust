@@ -16,7 +16,11 @@ class EPGSyncService
 
     # Delete current/future programmes for channels we're about to sync
     channel_ids_to_sync = relevant_entries.map(&:channel_id).uniq
-    EPGProgramme.where(channel_id: channel_ids_to_sync).where("ends_at > ?", Time.current).delete_all
+    stale_ids = EPGProgramme.where(channel_id: channel_ids_to_sync).where("ends_at > ?", Time.current).ids
+    if stale_ids.any?
+      Recording.where(epg_programme_id: stale_ids).update_all(epg_programme_id: nil)
+      EPGProgramme.where(id: stale_ids).delete_all
+    end
 
     # Insert in batches
     now = Time.current
@@ -38,7 +42,11 @@ class EPGSyncService
     end
 
     # Cleanup expired programmes (ended > 1 hour ago)
-    EPGProgramme.where("ends_at < ?", 1.hour.ago).delete_all
+    expired_ids = EPGProgramme.where("ends_at < ?", 1.hour.ago).ids
+    if expired_ids.any?
+      Recording.where(epg_programme_id: expired_ids).update_all(epg_programme_id: nil)
+      EPGProgramme.where(id: expired_ids).delete_all
+    end
 
     { synced: records.size, channels: channel_ids_to_sync.size }
   end

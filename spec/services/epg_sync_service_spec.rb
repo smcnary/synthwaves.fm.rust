@@ -59,6 +59,25 @@ RSpec.describe EPGSyncService do
       expect(EPGProgramme.where("ends_at < ?", 1.hour.ago).count).to eq(0)
     end
 
+    it "nullifies recording references before deleting expired programmes" do
+      expired = create(:epg_programme, channel_id: "espn.us", ends_at: 3.hours.ago)
+      recording = create(:recording, epg_programme: expired)
+
+      described_class.call
+
+      expect(recording.reload.epg_programme_id).to be_nil
+    end
+
+    it "nullifies recording references before replacing stale programmes" do
+      stale = create(:epg_programme, channel_id: "espn.us", title: "Old Show",
+                     starts_at: 30.minutes.ago, ends_at: 30.minutes.from_now)
+      recording = create(:recording, epg_programme: stale)
+
+      described_class.call
+
+      expect(recording.reload.epg_programme_id).to be_nil
+    end
+
     it "replaces current/future programmes on re-sync" do
       create(:epg_programme, channel_id: "espn.us", title: "Old Show",
              starts_at: 30.minutes.ago, ends_at: 30.minutes.from_now)

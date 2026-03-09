@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_030908) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_150604) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -447,7 +447,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_030908) do
   add_foreign_key "playlist_tracks", "tracks"
   add_foreign_key "playlists", "users"
   add_foreign_key "radio_stations", "users"
-  add_foreign_key "recordings", "epg_programmes"
+  add_foreign_key "recordings", "epg_programmes", on_delete: :nullify
   add_foreign_key "recordings", "iptv_channels"
   add_foreign_key "sessions", "users"
   add_foreign_key "tool_calls", "messages"
