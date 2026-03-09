@@ -1,4 +1,8 @@
 class DownloadsController < ApplicationController
+  def index
+    @downloads = Current.user.downloads.order(created_at: :desc)
+  end
+
   def create
     downloadable_type = params[:downloadable_type]
     downloadable_id = params[:downloadable_id]

@@ -57,6 +57,21 @@ class Download < ApplicationRecord
     )
   end
 
+  def broadcast_append
+    Turbo::StreamsChannel.broadcast_append_to(
+      "downloads_#{user_id}",
+      target: "download-notifications",
+      partial: "downloads/status",
+      locals: {download: self}
+    )
+    Turbo::StreamsChannel.broadcast_append_to(
+      "downloads_#{user_id}",
+      target: "downloads-list",
+      partial: "downloads/status",
+      locals: {download: self}
+    )
+  end
+
   private
 
   def sanitize_filename(name)

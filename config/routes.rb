@@ -25,7 +25,7 @@ Rails.application.routes.draw do
       get :download
     end
   end
-  resources :downloads, only: [:create, :show] do
+  resources :downloads, only: [:index, :create, :show] do
     member { get :file }
   end
   resources :playlists do
@@ -35,6 +35,7 @@ Rails.application.routes.draw do
   resources :radio_stations, only: [:index, :new, :create, :destroy] do
     resource :stream, only: [:show], controller: "radio_streams"
   end
+  resources :iptv_channels, only: [:index, :show], path: "tv"
   resources :youtube_imports, only: [:new, :create]
   resources :favorites, only: [:index, :create, :destroy]
   resources :play_histories, only: [:index, :create]

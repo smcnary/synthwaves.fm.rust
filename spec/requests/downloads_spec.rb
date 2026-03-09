@@ -5,6 +5,35 @@ RSpec.describe "Downloads", type: :request do
 
   before { login_user(user) }
 
+  describe "GET /downloads" do
+    it "lists the current user's downloads" do
+      download1 = create(:download, user: user, status: "ready")
+      download2 = create(:download, user: user, status: "processing")
+
+      get downloads_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("download_#{download1.id}")
+      expect(response.body).to include("download_#{download2.id}")
+    end
+
+    it "does not show other users' downloads" do
+      other_user = create(:user)
+      other_download = create(:download, user: other_user)
+
+      get downloads_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("download_#{other_download.id}")
+    end
+
+    it "requires authentication" do
+      reset!
+      get downloads_path
+      expect(response).to redirect_to(new_session_path)
+    end
+  end
+
   describe "POST /downloads" do
     it "creates a download for an album and enqueues job" do
       album = create(:album)

@@ -50,7 +50,7 @@ class DownloadZipJob < ApplicationJob
         @download.user.downloads.create!(
           downloadable_type: "Library",
           status: "pending"
-        )
+        ).tap { |d| d.broadcast_append }
       end
       build_zip(batch, dl, part: index + 1)
     end
