@@ -35,6 +35,8 @@
     <% end %>
     <%= render 'navbar' %>
     <%= render 'alerts' %>
+    <%= render TvPlayerComponent.new %>
+    <%= render PipComponent.new %>
     <main class="container mx-auto my-28 px-5 flex">
       <%= yield %>
     </main>

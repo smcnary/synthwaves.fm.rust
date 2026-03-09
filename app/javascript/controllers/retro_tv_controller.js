@@ -5,12 +5,20 @@ export default class extends Controller {
   static targets = ["nowPlaying", "channelNumber", "channelName", "channelLogo", "progressBar", "timeLeft"]
 
   connect() {
+    // Guard: skip re-init if already connected (data-turbo-permanent)
+    if (this.element._retroTvConnected) return
+    this.element._retroTvConnected = true
+
     this.currentIndex = -1
     this.refreshTimer = setInterval(() => this.updateNowPlaying(), 60000)
   }
 
   disconnect() {
-    if (this.refreshTimer) clearInterval(this.refreshTimer)
+    // With data-turbo-permanent, don't clear the timer
+    if (!document.contains(this.element)) {
+      this.element._retroTvConnected = false
+      if (this.refreshTimer) clearInterval(this.refreshTimer)
+    }
   }
 
   channelUp() {
@@ -26,7 +34,7 @@ export default class extends Controller {
   }
 
   sync(event) {
-    const index = parseInt(event.params.index, 10)
+    const index = typeof event.params?.index === "number" ? event.params.index : parseInt(event.params?.index, 10)
     if (!isNaN(index) && index >= 0 && index < this.channelsValue.length) {
       this.currentIndex = index
       this.updateNowPlaying()
@@ -62,7 +70,9 @@ export default class extends Controller {
     if (!channel) return
 
     if (this.hasChannelNumberTarget) {
-      this.channelNumberTarget.textContent = String(this.currentIndex + 1).padStart(2, "0")
+      this.channelNumberTargets.forEach(el => {
+        el.textContent = String(this.currentIndex + 1).padStart(2, "0")
+      })
     }
     if (this.hasChannelNameTarget) {
       this.channelNameTarget.textContent = channel.name

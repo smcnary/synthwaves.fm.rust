@@ -1,25 +1,10 @@
-<div class="w-full" data-controller="hls-player tv-page"
-     data-hls-player-autoplay-url-value="<%= @channel.stream_url %>"
-     data-hls-player-autoplay-name-value="<%= @channel.name %>">
+<div class="w-full" data-controller="tv-page tv-remote"
+     data-tv-remote-autoplay-url-value="<%= @channel.stream_url %>"
+     data-tv-remote-autoplay-name-value="<%= @channel.name %>">
   <div class="mb-6">
     <%= link_to tv_path, class: "text-sm text-gray-400 hover:text-neon-cyan transition-colors" do %>
       &larr; Back to TV
     <% end %>
-  </div>
-
-  <%# Video player %>
-  <div class="mb-6 relative bg-black rounded-xl overflow-hidden aspect-video max-w-4xl mx-auto">
-    <video data-hls-player-target="video"
-           class="w-full h-full"
-           controls
-           playsinline></video>
-    <div data-hls-player-target="loading"
-         class="absolute inset-0 flex items-center justify-center bg-black/50">
-      <div class="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-    </div>
-    <div data-hls-player-target="error"
-         class="absolute inset-0 flex items-center justify-center bg-black/80 text-red-400 text-sm px-4 text-center hidden">
-    </div>
   </div>
 
   <%# Channel info %>

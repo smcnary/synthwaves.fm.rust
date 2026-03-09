@@ -1,4 +1,4 @@
-<div class="w-full" data-controller="hls-player tv-page tv-guide"
+<div class="w-full" data-controller="tv-page tv-guide tv-remote"
      data-tv-guide-window-start-value="<%= @window_start.to_i %>"
      data-tv-guide-window-end-value="<%= @window_end.to_i %>"
      data-tv-guide-pixels-per-minute-value="7">
@@ -13,23 +13,6 @@
       <%= link_to "Recordings", recordings_path, class: "px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:border-neon-cyan hover:text-neon-cyan text-sm font-medium transition-colors" %>
       <%= link_to "Add Channel", new_iptv_channel_path, class: "px-4 py-2 bg-neon-pink text-white rounded-lg hover:shadow-neon-pink text-sm font-medium" %>
     </div>
-  </div>
-  <%# Video player area (hidden until a channel is selected) %>
-  <div data-hls-player-target="container" class="hidden">
-    <div class="mb-8 relative bg-black rounded-xl overflow-hidden aspect-video max-w-4xl mx-auto">
-      <video data-hls-player-target="video"
-             class="w-full h-full"
-             controls
-             playsinline></video>
-      <div data-hls-player-target="loading"
-           class="absolute inset-0 flex items-center justify-center bg-black/50 hidden">
-        <div class="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-      </div>
-      <div data-hls-player-target="error"
-           class="absolute inset-0 flex items-center justify-center bg-black/80 text-red-400 text-sm px-4 text-center hidden">
-      </div>
-    </div>
-    <div data-hls-player-target="channelName" class="text-center text-lg font-medium text-white mb-6 min-h-[1.75rem]"></div>
   </div>
   <%# Search and country filter %>
   <div class="flex flex-col sm:flex-row gap-3 mb-4">
@@ -100,11 +83,12 @@
               <%# Time header spacer %>
               <div class="h-10 border-b border-gray-700/50 bg-gray-900"></div>
               <%# Channel rows %>
-              <% @channels.each do |channel| %>
+              <% @channels.each_with_index do |channel, index| %>
                 <div class="h-16 border-b border-gray-700/30 flex items-center gap-2 px-3 bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer"
-                 data-action="click->hls-player#play"
-                  data-hls-player-url-param="<%= channel.stream_url %>"
-                  data-hls-player-name-param="<%= channel.name %>">
+                 data-action="click->tv-remote#tune"
+                  data-tv-remote-url-param="<%= channel.stream_url %>"
+                  data-tv-remote-name-param="<%= channel.name %>"
+                  data-tv-remote-index-param="<%= index %>">
                   <div class="w-8 h-8 rounded bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                     <% if channel.logo_url.present? %>
                       <img src="<%= channel.logo_url %>" alt="" class="w-full h-full object-contain" loading="lazy">
@@ -133,7 +117,7 @@
                   <% end %>
                 </div>
                 <%# Programme rows %>
-                <% @channels.each do |channel| %>
+                <% @channels.each_with_index do |channel, index| %>
                   <div class="h-16 border-b border-gray-700/30 relative">
                     <% programmes = @programmes_by_channel[channel.tvg_id] || [] %>
                     <% if programmes.any? %>
@@ -144,9 +128,10 @@
                         <div class="group/prog absolute top-1 bottom-1 rounded-md px-2 py-1 overflow-hidden cursor-pointer transition-all duration-150
                                 <%= programme.live? ? 'bg-gray-800/90 border border-neon-cyan/30 shadow-[0_0_8px_rgba(0,255,255,0.1)]' : 'bg-gray-800 border border-gray-600 hover:border-neon-cyan/50 hover:bg-gray-700' %>"
                          style="left: <%= left %>px; width: <%= width %>px;"
-                         data-action="click->hls-player#play"
-                          data-hls-player-url-param="<%= channel.stream_url %>"
-                          data-hls-player-name-param="<%= channel.name %>"
+                         data-action="click->tv-remote#tune"
+                          data-tv-remote-url-param="<%= channel.stream_url %>"
+                          data-tv-remote-name-param="<%= channel.name %>"
+                          data-tv-remote-index-param="<%= index %>"
                           title="<%= programme.title %><%= " - #{programme.subtitle}" if programme.subtitle.present? %>">
                           <div class="text-xs font-medium text-white truncate leading-tight"><%= programme.title %></div>
                           <% if programme.subtitle.present? && width > 100 %>
