@@ -2,7 +2,7 @@
      data-hls-player-autoplay-url-value="<%= @channel.stream_url %>"
      data-hls-player-autoplay-name-value="<%= @channel.name %>">
   <div class="mb-6">
-    <%= link_to iptv_channels_path, class: "text-sm text-gray-400 hover:text-neon-cyan transition-colors" do %>
+    <%= link_to tv_path, class: "text-sm text-gray-400 hover:text-neon-cyan transition-colors" do %>
       &larr; Back to TV
     <% end %>
   </div>
@@ -34,7 +34,7 @@
         <h1 class="text-2xl font-bold font-display"><%= @channel.name %></h1>
         <div class="flex items-center gap-3 text-sm text-gray-400 mt-1">
           <% if @channel.iptv_category.present? %>
-            <%= link_to @channel.iptv_category.name, iptv_channels_path(category: @channel.iptv_category.slug),
+            <%= link_to @channel.iptv_category.name, tv_path(tab: "guide", category: @channel.iptv_category.slug),
                   class: "hover:text-neon-cyan transition-colors" %>
           <% end %>
           <% if @channel.country.present? %>

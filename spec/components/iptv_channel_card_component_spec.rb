@@ -61,6 +61,6 @@ RSpec.describe IPTVChannelCardComponent, type: :component do
   it "links to the channel show page" do
     html = render_component(channel: channel)
     link = html.at_css("a")
-    expect(link["href"]).to eq("/tv/#{channel.id}")
+    expect(link["href"]).to eq("/tv/channels/#{channel.id}")
   end
 end

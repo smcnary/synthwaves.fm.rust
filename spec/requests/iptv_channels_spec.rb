@@ -10,13 +10,13 @@ RSpec.describe "IPTVChannels", type: :request do
 
   describe "GET /tv" do
     it "returns success" do
-      get iptv_channels_path
+      get tv_path
       expect(response).to have_http_status(:ok)
     end
 
     it "displays channels" do
       create(:iptv_channel, name: "CNN International")
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include("CNN International")
     end
 
@@ -26,7 +26,7 @@ RSpec.describe "IPTVChannels", type: :request do
       cnn = create(:iptv_channel, name: "CNN", iptv_category: news)
       _mtv = create(:iptv_channel, name: "MTV", iptv_category: music)
 
-      get iptv_channels_path(category: "news")
+      get tv_path(tab: "guide", category: "news")
       expect(response.body).to include("CNN")
       expect(response.body).not_to include("MTV")
     end
@@ -35,7 +35,7 @@ RSpec.describe "IPTVChannels", type: :request do
       create(:iptv_channel, name: "CNN International")
       create(:iptv_channel, name: "BBC World")
 
-      get iptv_channels_path(q: "CNN")
+      get tv_path(tab: "guide", q: "CNN")
       expect(response.body).to include("CNN International")
       expect(response.body).not_to include("BBC World")
     end
@@ -44,7 +44,7 @@ RSpec.describe "IPTVChannels", type: :request do
       create(:iptv_channel, name: "CNN", country: "US")
       create(:iptv_channel, name: "BBC", country: "UK")
 
-      get iptv_channels_path(country: "US")
+      get tv_path(tab: "guide", country: "US")
       expect(response.body).to include("CNN")
       expect(response.body).not_to include("BBC")
     end
@@ -53,14 +53,14 @@ RSpec.describe "IPTVChannels", type: :request do
       create(:iptv_channel, name: "Active Channel", active: true)
       create(:iptv_channel, name: "Dead Channel", active: false)
 
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include("Active Channel")
       expect(response.body).not_to include("Dead Channel")
     end
 
     it "renders the TV Guide grid" do
       create(:iptv_channel, name: "ESPN")
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include("tv-guide")
       expect(response.body).to include("ESPN")
     end
@@ -69,14 +69,14 @@ RSpec.describe "IPTVChannels", type: :request do
       channel = create(:iptv_channel, name: "ESPN", tvg_id: "espn.us")
       create(:epg_programme, :current, channel_id: "espn.us", title: "NHL Hockey")
 
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include("NHL Hockey")
     end
 
     it "shows no schedule info when EPG data is missing" do
       create(:iptv_channel, name: "ESPN", tvg_id: "espn.us")
 
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include("No schedule info")
     end
 
@@ -87,7 +87,7 @@ RSpec.describe "IPTVChannels", type: :request do
                           title: programme.title, starts_at: programme.starts_at, ends_at: programme.ends_at)
       create(:user_recording, user: user, recording: recording)
 
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include('title="Scheduled"')
     end
 
@@ -95,7 +95,7 @@ RSpec.describe "IPTVChannels", type: :request do
       create(:iptv_channel, name: "ESPN", tvg_id: "espn.us")
       create(:epg_programme, :current, channel_id: "espn.us", title: "NHL Hockey")
 
-      get iptv_channels_path
+      get tv_path
       expect(response.body).to include('title="Record"')
     end
 
@@ -106,13 +106,13 @@ RSpec.describe "IPTVChannels", type: :request do
                           title: programme.title, starts_at: programme.starts_at, ends_at: programme.ends_at)
       create(:user_recording, user: user, recording: recording)
 
-      get iptv_channels_path
+      get tv_path
       expect(response.body).not_to include('title="Scheduled"')
       expect(response.body).to include('title="Record"')
     end
   end
 
-  describe "GET /tv/:id" do
+  describe "GET /tv/channels/:id" do
     it "returns success" do
       channel = create(:iptv_channel)
       get iptv_channel_path(channel)
@@ -187,14 +187,14 @@ RSpec.describe "IPTVChannels", type: :request do
     end
   end
 
-  describe "GET /tv/new" do
+  describe "GET /tv/channels/new" do
     it "returns success" do
       get new_iptv_channel_path
       expect(response).to have_http_status(:ok)
     end
   end
 
-  describe "POST /tv" do
+  describe "POST /tv/channels" do
     it "creates a channel" do
       expect {
         post iptv_channels_path, params: { iptv_channel: {
@@ -212,7 +212,7 @@ RSpec.describe "IPTVChannels", type: :request do
     end
   end
 
-  describe "GET /tv/:id/edit" do
+  describe "GET /tv/channels/:id/edit" do
     it "returns success" do
       channel = create(:iptv_channel)
       get edit_iptv_channel_path(channel)
@@ -220,7 +220,7 @@ RSpec.describe "IPTVChannels", type: :request do
     end
   end
 
-  describe "PATCH /tv/:id" do
+  describe "PATCH /tv/channels/:id" do
     it "updates the channel" do
       channel = create(:iptv_channel, name: "Old Name")
       patch iptv_channel_path(channel), params: { iptv_channel: { name: "New Name" } }
@@ -230,15 +230,15 @@ RSpec.describe "IPTVChannels", type: :request do
     end
   end
 
-  describe "DELETE /tv/:id" do
+  describe "DELETE /tv/channels/:id" do
     it "deletes the channel" do
       channel = create(:iptv_channel)
       expect { delete iptv_channel_path(channel) }.to change(IPTVChannel, :count).by(-1)
-      expect(response).to redirect_to(iptv_channels_path)
+      expect(response).to redirect_to(tv_path)
     end
   end
 
-  describe "POST /tv/import" do
+  describe "POST /tv/channels/import" do
     it "imports channels from a playlist URL" do
       playlist = <<~M3U
         #EXTM3U
@@ -253,14 +253,14 @@ RSpec.describe "IPTVChannels", type: :request do
         post import_iptv_channels_path, params: { playlist_url: "https://example.com/playlist.m3u" }
       }.to change(IPTVChannel, :count).by(1)
 
-      expect(response).to redirect_to(iptv_channels_path)
+      expect(response).to redirect_to(tv_path)
       follow_redirect!
       expect(response.body).to include("Imported 1 channels")
     end
 
     it "handles missing URL" do
       post import_iptv_channels_path, params: { playlist_url: "" }
-      expect(response).to redirect_to(iptv_channels_path)
+      expect(response).to redirect_to(tv_path)
     end
 
     it "handles fetch errors" do
@@ -268,14 +268,14 @@ RSpec.describe "IPTVChannels", type: :request do
         .to_raise(HTTP::ConnectionError.new("Connection refused"))
 
       post import_iptv_channels_path, params: { playlist_url: "https://example.com/bad.m3u" }
-      expect(response).to redirect_to(iptv_channels_path)
+      expect(response).to redirect_to(tv_path)
     end
   end
 
   describe "feature flag" do
     it "redirects when feature is disabled" do
       Flipper.disable(:iptv)
-      get iptv_channels_path
+      get tv_path
       expect(response).to redirect_to(root_path)
     end
   end
