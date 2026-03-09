@@ -1,10 +1,9 @@
 class MusicController < ApplicationController
   include Orderable
 
-  TABS = %w[artists albums tracks podcasts].freeze
-
   def show
-    @tab = params[:tab].presence_in(TABS) || "artists"
+    @available_tabs = available_tabs
+    @tab = params[:tab].presence_in(@available_tabs) || "artists"
 
     case @tab
     when "artists"
@@ -15,10 +14,23 @@ class MusicController < ApplicationController
       load_tracks
     when "podcasts"
       load_podcasts
+    when "playlists"
+      load_playlists
+    when "radio"
+      load_radio
+    when "internet_radio"
+      load_internet_radio
     end
   end
 
   private
+
+  def available_tabs
+    tabs = %w[artists albums tracks podcasts playlists]
+    tabs << "radio" if Flipper.enabled?(:youtube_radio, Current.user)
+    tabs << "internet_radio" if Flipper.enabled?(:internet_radio, Current.user)
+    tabs
+  end
 
   def load_artists
     @query = params[:q]
@@ -53,5 +65,47 @@ class MusicController < ApplicationController
       .search(@query)
       .order(:name)
     @pagy, @podcasts = pagy(:offset, scope)
+  end
+
+  def load_playlists
+    @query = params[:q]
+    @sort = sort_column(Playlist, default: "name")
+    @direction = sort_direction
+    scope = Current.user.playlists.search(@query).order(@sort => @direction)
+    @pagy, @playlists = pagy(:offset, scope)
+  end
+
+  def load_radio
+    @radio_stations = RadioStation.order(created_at: :desc)
+  end
+
+  def load_internet_radio
+    @categories = InternetRadioCategory.with_stations.order(:name)
+    scope = InternetRadioStation.active.includes(:internet_radio_category)
+
+    if params[:category].present?
+      @current_category = InternetRadioCategory.find_by(slug: params[:category])
+      scope = scope.where(internet_radio_category: @current_category) if @current_category
+    end
+
+    if params[:favorites] == "1"
+      favorite_ids = Current.user.favorites.where(favorable_type: "InternetRadioStation").pluck(:favorable_id)
+      scope = scope.where(id: favorite_ids)
+    end
+
+    scope = scope.search(params[:q])
+    scope = scope.by_country(params[:country])
+    scope = scope.by_tag(params[:tag])
+
+    scope = case params[:sort]
+    when "popular" then scope.popular
+    else scope.order(:name)
+    end
+
+    @pagy, @stations = pagy(scope, limit: 24)
+
+    @favorited_station_ids = Current.user.favorites.where(favorable_type: "InternetRadioStation").pluck(:favorable_id).to_set
+
+    @countries = InternetRadioStation.active.where.not(country_code: [nil, ""]).distinct.pluck(:country_code).sort
   end
 end

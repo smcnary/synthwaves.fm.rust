@@ -9,15 +9,8 @@
         <% if authenticated? %>
           <nav class="hidden md:flex items-center space-x-3 text-sm">
             <%= link_to "Music", music_path, class: "text-white hover:text-neon-cyan transition-colors" %>
-            <%= link_to "Playlists", playlists_path, class: "text-white hover:text-neon-cyan transition-colors" %>
-            <% if Flipper.enabled?(:youtube_radio, Current.user) %>
-              <%= link_to "Radio", radio_stations_path, class: "text-white hover:text-neon-cyan transition-colors" %>
-            <% end %>
             <% if Flipper.enabled?(:iptv, Current.user) %>
               <%= link_to "TV", iptv_channels_path, class: "text-white hover:text-neon-cyan transition-colors" %>
-            <% end %>
-            <% if Flipper.enabled?(:internet_radio, Current.user) %>
-              <%= link_to "Internet Radio", internet_radio_stations_path, class: "text-white hover:text-neon-cyan transition-colors" %>
             <% end %>
             <%= link_to "Visualizer", visualizer_path, class: "text-white hover:text-neon-cyan transition-colors" %>
           </nav>
@@ -53,15 +46,8 @@
           <div class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg border border-gray-700 py-1 z-50">
             <div class="md:hidden">
               <%= link_to "Music", music_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
-              <%= link_to "Playlists", playlists_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
-              <% if Flipper.enabled?(:youtube_radio, Current.user) %>
-                <%= link_to "Radio", radio_stations_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
-              <% end %>
               <% if Flipper.enabled?(:iptv, Current.user) %>
                 <%= link_to "TV", iptv_channels_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
-              <% end %>
-              <% if Flipper.enabled?(:internet_radio, Current.user) %>
-                <%= link_to "Internet Radio", internet_radio_stations_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
               <% end %>
               <%= link_to "Visualizer", visualizer_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
               <%= link_to "Search", search_path, class: "block px-4 py-2 text-sm text-white hover:bg-gray-700 hover:text-neon-cyan" %>
