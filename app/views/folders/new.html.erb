@@ -14,7 +14,7 @@
     <% end %>
 
     <div>
-      <label class="block text-sm font-medium text-gray-300 mb-1">Folder Name</label>
+      <label class="block text-sm font-medium text-gray-400 mb-1">Folder Name</label>
       <input type="text" name="folder_name" value="<%= params[:folder_name] %>" required
              list="existing-folders"
              placeholder="e.g. Breaking Bad"
@@ -27,14 +27,14 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-300 mb-1">Season Number <span class="text-gray-500">(optional)</span></label>
+      <label class="block text-sm font-medium text-gray-400 mb-1">Season Number <span class="text-gray-500">(optional)</span></label>
       <input type="number" name="season_number" value="<%= params[:season_number] %>" min="1"
              placeholder="e.g. 1"
              class="w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan px-3 py-2 text-sm border">
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-300 mb-1">Video Files</label>
+      <label class="block text-sm font-medium text-gray-400 mb-1">Video Files</label>
       <input type="file" name="video_files[]" accept="video/*,.mkv" multiple required
              data-bulk-upload-target="input"
              data-action="change->bulk-upload#filesChanged"
@@ -43,7 +43,7 @@
     </div>
 
     <div data-bulk-upload-target="preview" class="hidden">
-      <label class="block text-sm font-medium text-gray-300 mb-2">Selected Files</label>
+      <label class="block text-sm font-medium text-gray-400 mb-2">Selected Files</label>
       <ul data-bulk-upload-target="list" class="space-y-1 text-sm text-gray-400 bg-gray-800/50 rounded-lg border border-gray-700 p-3 max-h-48 overflow-y-auto">
       </ul>
     </div>

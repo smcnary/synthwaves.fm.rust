@@ -14,7 +14,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
         <input type="text" name="q" value="<%= params[:q] %>" placeholder="Search channels..."
-               class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:border-transparent placeholder-gray-500">
+               class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-500 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:border-transparent placeholder-gray-500">
       </div>
     <% end %>
     <% if @countries.any? %>
@@ -23,7 +23,7 @@
         <%= hidden_field_tag :category, params[:category] %>
         <%= hidden_field_tag :q, params[:q] %>
         <select name="country" onchange="this.form.requestSubmit()"
-                class="px-3 py-2 text-sm rounded-lg border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan">
+                class="px-3 py-2 text-sm rounded-lg border border-gray-500 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan">
           <option value="">All Countries</option>
           <% @countries.each do |country| %>
             <option value="<%= country %>" <%= 'selected' if params[:country] == country %>><%= country %></option>
@@ -37,7 +37,7 @@
         <%= hidden_field_tag :q, params[:q] %>
         <%= hidden_field_tag :country, params[:country] %>
         <select name="category" onchange="this.form.requestSubmit()"
-                class="px-3 py-2 text-sm rounded-lg border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan">
+                class="px-3 py-2 text-sm rounded-lg border border-gray-500 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-neon-cyan">
           <option value="">All Categories</option>
           <% @categories.each do |category| %>
             <option value="<%= category.slug %>" <%= 'selected' if params[:category] == category.slug %>><%= category.name %></option>
@@ -50,15 +50,15 @@
   <div class="flex items-center justify-between mb-3">
     <div class="flex items-center gap-2">
       <button type="button" data-action="tv-guide#navigateBack"
-          class="px-3 py-1.5 text-sm border border-gray-600 text-gray-300 rounded-lg hover:border-neon-cyan hover:text-neon-cyan transition-colors">
+          class="px-3 py-1.5 text-sm border border-gray-600 text-gray-400 rounded-lg hover:border-neon-cyan hover:text-neon-cyan transition-colors">
         &larr; Back
       </button>
       <button type="button" data-action="tv-guide#jumpToNow"
-          class="px-3 py-1.5 text-sm bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan rounded-lg hover:bg-neon-cyan/20 transition-colors">
+          class="px-3 py-1.5 text-sm bg-neon-cyan/10 border border-neon-cyan/50 text-neon-cyan rounded-lg hover:bg-neon-cyan/20 transition-colors">
         Now
       </button>
       <button type="button" data-action="tv-guide#navigateForward"
-          class="px-3 py-1.5 text-sm border border-gray-600 text-gray-300 rounded-lg hover:border-neon-cyan hover:text-neon-cyan transition-colors">
+          class="px-3 py-1.5 text-sm border border-gray-600 text-gray-400 rounded-lg hover:border-neon-cyan hover:text-neon-cyan transition-colors">
         Forward &rarr;
       </button>
     </div>
@@ -68,15 +68,15 @@
   </div>
   <%# TV Guide Grid %>
   <% if @channels.any? %>
-    <div class="border border-gray-700/50 rounded-xl overflow-hidden bg-gray-900/80">
+    <div class="border border-gray-700 rounded-xl overflow-hidden bg-gray-900/80">
       <div class="flex">
         <%# Sticky channel column %>
         <div class="flex-shrink-0 w-[160px] z-20 bg-gray-900">
           <%# Time header spacer %>
-          <div class="h-10 border-b border-gray-700/50 bg-gray-900"></div>
+          <div class="h-10 border-b border-gray-700 bg-gray-900"></div>
           <%# Channel rows %>
           <% @channels.each_with_index do |channel, index| %>
-            <div class="h-16 border-b border-gray-700/30 flex items-center gap-2 px-3 bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer"
+            <div class="h-16 border-b border-gray-700/60 flex items-center gap-2 px-3 bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer"
              data-action="click->tv-remote#tune"
               data-tv-remote-url-param="<%= channel.stream_url %>"
               data-tv-remote-name-param="<%= channel.name %>"
@@ -89,7 +89,10 @@
                 <% end %>
               </div>
               <span class="text-xs font-medium text-white truncate flex-1"><%= channel.name %></span>
-              <div class="flex-shrink-0" onclick="event.stopPropagation()">
+              <div class="flex-shrink-0 flex items-center gap-1" onclick="event.stopPropagation()">
+                <%= link_to iptv_channel_path(channel), class: "text-gray-600 hover:text-neon-cyan transition-colors p-0.5", title: "Channel details" do %>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <% end %>
                 <%= render "favorites/button", favorable: channel, favorited: @favorited_channel_ids.include?(channel.id) %>
               </div>
             </div>
@@ -99,10 +102,10 @@
         <div class="flex-1 overflow-x-auto" data-tv-guide-target="grid">
           <div class="relative" style="width: <%= guide_grid_width(@window_start, @window_end) %>px; min-width: 100%;">
             <%# Time header %>
-            <div class="h-10 border-b border-gray-700/50 relative bg-gray-900/90">
+            <div class="h-10 border-b border-gray-700 relative bg-gray-900/90">
               <% guide_time_slots(@window_start, @window_end).each do |slot| %>
                 <% left = time_slot_left_px(slot, @window_start) %>
-                <div class="absolute top-0 h-full flex items-center border-l border-gray-700/30 pl-2"
+                <div class="absolute top-0 h-full flex items-center border-l border-gray-700/60 pl-2"
                  style="left: <%= left %>px;">
                   <span class="text-xs text-gray-400 whitespace-nowrap"><%= slot.strftime("%-I:%M %p") %></span>
                 </div>
@@ -110,7 +113,7 @@
             </div>
             <%# Programme rows %>
             <% @channels.each_with_index do |channel, index| %>
-              <div class="h-16 border-b border-gray-700/30 relative">
+              <div class="h-16 border-b border-gray-700/60 relative">
                 <% programmes = @programmes_by_channel[channel.tvg_id] || [] %>
                 <% if programmes.any? %>
                   <% programmes.each do |programme| %>
@@ -118,7 +121,7 @@
                     <% width = programme_width_px(programme, @window_start, @window_end) %>
                     <% next if width < 2 %>
                     <div class="group/prog absolute top-1 bottom-1 rounded-md px-2 py-1 overflow-hidden cursor-pointer transition-all duration-150
-                            <%= programme.live? ? 'bg-gray-800/90 border border-neon-cyan/30 shadow-[0_0_8px_rgba(0,255,255,0.1)]' : 'bg-gray-800 border border-gray-600 hover:border-neon-cyan/50 hover:bg-gray-700' %>"
+                            <%= programme.live? ? 'bg-gray-800/90 border border-neon-cyan/50 shadow-[0_0_8px_rgba(0,255,255,0.1)]' : 'bg-gray-800 border border-gray-600 hover:border-neon-cyan/50 hover:bg-gray-700' %>"
                      style="left: <%= left %>px; width: <%= width %>px;"
                      data-action="click->tv-remote#tune"
                       data-tv-remote-url-param="<%= channel.stream_url %>"
