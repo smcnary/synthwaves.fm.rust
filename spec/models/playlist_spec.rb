@@ -11,6 +11,38 @@ RSpec.describe Playlist, type: :model do
     it { should validate_presence_of(:name) }
   end
 
+  describe "#random_cover_track" do
+    let(:user) { create(:user) }
+    let(:playlist) { create(:playlist, user: user) }
+
+    it "returns nil for an empty playlist" do
+      expect(playlist.random_cover_track).to be_nil
+    end
+
+    it "returns nil when no albums have cover images" do
+      track = create(:track)
+      create(:playlist_track, playlist: playlist, track: track)
+
+      expect(playlist.random_cover_track).to be_nil
+    end
+
+    it "returns a track whose album has a cover image" do
+      album_with_cover = create(:album)
+      album_with_cover.cover_image.attach(
+        io: StringIO.new("fake image data"),
+        filename: "cover.jpg",
+        content_type: "image/jpeg"
+      )
+      track_with_cover = create(:track, album: album_with_cover, artist: album_with_cover.artist)
+      create(:playlist_track, playlist: playlist, track: track_with_cover)
+
+      track_without_cover = create(:track)
+      create(:playlist_track, playlist: playlist, track: track_without_cover)
+
+      expect(playlist.random_cover_track).to eq(track_with_cover)
+    end
+  end
+
   describe ".search" do
     let(:user) { create(:user) }
     let!(:chill) { create(:playlist, user: user, name: "Chill Vibes") }

@@ -5,6 +5,10 @@ class Playlist < ApplicationRecord
 
   validates :name, presence: true
 
+  def random_cover_track
+    tracks.joins(album: :cover_image_attachment).order("RANDOM()").first
+  end
+
   SORT_OPTIONS = {
     "name" => "Name",
     "playlist_tracks_count" => "Track Count",
