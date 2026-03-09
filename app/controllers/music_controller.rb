@@ -24,10 +24,10 @@ class MusicController < ApplicationController
     @query = params[:q]
     @sort = sort_column(Artist, default: "name")
     @direction = sort_direction
-    scope = Artist.music.includes(albums: { cover_image_attachment: :blob })
-                  .search(@query)
-                  .order(@sort => @direction)
-    @pagy, @artists = pagy(:offset, scope)
+    scope = Artist.music.includes(albums: {cover_image_attachment: :blob})
+      .search(@query)
+      .order(@sort => @direction)
+    @pagy, @artists = pagy(:offset, scope, limit: 60)
   end
 
   def load_albums
@@ -35,8 +35,8 @@ class MusicController < ApplicationController
     @sort = sort_column(Album, default: "title")
     @direction = sort_direction
     scope = Album.music.includes(:artist, cover_image_attachment: :blob)
-                 .search(@query)
-                 .order(@sort => @direction)
+      .search(@query)
+      .order(@sort => @direction)
     @pagy, @albums = pagy(:offset, scope)
   end
 
@@ -49,9 +49,9 @@ class MusicController < ApplicationController
 
   def load_podcasts
     @query = params[:q]
-    scope = Artist.podcast.includes(albums: { cover_image_attachment: :blob })
-                  .search(@query)
-                  .order(:name)
+    scope = Artist.podcast.includes(albums: {cover_image_attachment: :blob})
+      .search(@query)
+      .order(:name)
     @pagy, @podcasts = pagy(:offset, scope)
   end
 end
