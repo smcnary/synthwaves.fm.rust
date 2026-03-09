@@ -13,28 +13,23 @@
       <%= link_to "Add Channel", new_iptv_channel_path, class: "px-4 py-2 bg-neon-pink text-white rounded-lg hover:shadow-neon-pink text-sm font-medium" %>
     </div>
   </div>
-  <%# Video player area %>
-  <div class="mb-8 relative bg-black rounded-xl overflow-hidden aspect-video max-w-4xl mx-auto">
-    <video data-hls-player-target="video"
-           class="w-full h-full hidden"
-           controls
-           playsinline></video>
-    <div data-hls-player-target="placeholder"
-         class="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
-      <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-      </svg>
-      <p class="text-sm">Select a channel to start watching</p>
+  <%# Video player area (hidden until a channel is selected) %>
+  <div data-hls-player-target="container" class="hidden">
+    <div class="mb-8 relative bg-black rounded-xl overflow-hidden aspect-video max-w-4xl mx-auto">
+      <video data-hls-player-target="video"
+             class="w-full h-full"
+             controls
+             playsinline></video>
+      <div data-hls-player-target="loading"
+           class="absolute inset-0 flex items-center justify-center bg-black/50 hidden">
+        <div class="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+      </div>
+      <div data-hls-player-target="error"
+           class="absolute inset-0 flex items-center justify-center bg-black/80 text-red-400 text-sm px-4 text-center hidden">
+      </div>
     </div>
-    <div data-hls-player-target="loading"
-         class="absolute inset-0 flex items-center justify-center bg-black/50 hidden">
-      <div class="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-    </div>
-    <div data-hls-player-target="error"
-         class="absolute inset-0 flex items-center justify-center bg-black/80 text-red-400 text-sm px-4 text-center hidden">
-    </div>
+    <div data-hls-player-target="channelName" class="text-center text-lg font-medium text-white mb-6 min-h-[1.75rem]"></div>
   </div>
-  <div data-hls-player-target="channelName" class="text-center text-lg font-medium text-white mb-6 min-h-[1.75rem]"></div>
   <%# Search and country filter %>
   <div class="flex flex-col sm:flex-row gap-3 mb-4">
     <%= form_with url: iptv_channels_path, method: :get, class: "flex-1" do |f| %>
@@ -145,7 +140,7 @@
                         <% left = programme_left_px(programme, @window_start) %>
                         <% width = programme_width_px(programme, @window_start, @window_end) %>
                         <% next if width < 2 %>
-                        <div class="absolute top-1 bottom-1 rounded-md px-2 py-1 overflow-hidden cursor-pointer transition-all duration-150
+                        <div class="group/prog absolute top-1 bottom-1 rounded-md px-2 py-1 overflow-hidden cursor-pointer transition-all duration-150
                                 <%= programme.live? ? 'bg-gray-800/90 border border-neon-cyan/30 shadow-[0_0_8px_rgba(0,255,255,0.1)]' : 'bg-gray-800 border border-gray-600 hover:border-neon-cyan/50 hover:bg-gray-700' %>"
                          style="left: <%= left %>px; width: <%= width %>px;"
                          data-action="click->hls-player#play"
@@ -159,6 +154,15 @@
                           <% if programme.live? && width > 60 %>
                             <div class="mt-0.5 h-1 bg-gray-700 rounded-full overflow-hidden">
                               <div class="h-full bg-neon-cyan rounded-full" style="width: <%= programme.progress_percentage %>%"></div>
+                            </div>
+                          <% end %>
+                          <% if programme.live? || programme.starts_at > Time.current %>
+                            <div class="absolute top-0.5 right-0.5 opacity-0 group-hover/prog:opacity-100 transition-opacity" onclick="event.stopPropagation()">
+                              <%= button_to recordings_path(iptv_channel_id: channel.id, epg_programme_id: programme.id), method: :post,
+                                    class: "p-0.5 text-red-400 hover:text-red-300 cursor-pointer",
+                                    title: "Record", data: { turbo_confirm: "Record \"#{programme.title}\"?" } do %>
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/></svg>
+                              <% end %>
                             </div>
                           <% end %>
                         </div>

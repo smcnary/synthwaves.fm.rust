@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["video", "placeholder", "error", "loading", "channelName"]
+  static targets = ["video", "container", "placeholder", "error", "loading", "channelName"]
   static values = { autoplayUrl: String, autoplayName: String }
 
   connect() {
@@ -35,6 +35,8 @@ export default class extends Controller {
     const audio = document.getElementById("persistent-audio")
     if (audio && !audio.paused) audio.pause()
     document.dispatchEvent(new CustomEvent("youtube:stop"))
+
+    if (this.hasContainerTarget) this.containerTarget.classList.remove("hidden")
 
     const video = this.videoTarget
     video.classList.remove("hidden")
