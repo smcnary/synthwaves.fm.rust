@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_194120) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_10_043429) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -386,6 +386,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_194120) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "taggings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "tag_id", null: false
+    t.bigint "taggable_id", null: false
+    t.string "taggable_type", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["tag_id", "taggable_type", "taggable_id", "user_id"], name: "index_taggings_uniqueness", unique: true
+    t.index ["tag_id"], name: "index_taggings_on_tag_id"
+    t.index ["taggable_type", "taggable_id"], name: "index_taggings_on_taggable_type_and_taggable_id"
+    t.index ["user_id"], name: "index_taggings_on_user_id"
+  end
+
+  create_table "tags", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "tag_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name", "tag_type"], name: "index_tags_on_name_and_tag_type", unique: true
+  end
+
   create_table "tool_calls", force: :cascade do |t|
     t.json "arguments", default: {}
     t.datetime "created_at", null: false
@@ -408,6 +429,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_194120) do
     t.float "duration"
     t.string "file_format"
     t.integer "file_size"
+    t.text "lyrics"
     t.string "title", null: false
     t.integer "track_number"
     t.datetime "updated_at", null: false
@@ -486,6 +508,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_194120) do
   add_foreign_key "recordings", "epg_programmes", on_delete: :nullify
   add_foreign_key "recordings", "iptv_channels"
   add_foreign_key "sessions", "users"
+  add_foreign_key "taggings", "tags"
+  add_foreign_key "taggings", "users"
   add_foreign_key "tool_calls", "messages"
   add_foreign_key "tracks", "albums"
   add_foreign_key "tracks", "artists"

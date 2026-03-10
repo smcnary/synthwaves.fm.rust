@@ -6,6 +6,8 @@ class Track < ApplicationRecord
   has_many :playlists, through: :playlist_tracks
   has_many :play_histories, dependent: :destroy
   has_many :favorites, as: :favorable, dependent: :destroy
+  has_many :taggings, as: :taggable, dependent: :destroy
+  has_many :tags, through: :taggings
 
   validates :title, presence: true
 

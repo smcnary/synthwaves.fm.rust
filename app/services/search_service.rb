@@ -1,14 +1,14 @@
 class SearchService
   def self.call(query:, types: [:artist, :album, :track], limit: 20,
     genre: nil, year_from: nil, year_to: nil,
-    favorites_only: false, user: nil, category: "music")
+    favorites_only: false, user: nil, category: "music", tags: nil)
     new(query: query, types: types, limit: limit,
       genre: genre, year_from: year_from, year_to: year_to,
-      favorites_only: favorites_only, user: user, category: category).call
+      favorites_only: favorites_only, user: user, category: category, tags: tags).call
   end
 
   def initialize(query:, types:, limit:, genre: nil, year_from: nil, year_to: nil,
-    favorites_only: false, user: nil, category: "music")
+    favorites_only: false, user: nil, category: "music", tags: nil)
     @query = query
     @types = types
     @limit = limit
@@ -18,6 +18,7 @@ class SearchService
     @favorites_only = favorites_only
     @user = user
     @category = category
+    @tags = tags
   end
 
   def call
@@ -61,6 +62,16 @@ class SearchService
       scope = scope.where("albums.year <= ?", @year_to) if @year_to
     end
     scope = scope.where(id: @user.favorites.where(favorable_type: "Track").select(:favorable_id)) if @favorites_only && @user
+    scope = filter_by_tags(scope, "Track") if @tags.present?
     scope.limit(@limit)
+  end
+
+  def filter_by_tags(scope, taggable_type)
+    tag_names = Array(@tags).map(&:downcase)
+    scope.where(
+      id: Tagging.joins(:tag)
+        .where(taggable_type: taggable_type, tags: {name: tag_names})
+        .select(:taggable_id)
+    )
   end
 end

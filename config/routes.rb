@@ -61,6 +61,7 @@ Rails.application.routes.draw do
   end
   resources :youtube_imports, only: [:new, :create]
   resources :favorites, only: [:index, :create, :destroy]
+  resources :taggings, only: [:create, :destroy]
   resources :play_histories, only: [:index, :create]
   get "search/dropdown", to: "search#dropdown"
   get :search, to: "search#index"
