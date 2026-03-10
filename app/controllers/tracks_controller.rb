@@ -125,7 +125,7 @@ class TracksController < ApplicationController
   end
 
   def cloud_storage?
-    !ActiveStorage::Blob.service.is_a?(ActiveStorage::Service::DiskService)
+    !ActiveStorage::Blob.service.class.name.include?("Disk")
   end
 
   def extract_metadata(uploaded_file, file_format)

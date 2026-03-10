@@ -285,8 +285,8 @@ RSpec.describe "Tracks", type: :request do
 
       it "redirects to direct URL with cloud storage" do
         s3_url = "https://bucket.s3.amazonaws.com/test.mp3?signed=1"
-        allow(ActiveStorage::Blob.service).to receive(:is_a?)
-          .with(ActiveStorage::Service::DiskService).and_return(false)
+        allow(ActiveStorage::Blob.service.class).to receive(:name)
+          .and_return("ActiveStorage::Service::S3Service")
         allow_any_instance_of(ActiveStorage::Blob).to receive(:url).and_return(s3_url)
 
         get stream_track_path(track)
@@ -296,8 +296,8 @@ RSpec.describe "Tracks", type: :request do
 
       it "returns direct URL as JSON with resolve param on cloud storage" do
         s3_url = "https://bucket.s3.amazonaws.com/test.mp3?signed=1"
-        allow(ActiveStorage::Blob.service).to receive(:is_a?)
-          .with(ActiveStorage::Service::DiskService).and_return(false)
+        allow(ActiveStorage::Blob.service.class).to receive(:name)
+          .and_return("ActiveStorage::Service::S3Service")
         allow_any_instance_of(ActiveStorage::Blob).to receive(:url).and_return(s3_url)
 
         get stream_track_path(track, resolve: "1")
