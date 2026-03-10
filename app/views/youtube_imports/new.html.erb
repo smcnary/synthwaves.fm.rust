@@ -9,7 +9,7 @@
     <%= form_with url: youtube_imports_path, method: :post, class: "space-y-4" do |f| %>
       <div>
         <%= f.label :youtube_url, "YouTube URL", class: "block text-sm font-medium text-gray-400 mb-1" %>
-        <%= f.text_field :youtube_url, value: params[:youtube_url], placeholder: "https://youtube.com/watch?v=... or playlist?list=...", class: "w-full rounded-lg border-gray-700 bg-gray-800 text-white focus:ring-neon-cyan focus:border-neon-cyan" %>
+        <%= f.text_field :youtube_url, value: params[:youtube_url], placeholder: "https://youtube.com/watch?v=... or playlist?list=...", class: "block w-full rounded-lg border border-gray-600 bg-gray-900 text-white shadow-sm focus:outline-neon-cyan px-3 py-2" %>
         <p class="mt-1 text-xs text-gray-500">Supported formats:</p>
         <ul class="mt-1 text-xs text-gray-500 list-disc list-inside">
           <li>youtube.com/watch?v=xxxxx</li>
@@ -22,7 +22,7 @@
 
       <div>
         <%= f.label :category, "Content Type", class: "block text-sm font-medium text-gray-400 mb-1" %>
-        <%= f.select :category, Artist::CATEGORIES.map { |c| [c.titleize, c] }, { selected: params[:category] || "music" }, class: "w-full rounded-lg border-gray-700 bg-gray-800 text-white focus:ring-neon-cyan focus:border-neon-cyan" %>
+        <%= f.select :category, Artist::CATEGORIES.map { |c| [c.titleize, c] }, { selected: params[:category] || "music" }, class: "block w-full rounded-lg border border-gray-600 bg-gray-900 text-white shadow-sm focus:outline-neon-cyan px-3 py-2" %>
       </div>
 
       <div>
