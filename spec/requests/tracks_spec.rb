@@ -293,6 +293,24 @@ RSpec.describe "Tracks", type: :request do
         expect(response).to have_http_status(:redirect)
         expect(response.location).to eq(s3_url)
       end
+
+      it "returns direct URL as JSON with resolve param on cloud storage" do
+        s3_url = "https://bucket.s3.amazonaws.com/test.mp3?signed=1"
+        allow(ActiveStorage::Blob.service).to receive(:is_a?)
+          .with(ActiveStorage::Service::DiskService).and_return(false)
+        allow_any_instance_of(ActiveStorage::Blob).to receive(:url).and_return(s3_url)
+
+        get stream_track_path(track, resolve: "1")
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json["url"]).to eq(s3_url)
+      end
+
+      it "ignores resolve param with disk storage and redirects to proxy" do
+        get stream_track_path(track, resolve: "1")
+        expect(response).to have_http_status(:redirect)
+        expect(response.location).to include("rails/active_storage")
+      end
     end
   end
 

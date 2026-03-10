@@ -601,22 +601,26 @@ export default class extends Controller {
   }
 
   async _resolveAndPlay(streamUrl) {
+    let resolvedUrl = streamUrl
     try {
-      const response = await fetch(streamUrl, { method: "HEAD" })
-      const resolvedUrl = response.url
-      this.audio.src = resolvedUrl
-      this.audio.play()
-      document.dispatchEvent(new CustomEvent("player:sourceChanged", {
-        detail: { streamUrl: resolvedUrl }
-      }))
+      // Ask the server for the direct S3 URL so audio.src points directly
+      // to S3 — required for AirPlay (Apple TV fetches audio.src directly)
+      const separator = streamUrl.includes("?") ? "&" : "?"
+      const response = await fetch(`${streamUrl}${separator}resolve=1`, {
+        headers: { "Accept": "application/json" }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.url) resolvedUrl = data.url
+      }
     } catch (e) {
-      // Fall back to original URL if resolve fails
-      this.audio.src = streamUrl
-      this.audio.play()
-      document.dispatchEvent(new CustomEvent("player:sourceChanged", {
-        detail: { streamUrl }
-      }))
+      // Fall back to original stream URL
     }
+    this.audio.src = resolvedUrl
+    this.audio.play()
+    document.dispatchEvent(new CustomEvent("player:sourceChanged", {
+      detail: { streamUrl: resolvedUrl }
+    }))
   }
 
   recordPlay(trackId) {

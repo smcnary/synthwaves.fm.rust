@@ -84,7 +84,9 @@ class TracksController < ApplicationController
     if @track.youtube?
       head :not_found
     elsif @track.audio_file.attached?
-      if params[:proxy].present? || !cloud_storage?
+      if params[:resolve].present? && cloud_storage?
+        render json: { url: @track.audio_file.url(expires_in: 4.hours) }
+      elsif params[:proxy].present? || !cloud_storage?
         redirect_to rails_storage_proxy_url(@track.audio_file)
       else
         redirect_to @track.audio_file.url(expires_in: 4.hours), allow_other_host: true
