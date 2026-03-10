@@ -81,6 +81,7 @@ export default class extends Controller {
       audio = document.createElement("audio")
       audio.id = "persistent-audio"
       audio.preload = "auto"
+      audio.setAttribute("x-webkit-airplay", "allow")
       document.documentElement.appendChild(audio)
     }
     return audio
