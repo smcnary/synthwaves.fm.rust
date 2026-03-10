@@ -44,6 +44,11 @@ export default class extends Controller {
     this.repeatChangedHandler = (e) => this.onRepeatChanged(e.detail)
     this.shuffleChangedHandler = (e) => this.onShuffleChanged(e.detail)
     this.nextTrackInfoHandler = (e) => this._onNextTrackInfo(e.detail)
+    this.seekForwardHandler = () => this.seekForward()
+    this.seekBackwardHandler = () => this.seekBackward()
+    this.volumeUpHandler = () => this.volumeUp()
+    this.volumeDownHandler = () => this.volumeDown()
+    this.toggleMuteHandler = () => this.toggleMute()
 
     document.addEventListener("player:play", this.playTrackHandler)
     document.addEventListener("player:playYouTube", this.playYouTubeHandler)
@@ -55,6 +60,11 @@ export default class extends Controller {
     document.addEventListener("queue:shuffleChanged", this.shuffleChangedHandler)
     document.addEventListener("cast:stateChanged", this.castStateHandler)
     document.addEventListener("queue:nextTrackInfo", this.nextTrackInfoHandler)
+    document.addEventListener("player:seekForward", this.seekForwardHandler)
+    document.addEventListener("player:seekBackward", this.seekBackwardHandler)
+    document.addEventListener("player:volumeUp", this.volumeUpHandler)
+    document.addEventListener("player:volumeDown", this.volumeDownHandler)
+    document.addEventListener("player:toggleMute", this.toggleMuteHandler)
 
     if ("mediaSession" in navigator) {
       navigator.mediaSession.setActionHandler("play", () => this.toggle())
@@ -77,6 +87,11 @@ export default class extends Controller {
     document.removeEventListener("queue:shuffleChanged", this.shuffleChangedHandler)
     document.removeEventListener("cast:stateChanged", this.castStateHandler)
     document.removeEventListener("queue:nextTrackInfo", this.nextTrackInfoHandler)
+    document.removeEventListener("player:seekForward", this.seekForwardHandler)
+    document.removeEventListener("player:seekBackward", this.seekBackwardHandler)
+    document.removeEventListener("player:volumeUp", this.volumeUpHandler)
+    document.removeEventListener("player:volumeDown", this.volumeDownHandler)
+    document.removeEventListener("player:toggleMute", this.toggleMuteHandler)
   }
 
   // Persistent audio element — lives on <html> so Turbo never detaches it
@@ -333,9 +348,41 @@ export default class extends Controller {
     this.audio.currentTime = percent * this.audio.duration
   }
 
+  seekForward() {
+    if (this.youtubeActive || this.currentIsLive) return
+    this.audio.currentTime = Math.min(this.audio.currentTime + 5, this.audio.duration || Infinity)
+  }
+
+  seekBackward() {
+    if (this.youtubeActive || this.currentIsLive) return
+    this.audio.currentTime = Math.max(this.audio.currentTime - 5, 0)
+  }
+
   setVolume() {
     this.audio.volume = this.volumeTarget.value
     localStorage.setItem("playerVolume", this.volumeTarget.value)
+  }
+
+  volumeUp() {
+    const newVol = Math.min(this.audio.volume + 0.05, 1)
+    this.audio.volume = newVol
+    this.volumeTarget.value = newVol
+    localStorage.setItem("playerVolume", newVol.toString())
+  }
+
+  volumeDown() {
+    const newVol = Math.max(this.audio.volume - 0.05, 0)
+    this.audio.volume = newVol
+    this.volumeTarget.value = newVol
+    localStorage.setItem("playerVolume", newVol.toString())
+  }
+
+  toggleMute() {
+    if (this.audio.muted) {
+      this.audio.muted = false
+    } else {
+      this.audio.muted = true
+    }
   }
 
   // Repeat
