@@ -14,6 +14,8 @@
              class="w-full h-full"
              controls
              playsinline
+             airplay="allow"
+             x-webkit-airplay="allow"
              <% if @video.thumbnail.attached? %>poster="<%= url_for(@video.thumbnail) %>"<% end %>
              src="<%= stream_video_path(@video) %>">
       </video>
