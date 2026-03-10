@@ -232,8 +232,7 @@ export default class extends Controller {
 
   // Playback
 
-  playTrack({ trackId, title, artist, streamUrl, isLive, coverUrl }) {
-  playTrack({ trackId, title, artist, streamUrl, isLive, isPodcast }) {
+  playTrack({ trackId, title, artist, streamUrl, isLive, coverUrl, isPodcast }) {
     if (this.youtubeActive) {
       document.dispatchEvent(new CustomEvent("youtube:stop"))
       this.youtubeActive = false
@@ -255,12 +254,9 @@ export default class extends Controller {
       this.showNormalMode()
     }
 
-    this.saveCurrentTrack({ trackId, title, artist, streamUrl, isLive: isLive || false, coverUrl: coverUrl || null })
+    this.saveCurrentTrack({ trackId, title, artist, streamUrl, isLive: isLive || false, coverUrl: coverUrl || null, isPodcast: isPodcast || false })
     this.dispatchNowPlaying({ trackId, title, artist, coverUrl })
     this._applyPlaybackRate()
-
-    this.saveCurrentTrack({ trackId, title, artist, streamUrl, isLive: isLive || false, isPodcast: isPodcast || false })
-    this.dispatchNowPlaying(trackId)
 
     // If casting, send to cast device instead of local audio
     if (this.castActive) {

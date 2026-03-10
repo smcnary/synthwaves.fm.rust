@@ -40,6 +40,31 @@ RSpec.describe TrackRowComponent, type: :component do
     it "has a play button with the correct data-action" do
       expect(render_component.css("button[data-action='song-row#play']")).to be_present
     end
+
+    it "sets cover URL attribute when album has a cover image" do
+      album.cover_image.attach(
+        io: StringIO.new("fake image data"),
+        filename: "cover.jpg",
+        content_type: "image/jpeg"
+      )
+      html = render_component
+      row = html.at_css("[data-controller]")
+      expect(row["data-song-row-cover-url-value"]).to be_present
+    end
+
+    it "sets podcast attribute when artist is a podcast" do
+      artist.update!(category: "podcast")
+      html = render_component
+      row = html.at_css("[data-controller]")
+      expect(row["data-song-row-is-podcast-value"]).to eq("true")
+    end
+
+    it "omits cover URL and podcast attributes by default" do
+      html = render_component
+      row = html.at_css("[data-controller]")
+      expect(row["data-song-row-cover-url-value"]).to be_nil
+      expect(row["data-song-row-is-podcast-value"]).to be_nil
+    end
   end
 
   describe "now-playing wiring" do
