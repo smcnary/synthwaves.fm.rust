@@ -5,6 +5,12 @@ export default class extends Controller {
 
   connect() {
     this.timeout = null
+
+    if (this.hasInputTarget && this.inputTarget.value) {
+      this.inputTarget.focus()
+      const len = this.inputTarget.value.length
+      this.inputTarget.setSelectionRange(len, len)
+    }
   }
 
   submit() {
