@@ -81,9 +81,7 @@ class TracksController < ApplicationController
   end
 
   def stream
-    if @track.youtube?
-      head :not_found
-    elsif @track.audio_file.attached?
+    if @track.audio_file.attached?
       if params[:resolve].present? && cloud_storage?
         render json: { url: @track.audio_file.url(expires_in: 4.hours) }
       elsif params[:proxy].present? || !cloud_storage?
@@ -97,7 +95,7 @@ class TracksController < ApplicationController
   end
 
   def download
-    if @track.youtube? || !@track.audio_file.attached?
+    if !@track.audio_file.attached?
       redirect_to track_path(@track), alert: "This track is not available for download."
       return
     end

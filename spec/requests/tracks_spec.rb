@@ -237,7 +237,7 @@ RSpec.describe "Tracks", type: :request do
       expect(response.location).to include("disposition=attachment")
     end
 
-    it "redirects with alert for YouTube tracks" do
+    it "redirects with alert for YouTube tracks without audio" do
       youtube_track = create(:track, youtube_video_id: "abc123")
 
       get download_track_path(youtube_track)
@@ -246,10 +246,26 @@ RSpec.describe "Tracks", type: :request do
       expect(flash[:alert]).to eq("This track is not available for download.")
     end
 
-    it "redirects with alert when no audio file is attached" do
-      get download_track_path(track)
+    it "allows download for YouTube tracks with audio file attached" do
+      youtube_track = create(:track, youtube_video_id: "abc123")
+      youtube_track.audio_file.attach(
+        io: File.open(Rails.root.join("spec/fixtures/files/test.mp3")),
+        filename: "test.mp3",
+        content_type: "audio/mpeg"
+      )
 
-      expect(response).to redirect_to(track_path(track))
+      get download_track_path(youtube_track)
+
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include("disposition=attachment")
+    end
+
+    it "redirects with alert when no audio file is attached" do
+      youtube_track = create(:track, :youtube)
+
+      get download_track_path(youtube_track)
+
+      expect(response).to redirect_to(track_path(youtube_track))
       expect(flash[:alert]).to eq("This track is not available for download.")
     end
   end
@@ -258,8 +274,22 @@ RSpec.describe "Tracks", type: :request do
     let(:track) { create(:track) }
 
     it "returns not_found when no audio file is attached" do
-      get stream_track_path(track)
+      youtube_track = create(:track, :youtube)
+      get stream_track_path(youtube_track)
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "streams YouTube tracks that have downloaded audio files" do
+      youtube_track = create(:track, youtube_video_id: "abc123")
+      youtube_track.audio_file.attach(
+        io: File.open(Rails.root.join("spec/fixtures/files/test.mp3")),
+        filename: "test.mp3",
+        content_type: "audio/mpeg"
+      )
+
+      get stream_track_path(youtube_track)
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include("rails/active_storage")
     end
 
     context "when audio file is attached" do

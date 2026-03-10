@@ -14,76 +14,147 @@ RSpec.describe "YoutubeImports", type: :request do
       get new_youtube_import_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "renders media type radio buttons" do
+      get new_youtube_import_path
+      expect(response.body).to include("Download As")
+      expect(response.body).to include("Audio (Track)")
+      expect(response.body).to include("Video")
+    end
   end
 
   describe "POST /youtube_imports" do
-    it "enqueues an import job and redirects to library" do
-      post youtube_imports_path, params: {youtube_url: "https://www.youtube.com/playlist?list=PLtest123"}
+    context "with audio media type (default)" do
+      it "enqueues import job with download flag for playlists" do
+        post youtube_imports_path, params: { youtube_url: "https://www.youtube.com/playlist?list=PLtest123" }
 
-      expect(YoutubeImportJob).to have_been_enqueued.with("https://www.youtube.com/playlist?list=PLtest123", category: "music")
-      expect(response).to redirect_to(library_path)
-      follow_redirect!
-      expect(response.body).to include("Playlist import started")
-    end
+        expect(YoutubeImportJob).to have_been_enqueued.with(
+          "https://www.youtube.com/playlist?list=PLtest123",
+          category: "music",
+          download: true,
+          user_id: user.id
+        )
+        expect(response).to redirect_to(library_path)
+      end
 
-    it "passes the category parameter to the job" do
-      post youtube_imports_path, params: {
-        youtube_url: "https://www.youtube.com/playlist?list=PLtest123",
-        category: "podcast"
-      }
+      it "passes the category parameter to the job" do
+        post youtube_imports_path, params: {
+          youtube_url: "https://www.youtube.com/playlist?list=PLtest123",
+          category: "podcast"
+        }
 
-      expect(YoutubeImportJob).to have_been_enqueued.with("https://www.youtube.com/playlist?list=PLtest123", category: "podcast")
-    end
+        expect(YoutubeImportJob).to have_been_enqueued.with(
+          "https://www.youtube.com/playlist?list=PLtest123",
+          category: "podcast",
+          download: true,
+          user_id: user.id
+        )
+      end
 
-    it "rejects invalid URLs without enqueuing a job" do
-      post youtube_imports_path, params: {youtube_url: "https://example.com"}
+      context "with a single video URL" do
+        let(:video_url) { "https://youtu.be/R-FxmoVM7X4" }
 
-      expect(YoutubeImportJob).not_to have_been_enqueued
-      expect(response).to have_http_status(:unprocessable_content)
-    end
+        it "imports metadata and enqueues MediaDownloadJob" do
+          album = create(:album)
+          track = create(:track, album: album, youtube_video_id: "R-FxmoVM7X4")
+          allow(YoutubeVideoImportService).to receive(:call).and_return(track)
 
-    context "with a single video URL" do
-      let(:video_url) { "https://youtu.be/R-FxmoVM7X4" }
+          post youtube_imports_path, params: { youtube_url: video_url }
 
-      it "imports synchronously and redirects to the album" do
-        album = create(:album)
-        track = instance_double(Track, album: album)
-        allow(YoutubeVideoImportService).to receive(:call).and_return(track)
+          expect(YoutubeVideoImportService).to have_received(:call).with(video_url, category: "music")
+          expect(MediaDownloadJob).to have_been_enqueued.with(track.id, video_url, user_id: user.id)
+          expect(response).to redirect_to(album_path(album))
+        end
 
-        post youtube_imports_path, params: {youtube_url: video_url}
+        it "passes the category parameter to the service" do
+          album = create(:album)
+          track = create(:track, album: album, youtube_video_id: "R-FxmoVM7X4")
+          allow(YoutubeVideoImportService).to receive(:call).and_return(track)
 
-        expect(YoutubeVideoImportService).to have_received(:call).with(video_url, category: "music")
+          post youtube_imports_path, params: { youtube_url: video_url, category: "podcast" }
+
+          expect(YoutubeVideoImportService).to have_received(:call).with(video_url, category: "podcast")
+        end
+
+        it "renders the form with an error when the service fails" do
+          allow(YoutubeVideoImportService).to receive(:call)
+            .and_raise(YoutubeVideoImportService::Error, "Video not found")
+
+          post youtube_imports_path, params: { youtube_url: video_url }
+
+          expect(response).to have_http_status(:unprocessable_content)
+        end
+      end
+
+      it "rejects invalid URLs without enqueuing a job" do
+        post youtube_imports_path, params: { youtube_url: "https://example.com" }
+
         expect(YoutubeImportJob).not_to have_been_enqueued
-        expect(response).to redirect_to(album_path(album))
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
-      it "passes the category parameter to the service" do
-        album = create(:album)
-        track = instance_double(Track, album: album)
-        allow(YoutubeVideoImportService).to receive(:call).and_return(track)
+      context "with a URL containing both video and playlist params" do
+        it "treats it as a playlist import" do
+          url = "https://www.youtube.com/watch?v=R-FxmoVM7X4&list=PLtest123"
 
-        post youtube_imports_path, params: {youtube_url: video_url, category: "podcast"}
+          post youtube_imports_path, params: { youtube_url: url }
 
-        expect(YoutubeVideoImportService).to have_received(:call).with(video_url, category: "podcast")
+          expect(YoutubeImportJob).to have_been_enqueued.with(
+            url, category: "music", download: true, user_id: user.id
+          )
+        end
+      end
+    end
+
+    context "with video media type" do
+      it "creates a Video record and enqueues VideoDownloadJob for a single video" do
+        details = { video_id: "dQw4w9WgXcQ", title: "Test Video", channel_name: "Test Channel", duration: 120.0 }
+        api = instance_double(YoutubeAPIService)
+        allow(YoutubeAPIService).to receive(:new).and_return(api)
+        allow(api).to receive(:fetch_video_details).with(["dQw4w9WgXcQ"]).and_return([details])
+
+        expect {
+          post youtube_imports_path, params: {
+            youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            media_type: "video"
+          }
+        }.to change(Video, :count).by(1)
+
+        video = Video.last
+        expect(video.title).to eq("Test Video")
+        expect(video.youtube_video_id).to eq("dQw4w9WgXcQ")
+        expect(VideoDownloadJob).to have_been_enqueued.with(video.id, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", user_id: user.id)
+        expect(response).to redirect_to(videos_path)
       end
 
-      it "renders the form with an error when the service fails" do
-        allow(YoutubeVideoImportService).to receive(:call)
-          .and_raise(YoutubeVideoImportService::Error, "Video not found")
+      it "rejects playlist URLs for video import" do
+        post youtube_imports_path, params: {
+          youtube_url: "https://www.youtube.com/playlist?list=PLtest123",
+          media_type: "video"
+        }
 
-        post youtube_imports_path, params: {youtube_url: video_url}
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("not supported for playlists")
+      end
+
+      it "rejects invalid URLs for video import" do
+        post youtube_imports_path, params: {
+          youtube_url: "https://example.com",
+          media_type: "video"
+        }
 
         expect(response).to have_http_status(:unprocessable_content)
       end
-    end
 
-    context "with a URL containing both video and playlist params" do
-      it "treats it as a playlist import" do
-        url = "https://www.youtube.com/watch?v=R-FxmoVM7X4&list=PLtest123"
+      it "redirects to existing video if already imported" do
+        existing = create(:video, user: user, youtube_video_id: "dQw4w9WgXcQ")
 
-        post youtube_imports_path, params: {youtube_url: url}
+        post youtube_imports_path, params: {
+          youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          media_type: "video"
+        }
 
-        expect(YoutubeImportJob).to have_been_enqueued.with(url, category: "music")
+        expect(response).to redirect_to(video_path(existing))
       end
     end
   end

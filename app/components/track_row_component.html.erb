@@ -10,10 +10,10 @@
      <% if track.artist.podcast? %>
      data-song-row-is-podcast-value="true"
      <% end %>
-     <% if track.youtube? %>
-     data-song-row-youtube-video-id-value="<%= track.youtube_video_id %>"
-     <% else %>
+     <% if track.audio_file.attached? %>
      data-song-row-stream-url-value="<%= stream_track_path(track) %>"
+     <% elsif track.youtube? %>
+     data-song-row-youtube-video-id-value="<%= track.youtube_video_id %>"
      <% end %>>
   <div class="flex items-center gap-3 min-w-0 flex-1">
     <button type="button" data-action="song-row#play" class="w-8 text-center text-gray-400 hover:text-neon-pink group/play">

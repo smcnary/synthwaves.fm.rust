@@ -13,7 +13,7 @@ class Track < ApplicationRecord
 
   scope :music, -> { joins(:artist).merge(Artist.music) }
   scope :podcast, -> { joins(:artist).merge(Artist.podcast) }
-  scope :streamable, -> { where(youtube_video_id: nil) }
+  scope :streamable, -> { joins(:audio_file_attachment) }
 
   ALBUM_SORT_OPTIONS = {
     "disc_number" => "Track Number",
@@ -24,6 +24,18 @@ class Track < ApplicationRecord
 
   def youtube?
     youtube_video_id.present?
+  end
+
+  def downloading?
+    download_status == "downloading"
+  end
+
+  def download_failed?
+    download_status == "failed"
+  end
+
+  def download_completed?
+    download_status == "completed"
   end
 
   scope :search, ->(query) {

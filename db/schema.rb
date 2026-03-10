@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_10_043429) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_10_220019) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -426,6 +426,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_043429) do
     t.integer "bitrate"
     t.datetime "created_at", null: false
     t.integer "disc_number", default: 1
+    t.string "download_error"
+    t.string "download_status"
     t.float "duration"
     t.string "file_format"
     t.integer "file_size"
@@ -467,6 +469,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_043429) do
     t.integer "bitrate"
     t.datetime "created_at", null: false
     t.text "description"
+    t.string "download_error"
+    t.string "download_status"
     t.float "duration"
     t.integer "episode_number"
     t.string "error_message"
@@ -481,9 +485,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_043429) do
     t.integer "user_id", null: false
     t.string "video_codec"
     t.integer "width"
+    t.string "youtube_video_id"
     t.index ["folder_id", "season_number", "episode_number"], name: "index_videos_on_folder_id_and_season_number_and_episode_number"
     t.index ["folder_id"], name: "index_videos_on_folder_id"
     t.index ["user_id"], name: "index_videos_on_user_id"
+    t.index ["youtube_video_id"], name: "index_videos_on_youtube_video_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

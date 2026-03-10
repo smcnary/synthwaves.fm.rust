@@ -75,36 +75,43 @@ RSpec.describe Track, type: :model do
   end
 
   describe ".streamable" do
-    it "includes tracks without youtube_video_id" do
+    it "includes tracks with an audio file attached" do
       track = create(:track)
+      track.audio_file.attach(io: StringIO.new("audio"), filename: "test.mp3", content_type: "audio/mpeg")
       expect(Track.streamable).to include(track)
     end
 
-    it "excludes tracks with youtube_video_id" do
+    it "excludes tracks without an audio file" do
+      track = create(:track, :youtube)
+      expect(Track.streamable).not_to include(track)
+    end
+
+    it "excludes YouTube tracks without audio files" do
       youtube_track = create(:track, :youtube)
       expect(Track.streamable).not_to include(youtube_track)
     end
 
-    it "chains with .music" do
-      music_track = create(:track, artist: create(:artist, category: "music"))
-      youtube_music = create(:track, :youtube, artist: create(:artist, category: "music"))
-      podcast_track = create(:track, artist: create(:artist, :podcast))
+    it "includes YouTube tracks that have downloaded audio files" do
+      youtube_track = create(:track, :youtube)
+      youtube_track.audio_file.attach(io: StringIO.new("audio"), filename: "test.mp3", content_type: "audio/mpeg")
+      expect(Track.streamable).to include(youtube_track)
+    end
+  end
 
-      result = Track.music.streamable
-      expect(result).to include(music_track)
-      expect(result).not_to include(youtube_music)
-      expect(result).not_to include(podcast_track)
+  describe "download status methods" do
+    it "#downloading? returns true when status is downloading" do
+      track = build(:track, download_status: "downloading")
+      expect(track).to be_downloading
     end
 
-    it "chains with .podcast" do
-      podcast_artist = create(:artist, :podcast)
-      podcast_album = create(:album, artist: podcast_artist)
-      podcast_track = create(:track, album: podcast_album, artist: podcast_artist)
-      youtube_podcast = create(:track, :youtube, album: podcast_album, artist: podcast_artist)
+    it "#download_failed? returns true when status is failed" do
+      track = build(:track, download_status: "failed")
+      expect(track).to be_download_failed
+    end
 
-      result = Track.podcast.streamable
-      expect(result).to include(podcast_track)
-      expect(result).not_to include(youtube_podcast)
+    it "#download_completed? returns true when status is completed" do
+      track = build(:track, download_status: "completed")
+      expect(track).to be_download_completed
     end
   end
 

@@ -18,7 +18,7 @@ RSpec.describe "Subsonic Media API", type: :request do
     end
 
     it "returns error when no audio file attached" do
-      track = create(:track)
+      track = create(:track, :youtube)
       get "/api/rest/stream.view", params: auth_params.merge(id: track.id)
       json = JSON.parse(response.body)
       expect(json["subsonic-response"]["error"]["code"]).to eq(70)
@@ -45,7 +45,7 @@ RSpec.describe "Subsonic Media API", type: :request do
     end
 
     it "returns error when no audio file attached" do
-      track = create(:track)
+      track = create(:track, :youtube)
       get "/api/rest/download.view", params: auth_params.merge(id: track.id)
       json = JSON.parse(response.body)
       expect(json["subsonic-response"]["error"]["code"]).to eq(70)

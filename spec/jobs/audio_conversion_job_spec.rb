@@ -5,7 +5,8 @@ RSpec.describe AudioConversionJob, type: :job do
 
   describe "#perform" do
     it "skips when no audio file is attached" do
-      expect { described_class.perform_now(track.id) }.not_to raise_error
+      no_audio_track = create(:track, :youtube)
+      expect { described_class.perform_now(no_audio_track.id) }.not_to raise_error
     end
 
     it "skips when file format is already mp3" do
