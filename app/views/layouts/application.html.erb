@@ -242,6 +242,12 @@
                    class="hidden md:inline-block w-20 h-1 accent-neon-pink"
                    data-player-target="volume"
                    data-action="input->player#setVolume">
+            <!-- AirPlay button -->
+            <div data-controller="airplay" data-airplay-target="button" class="hidden">
+              <button data-action="airplay#pick" class="text-gray-500 hover:text-neon-cyan p-1" title="AirPlay">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 22h12l-6-6-6 6zM21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v-2H3V5h18v12h-4v2h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+              </button>
+            </div>
             <!-- Cast button -->
             <div data-controller="cast" class="hidden" data-cast-target="button">
               <button data-action="cast#requestSession" class="text-gray-500 hover:text-neon-cyan p-1" title="Cast">
@@ -264,7 +270,7 @@
               </div>
             </div>
             <!-- Fullscreen now playing toggle -->
-            <button data-action="click->fullscreen-now-playing#toggle" class="text-gray-500 hover:text-neon-cyan p-1" title="Now Playing">
+            <button data-action="click->player#toggleFullscreen" class="text-gray-500 hover:text-neon-cyan p-1" title="Now Playing">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
               </svg>

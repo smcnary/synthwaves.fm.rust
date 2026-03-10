@@ -445,6 +445,10 @@ export default class extends Controller {
     document.dispatchEvent(new CustomEvent("visualizer-panel:toggle"))
   }
 
+  toggleFullscreen() {
+    document.dispatchEvent(new CustomEvent("fullscreen-now-playing:toggle"))
+  }
+
   // Now playing
 
   dispatchNowPlaying({ trackId, title, artist, coverUrl }) {
