@@ -254,6 +254,24 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
               </svg>
             </button>
+            <!-- Sleep timer -->
+            <div class="relative" data-controller="sleep-timer">
+              <button data-action="sleep-timer#toggleMenu" class="text-gray-500 hover:text-neon-cyan p-1 relative" title="Sleep Timer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+                <span data-sleep-timer-target="badge" class="hidden absolute -top-2 -right-2 text-[9px] font-bold text-neon-pink bg-gray-900 px-1 rounded tabular-nums"></span>
+              </button>
+              <div data-sleep-timer-target="menu" class="hidden absolute bottom-full right-0 mb-2 bg-gray-800 border border-neon-purple/30 rounded-lg shadow-xl py-1 min-w-[140px]">
+                <button data-action="sleep-timer#start" data-minutes="15" class="block w-full text-left px-4 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">15 minutes</button>
+                <button data-action="sleep-timer#start" data-minutes="30" class="block w-full text-left px-4 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">30 minutes</button>
+                <button data-action="sleep-timer#start" data-minutes="60" class="block w-full text-left px-4 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">60 minutes</button>
+                <button data-action="sleep-timer#start" data-minutes="90" class="block w-full text-left px-4 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">90 minutes</button>
+                <button data-action="sleep-timer#start" data-minutes="120" class="block w-full text-left px-4 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">120 minutes</button>
+                <hr class="border-gray-700 my-1">
+                <button data-action="sleep-timer#cancel" class="block w-full text-left px-4 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-gray-700">Cancel timer</button>
+              </div>
+            </div>
             <!-- Visualizer toggle -->
             <button data-action="player#toggleVisualizer" class="text-gray-500 hover:text-neon-cyan p-1" title="Visualizer">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
