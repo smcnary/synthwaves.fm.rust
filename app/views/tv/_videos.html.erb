@@ -34,7 +34,7 @@
   </div>
 
   <div class="mt-6">
-    <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+    <%== @pagy.series_nav if @pagy.pages > 1 %>
   </div>
 <% elsif @folders.empty? %>
   <div class="text-center py-16 text-gray-400">
