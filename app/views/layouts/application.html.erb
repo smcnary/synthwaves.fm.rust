@@ -30,7 +30,7 @@
     <meta name="turbo-refresh-method" content="morph">
     <meta name="turbo-refresh-scroll" content="preserve">
   </head>
-  <body class="bg-gray-900 synthwave-bg text-white pb-24 scanlines" data-controller="youtube-player">
+  <body class="bg-gray-900 synthwave-bg text-white pb-24 scanlines" data-controller="youtube-player keyboard-shortcuts">
     <% if authenticated? %>
       <%= turbo_stream_from "downloads_#{Current.user.id}" %>
       <%= turbo_stream_from "recordings_#{Current.user.id}" %>
@@ -122,6 +122,32 @@
         </div>
         <!-- Lyrics area placeholder -->
         <div data-fullscreen-now-playing-target="lyrics" class="mt-8 w-full max-w-md text-center text-gray-500 text-sm max-h-32 overflow-y-auto"></div>
+    <!-- Keyboard shortcuts help modal -->
+    <div data-keyboard-shortcuts-target="helpModal" class="hidden fixed inset-0 z-[9998] flex items-center justify-center bg-black/70">
+      <div class="bg-gray-800 border border-neon-purple/30 rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold font-display text-white">Keyboard Shortcuts</h2>
+          <button data-action="keyboard-shortcuts#closeHelp" class="text-gray-400 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-400">Play / Pause</span><kbd class="text-neon-cyan font-mono">Space</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Next track</span><kbd class="text-neon-cyan font-mono">N</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Previous track</span><kbd class="text-neon-cyan font-mono">P</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Mute</span><kbd class="text-neon-cyan font-mono">M</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Seek forward 5s</span><kbd class="text-neon-cyan font-mono">&rarr;</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Seek backward 5s</span><kbd class="text-neon-cyan font-mono">&larr;</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Volume up</span><kbd class="text-neon-cyan font-mono">&uarr;</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Volume down</span><kbd class="text-neon-cyan font-mono">&darr;</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Visualizer</span><kbd class="text-neon-cyan font-mono">V</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Queue</span><kbd class="text-neon-cyan font-mono">Q</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Shuffle</span><kbd class="text-neon-cyan font-mono">S</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Repeat</span><kbd class="text-neon-cyan font-mono">R</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Fullscreen</span><kbd class="text-neon-cyan font-mono">F</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">Dismiss overlays</span><kbd class="text-neon-cyan font-mono">Esc</kbd></div>
+          <div class="flex justify-between"><span class="text-gray-400">This help</span><kbd class="text-neon-cyan font-mono">?</kbd></div>
+        </div>
       </div>
     </div>
     <!-- Persistent player bar -->
