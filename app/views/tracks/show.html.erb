@@ -25,6 +25,10 @@
           <% if @track.youtube? %><p>Source: YouTube</p><% end %>
         </div>
 
+        <div class="mt-4">
+          <%= render "taggings/tags", taggable: @track %>
+        </div>
+
         <div class="mt-4 flex flex-wrap items-center gap-2">
           <%= render "favorites/button", favorable: @track, favorited: Current.user.favorites.exists?(favorable: @track) %>
           <button class="px-4 py-2 bg-neon-pink text-white rounded-lg hover:shadow-neon-pink"
