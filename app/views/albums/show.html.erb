@@ -34,10 +34,13 @@
               playlists: current_user_playlists,
               new_playlist_name: @album.title
             ) %>
-        <%= button_to "Download", downloads_path(downloadable_type: "Album", downloadable_id: @album.id), class: "inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-neon-cyan bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" %>
+        <%= button_to "Export ZIP", downloads_path(downloadable_type: "Album", downloadable_id: @album.id), class: "inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-neon-cyan bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" %>
         <%= button_to "Fetch cover", fetch_cover_album_path(@album), class: "inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-neon-cyan bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" %>
         <% if @album.youtube_playlist_url.present? %>
           <%= button_to "Refresh Episodes", refresh_album_path(@album), class: "inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-neon-cyan bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" %>
+        <% end %>
+        <% if @album.tracks.where.not(youtube_video_id: [nil, ""]).where.missing(:audio_file_attachment).any? %>
+          <%= button_to "Download Audio", download_audio_album_path(@album), class: "inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-neon-cyan bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" %>
         <% end %>
       </div>
       <% if Flipper.enabled?(:youtube_import, Current.user) %>

@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     post :create_playlist, on: :member
     post :refresh, on: :member
     post :fetch_cover, on: :member
+    post :download_audio, on: :member
   end
   resources :tracks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
     member do

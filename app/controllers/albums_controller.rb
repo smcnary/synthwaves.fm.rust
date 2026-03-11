@@ -54,6 +54,34 @@ class AlbumsController < ApplicationController
     redirect_to album, alert: "Refresh failed: #{e.message}"
   end
 
+  def download_audio
+    album = Album.find(params[:id])
+
+    unless Flipper.enabled?(:youtube_import, Current.user)
+      redirect_to album, alert: "This feature is not available."
+      return
+    end
+
+    tracks = album.tracks.where.not(youtube_video_id: [nil, ""]).reject { |t| t.audio_file.attached? }
+
+    if album.tracks.where.not(youtube_video_id: [nil, ""]).none?
+      redirect_to album, alert: "No YouTube tracks to download."
+      return
+    end
+
+    if tracks.empty?
+      redirect_to album, notice: "All tracks already have audio."
+      return
+    end
+
+    tracks.each do |track|
+      url = "https://www.youtube.com/watch?v=#{track.youtube_video_id}"
+      MediaDownloadJob.perform_later(track.id, url, user_id: Current.user.id)
+    end
+
+    redirect_to album, notice: "Downloading audio for #{tracks.size} #{"track".pluralize(tracks.size)}."
+  end
+
   def update
     album = Album.find(params[:id])
     if album.update(album_params)

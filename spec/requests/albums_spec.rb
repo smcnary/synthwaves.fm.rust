@@ -287,6 +287,64 @@ RSpec.describe "Albums", type: :request do
     end
   end
 
+  describe "POST /albums/:id/download_audio" do
+    before { Flipper.enable(:youtube_import) }
+
+    it "enqueues MediaDownloadJob for YouTube tracks without audio" do
+      album = create(:album)
+      yt_track = create(:track, album: album, youtube_video_id: "abc123")
+      local_track = create(:track, album: album)
+
+      expect {
+        post download_audio_album_path(album)
+      }.to have_enqueued_job(MediaDownloadJob).with(yt_track.id, "https://www.youtube.com/watch?v=abc123", user_id: user.id)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("1 track")
+    end
+
+    it "skips YouTube tracks that already have audio attached" do
+      album = create(:album)
+      yt_track = create(:track, album: album, youtube_video_id: "abc123")
+      yt_track.audio_file.attach(
+        io: File.open(Rails.root.join("spec/fixtures/files/test.mp3")),
+        filename: "test.mp3",
+        content_type: "audio/mpeg"
+      )
+
+      expect {
+        post download_audio_album_path(album)
+      }.not_to have_enqueued_job(MediaDownloadJob)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("All tracks already have audio")
+    end
+
+    it "redirects with alert when no YouTube tracks exist" do
+      album = create(:album)
+      create(:track, album: album)
+
+      post download_audio_album_path(album)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("No YouTube tracks to download")
+    end
+
+    it "requires the youtube_import feature flag" do
+      Flipper.disable(:youtube_import)
+      album = create(:album)
+
+      post download_audio_album_path(album)
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("not available")
+    end
+  end
+
   describe "POST /albums/:id/create_playlist" do
     it "creates a playlist named after the album with all tracks in disc/track order" do
       album = create(:album, title: "Great Album")
