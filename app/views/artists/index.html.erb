@@ -25,7 +25,7 @@
     <% end %>
   </div>
 
-  <turbo-frame id="artists-list" data-turbo-action="advance">
+  <turbo-frame id="artists-list" data-turbo-action="replace">
     <% if @artists.any? %>
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <% @artists.each do |artist| %>

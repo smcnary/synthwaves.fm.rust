@@ -57,6 +57,27 @@ RSpec.describe Track, type: :model do
       tracks = create_list(:track, 3)
       expect(Track.search("")).to match_array(tracks)
     end
+
+    it "matches by prefix" do
+      matching = create(:track, title: "Bohemian Rhapsody")
+      create(:track, title: "Stairway to Heaven")
+
+      expect(Track.search("Boh")).to include(matching)
+    end
+
+    it "finds a track immediately after creation" do
+      track = create(:track, title: "Instant Index Test")
+
+      expect(Track.search("Instant")).to include(track)
+    end
+
+    it "does not find a track after it is destroyed" do
+      track = create(:track, title: "Ephemeral Song")
+      expect(Track.search("Ephemeral")).to include(track)
+
+      track.destroy!
+      expect(Track.search("Ephemeral")).to be_empty
+    end
   end
 
   describe "category scopes" do

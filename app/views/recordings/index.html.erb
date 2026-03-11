@@ -35,7 +35,7 @@
     <% end %>
   </div>
 
-  <turbo-frame id="recordings-list" data-turbo-action="advance">
+  <turbo-frame id="recordings-list" data-turbo-action="replace">
     <% if @recordings.any? %>
       <div class="space-y-3">
         <% @recordings.each do |recording| %>

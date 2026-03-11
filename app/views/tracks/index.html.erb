@@ -12,7 +12,7 @@
     <% end %>
   </div>
 
-  <turbo-frame id="tracks-list" data-turbo-action="advance">
+  <turbo-frame id="tracks-list" data-turbo-action="replace">
     <% if @tracks.any? %>
       <% if @query.present? %>
         <div class="flex justify-end mb-3">

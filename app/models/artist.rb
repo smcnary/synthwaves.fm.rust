@@ -14,7 +14,17 @@ class Artist < ApplicationRecord
 
   validates :name, presence: true, uniqueness: true
 
+  after_update_commit :reindex_tracks_search, if: :saved_change_to_name?
+
   scope :search, ->(query) {
     where("artists.name LIKE :q", q: "%#{query}%") if query.present?
   }
+
+  private
+
+  def reindex_tracks_search
+    tracks.find_each do |track|
+      track.send(:update_search_index)
+    end
+  end
 end

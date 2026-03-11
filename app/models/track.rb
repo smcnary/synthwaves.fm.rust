@@ -40,12 +40,16 @@ class Track < ApplicationRecord
 
   scope :search, ->(query) {
     if query.present?
-      joins(:artist, :album)
-        .where("tracks.title LIKE :q OR artists.name LIKE :q OR albums.title LIKE :q", q: "%#{query}%")
+      sanitized = query.gsub(/["\*\(\)]/, "")
+      fts_query = sanitized.split.map { |term| "\"#{term}\"*" }.join(" ")
+      where("tracks.id IN (SELECT CAST(track_id AS INTEGER) FROM tracks_search WHERE tracks_search MATCH ?)", fts_query)
     end
   }
 
   after_create_commit :convert_audio_if_needed
+  after_create_commit :add_to_search_index
+  after_update_commit :update_search_index, if: :saved_change_to_title?
+  after_destroy_commit :remove_from_search_index
 
   private
 
@@ -54,5 +58,27 @@ class Track < ApplicationRecord
     return unless AudioConversionJob::CONVERTIBLE_FORMATS.include?(file_format)
 
     AudioConversionJob.perform_later(id)
+  end
+
+  def add_to_search_index
+    self.class.connection.execute(
+      ActiveRecord::Base.sanitize_sql_array([
+        "INSERT INTO tracks_search (track_title, artist_name, album_title, track_id) VALUES (?, ?, ?, ?)",
+        title, artist.name, album.title, id
+      ])
+    )
+  end
+
+  def update_search_index
+    remove_from_search_index
+    add_to_search_index
+  end
+
+  def remove_from_search_index
+    self.class.connection.execute(
+      ActiveRecord::Base.sanitize_sql_array([
+        "DELETE FROM tracks_search WHERE track_id = ?", id.to_s
+      ])
+    )
   end
 end
