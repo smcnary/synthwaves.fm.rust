@@ -101,6 +101,24 @@ RSpec.describe "Videos", type: :request do
       patch video_path(video), params: {video: {title: ""}}
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "moves video to a folder" do
+      folder = create(:folder, user: user)
+      video = create(:video, user: user)
+
+      patch video_path(video), params: {video: {folder_id: folder.id}}
+
+      expect(video.reload.folder).to eq(folder)
+    end
+
+    it "removes video from a folder" do
+      folder = create(:folder, user: user)
+      video = create(:video, user: user, folder: folder)
+
+      patch video_path(video), params: {video: {folder_id: ""}}
+
+      expect(video.reload.folder).to be_nil
+    end
   end
 
   describe "DELETE /videos/:id" do

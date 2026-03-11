@@ -23,6 +23,11 @@
     </div>
 
     <div>
+      <%= f.label :folder_id, "Folder", class: "block text-sm font-medium text-gray-400 mb-1" %>
+      <%= f.collection_select :folder_id, @folders, :id, :name, { include_blank: "(No folder)" }, class: "w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan px-3 py-2 text-sm border" %>
+    </div>
+
+    <div>
       <%= f.submit "Save", class: "px-4 py-2 bg-neon-pink text-white rounded-lg hover:shadow-neon-pink cursor-pointer" %>
       <%= link_to "Cancel", video_path(@video), class: "px-4 py-2 text-gray-400 hover:text-neon-cyan" %>
     </div>

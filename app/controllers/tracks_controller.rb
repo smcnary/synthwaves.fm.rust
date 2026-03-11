@@ -65,12 +65,16 @@ class TracksController < ApplicationController
   end
 
   def edit
+    @artists = Artist.order(:name)
+    @albums = Album.includes(:artist).order(:title)
   end
 
   def update
     if @track.update(track_params)
       redirect_to @track, notice: "Track updated successfully."
     else
+      @artists = Artist.order(:name)
+      @albums = Album.includes(:artist).order(:title)
       render :edit, status: :unprocessable_content
     end
   end
@@ -119,7 +123,7 @@ class TracksController < ApplicationController
   end
 
   def track_params
-    params.require(:track).permit(:title, :track_number, :disc_number, :lyrics)
+    params.require(:track).permit(:title, :track_number, :disc_number, :lyrics, :album_id, :artist_id)
   end
 
   def cloud_storage?

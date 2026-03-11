@@ -48,7 +48,9 @@ class Track < ApplicationRecord
 
   after_create_commit :convert_audio_if_needed
   after_create_commit :add_to_search_index
-  after_update_commit :update_search_index, if: :saved_change_to_title?
+  after_update_commit :update_search_index, if: -> {
+    saved_change_to_title? || saved_change_to_album_id? || saved_change_to_artist_id?
+  }
   after_destroy_commit :remove_from_search_index
 
   private

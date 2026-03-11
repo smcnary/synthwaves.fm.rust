@@ -116,4 +116,89 @@ RSpec.describe "Artists", type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  describe "GET /artists/:id/edit" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "returns success for admin" do
+      artist = create(:artist)
+      get edit_artist_path(artist)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "redirects non-admin" do
+      login_user(user)
+      artist = create(:artist)
+      get edit_artist_path(artist)
+      expect(response).to redirect_to(artists_path)
+    end
+  end
+
+  describe "PATCH /artists/:id" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "updates artist name" do
+      artist = create(:artist, name: "Old Name")
+      patch artist_path(artist), params: {artist: {name: "New Name"}}
+
+      expect(artist.reload.name).to eq("New Name")
+      expect(response).to redirect_to(artist_path(artist))
+    end
+
+    it "updates artist category" do
+      artist = create(:artist, category: "music")
+      patch artist_path(artist), params: {artist: {category: "podcast"}}
+
+      expect(artist.reload.category).to eq("podcast")
+    end
+
+    it "renders edit on validation error" do
+      create(:artist, name: "Taken")
+      artist = create(:artist, name: "Other")
+
+      patch artist_path(artist), params: {artist: {name: "Taken"}}
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "redirects non-admin" do
+      login_user(user)
+      artist = create(:artist, name: "Original")
+      patch artist_path(artist), params: {artist: {name: "Hacked"}}
+      expect(response).to redirect_to(artists_path)
+      expect(artist.reload.name).to eq("Original")
+    end
+  end
+
+  describe "DELETE /artists/:id" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "deletes the artist and cascades to albums and tracks" do
+      artist = create(:artist)
+      album = create(:album, artist: artist)
+      create(:track, album: album, artist: artist)
+
+      expect {
+        delete artist_path(artist)
+      }.to change(Artist, :count).by(-1)
+        .and change(Album, :count).by(-1)
+        .and change(Track, :count).by(-1)
+
+      expect(response).to redirect_to(artists_path)
+    end
+
+    it "redirects non-admin" do
+      login_user(user)
+      artist = create(:artist)
+      delete artist_path(artist)
+      expect(response).to redirect_to(artists_path)
+      expect(Artist.exists?(artist.id)).to be true
+    end
+  end
 end

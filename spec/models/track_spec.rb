@@ -136,6 +136,28 @@ RSpec.describe Track, type: :model do
     end
   end
 
+  describe "search index update on move" do
+    it "reindexes when album_id changes" do
+      track = create(:track, title: "Movable Song")
+      new_album = create(:album, title: "Destination Album")
+
+      track.update!(album: new_album)
+
+      results = Track.search("Destination")
+      expect(results).to include(track)
+    end
+
+    it "reindexes when artist_id changes" do
+      track = create(:track, title: "Transferable Song")
+      new_artist = create(:artist, name: "Receiving Artist")
+
+      track.update!(artist: new_artist)
+
+      results = Track.search("Receiving")
+      expect(results).to include(track)
+    end
+  end
+
   describe "callbacks" do
     it "enqueues AudioConversionJob for webm files" do
       track = build(:track, file_format: "webm")

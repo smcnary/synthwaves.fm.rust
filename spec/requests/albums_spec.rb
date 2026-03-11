@@ -345,6 +345,121 @@ RSpec.describe "Albums", type: :request do
     end
   end
 
+  describe "GET /albums/:id/edit" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "returns success for admin" do
+      album = create(:album)
+      get edit_album_path(album)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "redirects non-admin" do
+      login_user(user)
+      album = create(:album)
+      get edit_album_path(album)
+      expect(response).to redirect_to(albums_path)
+    end
+  end
+
+  describe "PATCH /albums/:id (admin edit)" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "updates album title" do
+      album = create(:album, title: "Old Title")
+      patch album_path(album), params: {album: {title: "New Title"}}
+
+      expect(album.reload.title).to eq("New Title")
+      expect(response).to redirect_to(album_path(album))
+    end
+
+    it "updates album artist" do
+      old_artist = create(:artist, name: "Old Artist")
+      new_artist = create(:artist, name: "New Artist")
+      album = create(:album, artist: old_artist)
+      track = create(:track, album: album, artist: old_artist)
+
+      patch album_path(album), params: {album: {artist_id: new_artist.id}}
+
+      album.reload
+      expect(album.artist).to eq(new_artist)
+      expect(track.reload.artist).to eq(new_artist)
+    end
+
+    it "renders edit on validation error" do
+      existing = create(:album, title: "Taken", artist: create(:artist, name: "Same"))
+      album = create(:album, title: "Other", artist: existing.artist)
+
+      patch album_path(album), params: {album: {title: "Taken"}}
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "DELETE /albums/:id" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "deletes the album and its tracks" do
+      album = create(:album)
+      create(:track, album: album)
+
+      expect {
+        delete album_path(album)
+      }.to change(Album, :count).by(-1).and change(Track, :count).by(-1)
+
+      expect(response).to redirect_to(artist_path(album.artist))
+    end
+
+    it "redirects non-admin" do
+      login_user(user)
+      album = create(:album)
+      delete album_path(album)
+      expect(response).to redirect_to(albums_path)
+      expect(Album.exists?(album.id)).to be true
+    end
+  end
+
+  describe "POST /albums/:id/merge" do
+    let(:admin) { create(:user, admin: true) }
+
+    before { login_user(admin) }
+
+    it "merges source album into target" do
+      target = create(:album, title: "Target")
+      source = create(:album, title: "Source")
+      track = create(:track, album: source, artist: source.artist)
+
+      post merge_album_path(target), params: {source_album_id: source.id}
+
+      expect(track.reload.album).to eq(target)
+      expect(Album.exists?(source.id)).to be false
+      expect(response).to redirect_to(album_path(target))
+    end
+
+    it "rejects self-merge" do
+      album = create(:album)
+      post merge_album_path(album), params: {source_album_id: album.id}
+
+      expect(response).to redirect_to(album_path(album))
+      follow_redirect!
+      expect(response.body).to include("Cannot merge an album into itself")
+    end
+
+    it "redirects non-admin" do
+      login_user(user)
+      album = create(:album)
+      source = create(:album)
+      post merge_album_path(album), params: {source_album_id: source.id}
+      expect(response).to redirect_to(albums_path)
+    end
+  end
+
   describe "POST /albums/:id/create_playlist" do
     it "creates a playlist named after the album with all tracks in disc/track order" do
       album = create(:album, title: "Great Album")

@@ -1,6 +1,8 @@
 class AlbumsController < ApplicationController
   include Orderable
 
+  before_action :require_admin, only: [:edit, :destroy, :merge]
+
   def index
     @query = params[:q]
     @sort = sort_column(Album, default: "title")
@@ -26,6 +28,27 @@ class AlbumsController < ApplicationController
     @all_tracks = @album.tracks
     @pagy, @tracks = pagy(:offset, scope)
     @favorited_track_ids = Current.user.favorites.where(favorable_type: "Track").pluck(:favorable_id).to_set
+  end
+
+  def edit
+    @album = Album.find(params[:id])
+    @artists = Artist.order(:name)
+  end
+
+  def destroy
+    @album = Album.find(params[:id])
+    artist = @album.artist
+    @album.destroy
+    redirect_to artist_path(artist), notice: "Album deleted."
+  end
+
+  def merge
+    @album = Album.find(params[:id])
+    source = Album.find(params[:source_album_id])
+    AlbumMergeService.call(target: @album, source: source)
+    redirect_to @album, notice: "Merged \"#{source.title}\" into this album."
+  rescue AlbumMergeService::Error => e
+    redirect_to @album, alert: e.message
   end
 
   def refresh
@@ -83,11 +106,12 @@ class AlbumsController < ApplicationController
   end
 
   def update
-    album = Album.find(params[:id])
-    if album.update(album_params)
-      redirect_to album, notice: "Album updated."
+    @album = Album.find(params[:id])
+    if @album.update(album_params)
+      redirect_to @album, notice: "Album updated."
     else
-      redirect_to album, alert: "Failed to update album."
+      @artists = Artist.order(:name)
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -117,7 +141,11 @@ class AlbumsController < ApplicationController
 
   private
 
+  def require_admin
+    redirect_to albums_path, alert: "Not authorized." unless Current.user.admin?
+  end
+
   def album_params
-    params.require(:album).permit(:youtube_playlist_url)
+    params.require(:album).permit(:title, :year, :genre, :artist_id, :youtube_playlist_url)
   end
 end

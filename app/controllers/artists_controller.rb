@@ -1,6 +1,8 @@
 class ArtistsController < ApplicationController
   include Orderable
 
+  before_action :require_admin, only: [:edit, :update, :destroy]
+
   def index
     @query = params[:q]
     @sort = sort_column(Artist, default: "name")
@@ -14,5 +16,34 @@ class ArtistsController < ApplicationController
   def show
     @artist = Artist.find(params[:id])
     @albums = @artist.albums.includes(:tracks).order(:year)
+  end
+
+  def edit
+    @artist = Artist.find(params[:id])
+  end
+
+  def update
+    @artist = Artist.find(params[:id])
+    if @artist.update(artist_params)
+      redirect_to @artist, notice: "Artist updated."
+    else
+      render :edit, status: :unprocessable_content
+    end
+  end
+
+  def destroy
+    @artist = Artist.find(params[:id])
+    @artist.destroy
+    redirect_to artists_path, notice: "Artist deleted."
+  end
+
+  private
+
+  def require_admin
+    redirect_to artists_path, alert: "Not authorized." unless Current.user.admin?
+  end
+
+  def artist_params
+    params.require(:artist).permit(:name, :category)
   end
 end

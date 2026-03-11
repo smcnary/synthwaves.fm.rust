@@ -172,6 +172,20 @@ RSpec.describe "Tracks", type: :request do
       patch track_path(track), params: {track: {title: ""}}
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "moves track to a different album" do
+      new_album = create(:album, title: "New Album")
+      patch track_path(track), params: {track: {album_id: new_album.id}}
+
+      expect(track.reload.album).to eq(new_album)
+    end
+
+    it "moves track to a different artist" do
+      new_artist = create(:artist, name: "New Artist")
+      patch track_path(track), params: {track: {artist_id: new_artist.id}}
+
+      expect(track.reload.artist).to eq(new_artist)
+    end
   end
 
   describe "DELETE /tracks/:id" do

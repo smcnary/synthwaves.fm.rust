@@ -64,6 +64,30 @@ RSpec.describe Album, type: :model do
     end
   end
 
+  describe "artist change cascade" do
+    it "reassigns all tracks to the new artist when artist_id changes" do
+      old_artist = create(:artist, name: "Old Artist")
+      new_artist = create(:artist, name: "New Artist")
+      album = create(:album, artist: old_artist)
+      track = create(:track, album: album, artist: old_artist)
+
+      album.update!(artist: new_artist)
+
+      expect(track.reload.artist).to eq(new_artist)
+    end
+
+    it "reindexes tracks search when artist changes" do
+      old_artist = create(:artist, name: "Old Artist")
+      new_artist = create(:artist, name: "New Artist")
+      album = create(:album, artist: old_artist)
+      track = create(:track, album: album, artist: old_artist, title: "Cascade Song")
+
+      album.update!(artist: new_artist)
+
+      expect(Track.search("New Artist")).to include(track)
+    end
+  end
+
   describe "category scopes" do
     let!(:music_album) { create(:album, artist: create(:artist, category: "music")) }
     let!(:podcast_album) { create(:album, artist: create(:artist, :podcast)) }

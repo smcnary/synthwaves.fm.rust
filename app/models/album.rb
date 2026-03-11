@@ -12,7 +12,10 @@ class Album < ApplicationRecord
 
   validates :title, presence: true, uniqueness: {scope: :artist_id}
 
-  after_update_commit :reindex_tracks_search, if: :saved_change_to_title?
+  after_update_commit :reassign_tracks_to_artist, if: :saved_change_to_artist_id?
+  after_update_commit :reindex_tracks_search, if: -> {
+    saved_change_to_title? || saved_change_to_artist_id?
+  }
 
   scope :music, -> { joins(:artist).merge(Artist.music) }
   scope :podcast, -> { joins(:artist).merge(Artist.podcast) }
@@ -23,8 +26,12 @@ class Album < ApplicationRecord
 
   private
 
+  def reassign_tracks_to_artist
+    tracks.update_all(artist_id: artist_id)
+  end
+
   def reindex_tracks_search
-    tracks.find_each do |track|
+    tracks.reload.find_each do |track|
       track.send(:update_search_index)
     end
   end
