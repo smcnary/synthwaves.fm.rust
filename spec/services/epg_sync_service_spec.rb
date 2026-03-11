@@ -51,28 +51,19 @@ RSpec.describe EPGSyncService do
       expect(programme.description).to eq("Regular season game.")
     end
 
-    it "cleans up expired programmes" do
-      create(:epg_programme, channel_id: "espn.us", ends_at: 3.hours.ago)
-
-      described_class.call
-
-      expect(EPGProgramme.where("ends_at < ?", 1.hour.ago).count).to eq(0)
-    end
-
-    it "nullifies recording references before deleting expired programmes" do
+    it "does not clean up expired programmes" do
       expired = create(:epg_programme, channel_id: "espn.us", ends_at: 3.hours.ago)
-      recording = create(:recording, epg_programme: expired)
 
       described_class.call
 
-      expect(recording.reload.epg_programme_id).to be_nil
+      expect(EPGProgramme.find_by(id: expired.id)).to be_present
     end
 
     it "upserts programmes instead of deleting on re-sync" do
       # Use truncated time to match XMLTV parser precision (no subseconds)
       starts = 1.hour.ago.change(usec: 0)
       existing = create(:epg_programme, channel_id: "espn.us", title: "NHL Hockey",
-                       starts_at: starts, ends_at: 1.hour.from_now)
+        starts_at: starts, ends_at: 1.hour.from_now)
 
       xml_with_match = <<~XML
         <?xml version="1.0" encoding="UTF-8"?>
@@ -93,7 +84,7 @@ RSpec.describe EPGSyncService do
 
     it "preserves programmes from earlier syncs outside current feed window" do
       tomorrow = create(:epg_programme, channel_id: "espn.us", title: "Tomorrow Show",
-                       starts_at: 1.day.from_now, ends_at: 1.day.from_now + 1.hour)
+        starts_at: 1.day.from_now, ends_at: 1.day.from_now + 1.hour)
 
       described_class.call
 
@@ -170,7 +161,7 @@ RSpec.describe EPGSyncService do
     end
 
     it "remaps feed channel IDs to tvg_id when they differ for a single channel" do
-      channel = create(:iptv_channel, tvg_id: "usa-network.us", epg_url: "https://epg.example.com/usa.xml")
+      create(:iptv_channel, tvg_id: "usa-network.us", epg_url: "https://epg.example.com/usa.xml")
 
       foreign_xml = <<~XML
         <?xml version="1.0" encoding="UTF-8"?>
@@ -188,6 +179,32 @@ RSpec.describe EPGSyncService do
       programme = EPGProgramme.find_by(title: "Law & Order: SVU")
       expect(programme).to be_present
       expect(programme.channel_id).to eq("usa-network.us")
+    end
+  end
+
+  describe "network error handling" do
+    it "handles SocketError gracefully" do
+      stub_request(:get, EPGSyncService::EPG_URL).to_raise(SocketError.new("getaddrinfo: Name or service not known"))
+
+      result = described_class.call
+
+      expect(result[:synced]).to eq(0)
+    end
+
+    it "handles Errno::ECONNREFUSED gracefully" do
+      stub_request(:get, EPGSyncService::EPG_URL).to_raise(Errno::ECONNREFUSED)
+
+      result = described_class.call
+
+      expect(result[:synced]).to eq(0)
+    end
+
+    it "handles OpenSSL::SSL::SSLError gracefully" do
+      stub_request(:get, EPGSyncService::EPG_URL).to_raise(OpenSSL::SSL::SSLError.new("SSL_connect returned=1"))
+
+      result = described_class.call
+
+      expect(result[:synced]).to eq(0)
     end
   end
 

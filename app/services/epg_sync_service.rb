@@ -2,6 +2,16 @@ class EPGSyncService
   EPG_URL = "https://tvpass.org/epg.xml"
   BATCH_SIZE = 500
 
+  NETWORK_ERRORS = [
+    HTTP::Error,
+    HTTP::TimeoutError,
+    SocketError,
+    OpenSSL::SSL::SSLError,
+    Errno::ECONNREFUSED,
+    Errno::EHOSTUNREACH,
+    IO::TimeoutError
+  ].freeze
+
   def self.call
     new.call
   end
@@ -34,14 +44,9 @@ class EPGSyncService
       total_synced += sync_from_url(EPG_URL, remaining_tvg_ids)
     end
 
-    # Cleanup expired programmes (ended > 1 hour ago)
-    expired_ids = EPGProgramme.where("ends_at < ?", 1.hour.ago).ids
-    if expired_ids.any?
-      Recording.where(epg_programme_id: expired_ids).update_all(epg_programme_id: nil)
-      EPGProgramme.where(id: expired_ids).delete_all
-    end
+    Rails.logger.info("EPG sync complete: #{total_synced} programmes synced across #{known_tvg_ids.size} channels")
 
-    { synced: total_synced, channels: known_tvg_ids.size }
+    {synced: total_synced, channels: known_tvg_ids.size}
   end
 
   def sync_from_url(url, tvg_ids, remap: nil)
@@ -87,8 +92,10 @@ class EPGSyncService
       EPGProgramme.upsert_all(batch, unique_by: [:channel_id, :starts_at])
     end
 
+    Rails.logger.info("EPG sync fetched #{records.size} programmes from #{url}")
+
     records.size
-  rescue HTTP::Error, HTTP::TimeoutError => e
+  rescue *NETWORK_ERRORS => e
     Rails.logger.warn("EPG sync failed for #{url}: #{e.message}")
     0
   end

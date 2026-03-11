@@ -12,4 +12,11 @@ namespace :iptv do
     result = EPGSyncService.call
     puts "Done. Synced #{result[:synced]} programmes across #{result[:channels]} channels."
   end
+
+  desc "Clean up expired EPG programmes (ended > 1 week ago)"
+  task epg_cleanup: :environment do
+    puts "Cleaning up expired EPG programmes..."
+    EPGCleanupJob.new.perform
+    puts "Done."
+  end
 end

@@ -25,6 +25,9 @@ production:
   epg_sync:
     class: EPGSyncJob
     schedule: every 3 hours
+  epg_cleanup:
+    class: EPGCleanupJob
+    schedule: at 4am on Sundays
   database_backup:
     class: DatabaseBackupJob
     schedule: at 3am every day
