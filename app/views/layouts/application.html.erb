@@ -162,7 +162,7 @@
          data-player-play-history-url-value="<%= play_histories_path %>">
       <%# <audio> element is created by player_controller.js on <html> so Turbo never detaches it %>
       <!-- Progress bar -->
-      <div data-player-target="progressBar" class="h-1 bg-gray-700 cursor-pointer" data-action="click->player#seek">
+      <div data-player-target="progressBar" class="h-2 sm:h-1 bg-gray-700 cursor-pointer" data-action="click->player#seek">
         <div class="h-full bg-gradient-to-r from-neon-pink to-neon-cyan transition-all duration-200" data-player-target="progress" style="width: 0%"></div>
       </div>
       <div class="container mx-auto px-4 py-2">
@@ -182,28 +182,28 @@
             </span>
           </div>
           <!-- Controls: shuffle, prev, play/pause, next, repeat -->
-          <div class="flex items-center gap-1 sm:gap-2">
+          <div class="flex items-center gap-2 sm:gap-2">
             <!-- Shuffle -->
-            <button data-action="player#toggleShuffle" class="p-1" title="Shuffle">
+            <button data-action="player#toggleShuffle" class="hidden sm:inline-flex p-1" title="Shuffle">
               <svg data-player-target="shuffleIcon" class="w-4 h-4 text-gray-500 hover:text-neon-cyan" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 4l3 3-3 3M18 20l3-3-3-3M2 7h6.5c2 0 3.5 2 5 5s3 5 5 5H21M2 17h6.5c2 0 3.5-2 5-5s3-5 5-5H21"/>
               </svg>
             </button>
             <!-- Prev -->
-            <button data-action="player#previous" class="text-gray-500 hover:text-neon-cyan p-1">
+            <button data-action="player#previous" class="text-gray-500 hover:text-neon-cyan p-2.5 sm:p-1">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/></svg>
             </button>
             <!-- Play/Pause -->
-            <button data-action="player#toggle" class="w-10 h-10 rounded-full bg-neon-pink text-white flex items-center justify-center hover:shadow-neon-pink transition-shadow">
+            <button data-action="player#toggle" class="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-neon-pink text-white flex items-center justify-center hover:shadow-neon-pink transition-shadow">
               <svg data-player-target="playIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
               <svg data-player-target="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z"/></svg>
             </button>
             <!-- Next -->
-            <button data-action="player#next" class="text-gray-500 hover:text-neon-cyan p-1">
+            <button data-action="player#next" class="text-gray-500 hover:text-neon-cyan p-2.5 sm:p-1">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 5.168A1 1 0 0010 6v2.798l-5.445-3.63A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4z"/></svg>
             </button>
             <!-- Repeat -->
-            <button data-action="player#cycleRepeat" class="p-1 relative" title="Repeat">
+            <button data-action="player#cycleRepeat" class="hidden sm:inline-flex p-1 relative" title="Repeat">
               <!-- Repeat off (gray) -->
               <svg data-player-target="repeatOff" class="w-4 h-4 text-gray-500 hover:text-neon-cyan" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/>
@@ -222,7 +222,7 @@
             </button>
           </div>
           <!-- Time & volume & queue toggle -->
-          <div class="flex items-center gap-3 flex-1 justify-end">
+          <div class="flex items-center gap-2 sm:gap-3 flex-1 justify-end">
             <span class="hidden sm:inline-flex items-center gap-1">
               <span class="text-xs text-gray-500 tabular-nums" data-player-target="currentTime">0:00</span>
               <span class="text-xs text-gray-500">/</span>
@@ -273,13 +273,13 @@
               </div>
             </div>
             <!-- Fullscreen now playing toggle -->
-            <button data-action="click->player#toggleFullscreen" class="text-gray-500 hover:text-neon-cyan p-1" title="Now Playing">
+            <button data-action="click->player#toggleFullscreen" class="text-gray-500 hover:text-neon-cyan p-2.5 sm:p-1" title="Now Playing">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
               </svg>
             </button>
             <!-- Sleep timer -->
-            <div class="relative" data-controller="sleep-timer">
+            <div class="hidden sm:block sm:relative" data-controller="sleep-timer">
               <button data-action="sleep-timer#toggleMenu" class="text-gray-500 hover:text-neon-cyan p-1 relative" title="Sleep Timer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -297,7 +297,7 @@
               </div>
             </div>
             <!-- Visualizer toggle -->
-            <button data-action="player#toggleVisualizer" class="text-gray-500 hover:text-neon-cyan p-1" title="Visualizer">
+            <button data-action="player#toggleVisualizer" class="hidden sm:inline-flex text-gray-500 hover:text-neon-cyan p-1" title="Visualizer">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="1" y="8" width="3" height="8" rx="0.5"/>
                 <rect x="6" y="4" width="3" height="16" rx="0.5"/>
@@ -307,7 +307,7 @@
               </svg>
             </button>
             <!-- Queue toggle -->
-            <button data-action="player#toggleQueue" class="text-gray-500 hover:text-neon-cyan p-1" title="Queue">
+            <button data-action="player#toggleQueue" class="text-gray-500 hover:text-neon-cyan p-2.5 sm:p-1" title="Queue">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
