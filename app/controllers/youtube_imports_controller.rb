@@ -4,6 +4,16 @@ class YoutubeImportsController < ApplicationController
   def new
   end
 
+  def search
+    @query = params[:q].to_s.strip
+    @results = @query.present? ? YoutubeAPIService.new.search_videos(@query) : []
+    render partial: "youtube_imports/search_results"
+  rescue YoutubeAPIService::Error => e
+    @results = []
+    @error = e.message
+    render partial: "youtube_imports/search_results"
+  end
+
   def create
     url = params[:youtube_url]
     category = params[:category].presence || "music"

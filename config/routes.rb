@@ -60,7 +60,11 @@ Rails.application.routes.draw do
       get :file
     end
   end
-  resources :youtube_imports, only: [:new, :create]
+  resources :youtube_imports, only: [:new, :create] do
+    collection do
+      get :search
+    end
+  end
   resources :favorites, only: [:index, :create, :destroy]
   resources :taggings, only: [:create, :destroy]
   resources :play_histories, only: [:index, :create]

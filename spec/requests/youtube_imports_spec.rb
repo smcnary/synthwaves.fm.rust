@@ -23,6 +23,61 @@ RSpec.describe "YoutubeImports", type: :request do
     end
   end
 
+  describe "GET /youtube_imports/search" do
+    it "returns search results for a valid query" do
+      results = [
+        {video_id: "abc123", title: "Test Video", channel_name: "Test Channel", thumbnail_url: "https://i.ytimg.com/vi/abc123/hqdefault.jpg"}
+      ]
+      api = instance_double(YoutubeAPIService)
+      allow(YoutubeAPIService).to receive(:new).and_return(api)
+      allow(api).to receive(:search_videos).with("lofi beats").and_return(results)
+
+      get search_youtube_imports_path, params: {q: "lofi beats"}
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Test Video")
+      expect(response.body).to include("Test Channel")
+      expect(response.body).to include("youtube.com/watch?v=abc123")
+    end
+
+    it "shows no results message for empty results" do
+      api = instance_double(YoutubeAPIService)
+      allow(YoutubeAPIService).to receive(:new).and_return(api)
+      allow(api).to receive(:search_videos).with("xyznosuchvideo").and_return([])
+
+      get search_youtube_imports_path, params: {q: "xyznosuchvideo"}
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("No results found")
+    end
+
+    it "handles API errors gracefully" do
+      api = instance_double(YoutubeAPIService)
+      allow(YoutubeAPIService).to receive(:new).and_return(api)
+      allow(api).to receive(:search_videos).and_raise(YoutubeAPIService::Error, "Daily Limit Exceeded")
+
+      get search_youtube_imports_path, params: {q: "test"}
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Daily Limit Exceeded")
+    end
+
+    it "requires authentication" do
+      delete session_path
+      get search_youtube_imports_path, params: {q: "test"}
+
+      expect(response).to redirect_to(new_session_path)
+    end
+
+    it "requires the youtube_import feature flag" do
+      Flipper.disable(:youtube_import)
+
+      get search_youtube_imports_path, params: {q: "test"}
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
   describe "POST /youtube_imports" do
     context "with audio media type (default)" do
       it "enqueues import job with download flag for playlists" do

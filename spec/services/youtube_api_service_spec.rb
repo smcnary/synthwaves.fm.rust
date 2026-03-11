@@ -108,6 +108,79 @@ RSpec.describe YoutubeAPIService do
     end
   end
 
+  describe "#search_videos" do
+    it "returns results for a valid query" do
+      stub_request(:get, "https://www.googleapis.com/youtube/v3/search")
+        .with(query: {part: "snippet", type: "video", q: "lofi beats", maxResults: "5", key: api_key})
+        .to_return(
+          status: 200,
+          headers: {"Content-Type" => "application/json"},
+          body: {
+            items: [
+              {
+                id: {videoId: "abc123"},
+                snippet: {
+                  title: "Lofi Hip Hop &amp; Chill Beats",
+                  channelTitle: "ChillHop Music",
+                  thumbnails: {high: {url: "https://i.ytimg.com/vi/abc123/hqdefault.jpg"}}
+                }
+              },
+              {
+                id: {videoId: "def456"},
+                snippet: {
+                  title: "Study Beats",
+                  channelTitle: "Study Music",
+                  thumbnails: {medium: {url: "https://i.ytimg.com/vi/def456/mqdefault.jpg"}}
+                }
+              }
+            ]
+          }.to_json
+        )
+
+      results = service.search_videos("lofi beats")
+
+      expect(results.length).to eq(2)
+      expect(results[0][:video_id]).to eq("abc123")
+      expect(results[0][:title]).to eq("Lofi Hip Hop & Chill Beats")
+      expect(results[0][:channel_name]).to eq("ChillHop Music")
+      expect(results[0][:thumbnail_url]).to eq("https://i.ytimg.com/vi/abc123/hqdefault.jpg")
+      expect(results[1][:video_id]).to eq("def456")
+    end
+
+    it "returns empty array for blank query without making an HTTP request" do
+      results = service.search_videos("")
+
+      expect(results).to eq([])
+      expect(WebMock).not_to have_requested(:get, /googleapis/)
+    end
+
+    it "raises error on API failure" do
+      stub_request(:get, "https://www.googleapis.com/youtube/v3/search")
+        .with(query: hash_including(q: "test"))
+        .to_return(
+          status: 403,
+          headers: {"Content-Type" => "application/json"},
+          body: {error: {message: "Daily Limit Exceeded"}}.to_json
+        )
+
+      expect { service.search_videos("test") }.to raise_error(YoutubeAPIService::Error, "Daily Limit Exceeded")
+    end
+
+    it "handles empty items array" do
+      stub_request(:get, "https://www.googleapis.com/youtube/v3/search")
+        .with(query: hash_including(q: "xyznosuchvideo"))
+        .to_return(
+          status: 200,
+          headers: {"Content-Type" => "application/json"},
+          body: {items: []}.to_json
+        )
+
+      results = service.search_videos("xyznosuchvideo")
+
+      expect(results).to eq([])
+    end
+  end
+
   describe "#fetch_video_details" do
     it "returns video details with parsed duration" do
       stub_request(:get, "https://www.googleapis.com/youtube/v3/videos")

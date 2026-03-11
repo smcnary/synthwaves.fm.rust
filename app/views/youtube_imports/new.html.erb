@@ -1,15 +1,27 @@
-<div class="w-full max-w-lg">
+<div class="w-full max-w-lg" data-controller="youtube-search" data-youtube-search-url-value="<%= search_youtube_imports_path %>">
   <div class="mb-6">
     <%= link_to "&larr; Back to Library".html_safe, library_path, class: "text-neon-cyan hover:underline" %>
   </div>
 
   <h1 class="text-3xl font-bold font-display mb-8">Import from YouTube</h1>
 
+  <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
+    <h2 class="text-sm font-medium text-gray-400 mb-3">Search YouTube</h2>
+    <form data-action="submit->youtube-search#submit" class="flex gap-2">
+      <input type="text"
+        data-youtube-search-target="input"
+        placeholder="Search for videos..."
+        class="block w-full rounded-lg border border-gray-600 bg-gray-900 text-white shadow-sm focus:outline-neon-cyan px-3 py-2">
+      <button type="submit" class="px-4 py-2 bg-neon-pink hover:shadow-neon-pink text-white rounded-lg cursor-pointer whitespace-nowrap">Search</button>
+    </form>
+    <turbo-frame id="youtube-search-results" data-youtube-search-target="frame"></turbo-frame>
+  </div>
+
   <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
     <%= form_with url: youtube_imports_path, method: :post, class: "space-y-4" do |f| %>
       <div>
         <%= f.label :youtube_url, "YouTube URL", class: "block text-sm font-medium text-gray-400 mb-1" %>
-        <%= f.text_field :youtube_url, value: params[:youtube_url], placeholder: "https://youtube.com/watch?v=... or playlist?list=...", class: "block w-full rounded-lg border border-gray-600 bg-gray-900 text-white shadow-sm focus:outline-neon-cyan px-3 py-2" %>
+        <%= f.text_field :youtube_url, value: params[:youtube_url], placeholder: "https://youtube.com/watch?v=... or playlist?list=...", data: { youtube_search_target: "urlField" }, class: "block w-full rounded-lg border border-gray-600 bg-gray-900 text-white shadow-sm focus:outline-neon-cyan px-3 py-2" %>
         <p class="mt-1 text-xs text-gray-500">Supported formats:</p>
         <ul class="mt-1 text-xs text-gray-500 list-disc list-inside">
           <li>youtube.com/watch?v=xxxxx</li>
