@@ -3,13 +3,14 @@ class YoutubeVideoImportService
 
   SINGLES_ALBUM_TITLE = "YouTube Singles"
 
-  def self.call(url, category: "music")
-    new(url, category: category).call
+  def self.call(url, category: "music", api_key:)
+    new(url, category: category, api_key: api_key).call
   end
 
-  def initialize(url, category: "music")
+  def initialize(url, category: "music", api_key:)
     @url = url
     @category = category
+    @api_key = api_key
     @video_id = YoutubeUrlParser.extract_video_id(url)
     raise Error, "Invalid YouTube video URL" if @video_id.blank?
   end
@@ -18,7 +19,7 @@ class YoutubeVideoImportService
     existing_track = Track.find_by(youtube_video_id: @video_id)
     return existing_track if existing_track
 
-    api = YoutubeAPIService.new
+    api = YoutubeAPIService.new(api_key: @api_key)
     details = api.fetch_video_details([@video_id]).first
     raise Error, "Video not found" if details.nil?
 

@@ -6,7 +6,7 @@ class YoutubeImportsController < ApplicationController
 
   def search
     @query = params[:q].to_s.strip
-    @results = @query.present? ? YoutubeAPIService.new.search_videos(@query) : []
+    @results = @query.present? ? YoutubeAPIService.new(api_key: Current.user.youtube_api_key).search_videos(@query) : []
     render partial: "youtube_imports/search_results"
   rescue YoutubeAPIService::Error => e
     @results = []
@@ -25,7 +25,7 @@ class YoutubeImportsController < ApplicationController
       YoutubeImportJob.perform_later(url, category: category, download: true, user_id: Current.user.id)
       redirect_to library_path, notice: "Playlist import started! Audio will be downloaded in the background."
     elsif YoutubeUrlParser.video_url?(url)
-      track = YoutubeVideoImportService.call(url, category: category)
+      track = YoutubeVideoImportService.call(url, category: category, api_key: Current.user.youtube_api_key)
       MediaDownloadJob.perform_later(track.id, url, user_id: Current.user.id)
       redirect_to album_path(track.album), notice: "Video imported! Audio download started in the background."
     else
@@ -59,7 +59,7 @@ class YoutubeImportsController < ApplicationController
       return
     end
 
-    api = YoutubeAPIService.new
+    api = YoutubeAPIService.new(api_key: Current.user.youtube_api_key)
     details = api.fetch_video_details([video_id]).first
     raise YoutubeAPIService::Error, "Video not found" if details.nil?
 

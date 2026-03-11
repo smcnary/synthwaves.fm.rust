@@ -3,7 +3,7 @@ class YoutubeAPIService
 
   class Error < StandardError; end
 
-  def initialize(api_key: Rails.application.credentials.youtube_api_key)
+  def initialize(api_key:)
     @api_key = api_key
     raise Error, "YouTube API key not configured" if @api_key.blank?
   end

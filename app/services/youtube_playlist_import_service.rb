@@ -1,19 +1,20 @@
 class YoutubePlaylistImportService
   class Error < StandardError; end
 
-  def self.call(url, category: "music")
-    new(url, category: category).call
+  def self.call(url, category: "music", api_key:)
+    new(url, category: category, api_key: api_key).call
   end
 
-  def initialize(url, category: "music")
+  def initialize(url, category: "music", api_key:)
     @url = url
     @category = category
+    @api_key = api_key
     @playlist_id = YoutubeUrlParser.extract_playlist_id(url)
     raise Error, "Invalid YouTube playlist URL" if @playlist_id.blank?
   end
 
   def call
-    api = YoutubeAPIService.new
+    api = YoutubeAPIService.new(api_key: @api_key)
 
     playlist_info = api.fetch_playlist_info(@playlist_id)
     playlist_items = api.fetch_playlist_items(@playlist_id)

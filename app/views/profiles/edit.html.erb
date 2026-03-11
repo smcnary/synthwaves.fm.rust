@@ -29,6 +29,12 @@
     </div>
 
     <div class="my-5">
+      <%= form.label :youtube_api_key, "YouTube API Key", class: "block text-sm font-medium text-gray-400" %>
+      <%= form.text_field :youtube_api_key, autocomplete: "off", placeholder: "Enter your YouTube Data API v3 key", class: "block shadow-sm rounded-md border border-gray-700 bg-gray-800 text-white focus:outline-neon-cyan px-3 py-2 mt-2 w-full" %>
+      <p class="mt-1 text-sm text-gray-400">Required for YouTube search and import. Get one from the Google Cloud Console.</p>
+    </div>
+
+    <div class="my-5">
       <span class="block text-sm font-medium text-gray-400 mb-3">Theme</span>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <% Themeable::THEMES.each do |key, config| %>

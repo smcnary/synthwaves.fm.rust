@@ -26,6 +26,6 @@ class ProfilesController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:name, :email_address, :subsonic_password, :theme)
+    params.require(:user).permit(:name, :email_address, :subsonic_password, :youtube_api_key, :theme)
   end
 end

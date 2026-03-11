@@ -3,20 +3,16 @@ require "rails_helper"
 RSpec.describe YoutubePlaylistImportService do
   let(:api_key) { "test_api_key" }
 
-  before do
-    allow(Rails.application.credentials).to receive(:youtube_api_key).and_return(api_key)
-  end
-
   describe ".call" do
     it "raises error for invalid playlist URL" do
-      expect { described_class.call("https://www.youtube.com/watch?v=abc") }
+      expect { described_class.call("https://www.youtube.com/watch?v=abc", api_key: api_key) }
         .to raise_error(YoutubePlaylistImportService::Error, "Invalid YouTube playlist URL")
     end
 
     it "imports a playlist as an album with tracks" do
       stub_playlist_api_calls
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
 
       expect(album).to be_persisted
       expect(album.title).to eq("Test Playlist")
@@ -36,8 +32,8 @@ RSpec.describe YoutubePlaylistImportService do
     it "skips duplicate tracks on re-import" do
       stub_playlist_api_calls
 
-      described_class.call("https://www.youtube.com/playlist?list=PLtest123")
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
 
       expect(album.tracks.count).to eq(2)
       expect(Track.where(youtube_video_id: "vid1").count).to eq(1)
@@ -46,7 +42,7 @@ RSpec.describe YoutubePlaylistImportService do
     it "creates a music artist by default" do
       stub_playlist_api_calls
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
 
       expect(album.artist).to be_music
     end
@@ -54,7 +50,7 @@ RSpec.describe YoutubePlaylistImportService do
     it "creates a podcast artist when category is podcast" do
       stub_playlist_api_calls
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "podcast")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "podcast", api_key: api_key)
 
       expect(album.artist).to be_podcast
     end
@@ -62,7 +58,7 @@ RSpec.describe YoutubePlaylistImportService do
     it "saves youtube_playlist_url on the album" do
       stub_playlist_api_calls
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
 
       expect(album.youtube_playlist_url).to eq("https://www.youtube.com/playlist?list=PLtest123")
     end
@@ -70,10 +66,10 @@ RSpec.describe YoutubePlaylistImportService do
     it "does not overwrite existing youtube_playlist_url on re-import" do
       stub_playlist_api_calls
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
       album.update!(youtube_playlist_url: "https://www.youtube.com/playlist?list=PLoriginal")
 
-      described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
       album.reload
 
       expect(album.youtube_playlist_url).to eq("https://www.youtube.com/playlist?list=PLoriginal")
@@ -82,10 +78,10 @@ RSpec.describe YoutubePlaylistImportService do
     it "does not overwrite existing artist category on re-import" do
       stub_playlist_api_calls
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "music")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "music", api_key: api_key)
       expect(album.artist).to be_music
 
-      album2 = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "podcast")
+      album2 = described_class.call("https://www.youtube.com/playlist?list=PLtest123", category: "podcast", api_key: api_key)
       expect(album2.artist).to be_music
     end
 
@@ -94,7 +90,7 @@ RSpec.describe YoutubePlaylistImportService do
       stub_request(:get, "https://i.ytimg.com/vi/abc/hqdefault.jpg")
         .to_return(status: 200, body: "fake_image_data", headers: { "Content-Type" => "image/jpeg" })
 
-      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123")
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key)
 
       expect(album.cover_image).to be_attached
     end

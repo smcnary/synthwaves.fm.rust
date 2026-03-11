@@ -16,6 +16,8 @@ class User < ApplicationRecord
   has_many :user_recordings, dependent: :destroy
   has_many :recordings, through: :user_recordings
 
+  encrypts :youtube_api_key
+
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
   validates :email_address, presence: true, uniqueness: true,
