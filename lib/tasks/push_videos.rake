@@ -13,21 +13,21 @@ namespace :videos do
     remote_url = groovy[:url] || abort("groovy.url is required in credentials")
     client_id = groovy[:client_id] || abort("groovy.client_id is required in credentials")
     secret_key = groovy[:secret_key] || abort("groovy.secret_key is required in credentials")
-    input_path = ENV.fetch("VIDEO") { abort "VIDEO is required (path to video file or directory)" }
-    abort "Not found: #{input_path}" unless File.exist?(input_path)
+    video_path = File.expand_path(ENV.fetch("VIDEO_PATH", "~/Movies"))
+    exclude_path = File.expand_path(ENV.fetch("EXCLUDE_PATH", "~/Movies/Transmissions"))
+    abort "Not found: #{video_path}" unless File.exist?(video_path)
 
-    folder_name = ENV["FOLDER"]
     video_extensions = %w[mp4 mkv avi mov m4v wmv flv webm ts]
+    pattern = File.join(video_path, "**", "*.{#{video_extensions.join(",")}}")
+    video_files = Dir.glob(pattern).sort
+    video_files.reject! { |f| f.start_with?(exclude_path) }
 
-    # Collect video files — single file or recursive directory scan
-    if File.directory?(input_path)
-      pattern = File.join(input_path, "**", "*.{#{video_extensions.join(",")}}")
-      video_files = Dir.glob(pattern).sort
-      abort "No video files found in #{input_path}" if video_files.empty?
-      puts "Found #{video_files.size} video files in #{input_path}"
-    else
-      video_files = [input_path]
+    if video_files.empty?
+      puts "No video files found in #{video_path}"
+      exit
     end
+
+    puts "Found #{video_files.size} video files in #{video_path}"
 
     # Authenticate and re-authenticate before token expires
     puts "Authenticating..."
@@ -37,7 +37,7 @@ namespace :videos do
     uploaded = 0
     failed = 0
 
-    video_files.each_with_index do |video_path, index|
+    video_files.each_with_index do |video_file, index|
       temp_file = nil
       label = video_files.size > 1 ? "[#{index + 1}/#{video_files.size}] " : ""
 
@@ -49,30 +49,33 @@ namespace :videos do
           token_issued_at = Time.now
         end
 
-        title = ENV.fetch("TITLE", File.basename(video_path, File.extname(video_path)))
-        season_number = ENV["SEASON"]
-        episode_number = ENV["EPISODE"]
+        title = File.basename(video_file, File.extname(video_file))
+        folder_name = ENV["FOLDER"] || begin
+          rel = Pathname.new(video_file).relative_path_from(Pathname.new(video_path)).to_s
+          parts = rel.split("/")
+          parts.length > 1 ? parts.first : nil
+        end
 
         # 1. Probe input
-        puts "#{label}Probing #{File.basename(video_path)}..."
-        probe = probe_video(video_path)
-        strategy = encoding_strategy(probe, video_path)
+        puts "#{label}Probing #{File.basename(video_file)}..."
+        probe = probe_video(video_file)
+        strategy = encoding_strategy(probe, video_file)
         puts "  Video: #{probe[:video_codec]}, Audio: #{probe[:audio_codec]}, Container: #{probe[:container]}"
         puts "  Strategy: #{strategy}"
 
         # 2. Encode if needed
-        upload_path = video_path
+        upload_path = video_file
 
         case strategy
         when :remux
-          temp_file = "#{video_path}.remuxed.mp4"
+          temp_file = "#{video_file}.remuxed.mp4"
           puts "  Remuxing to MP4 with faststart..."
-          remux(video_path, temp_file)
+          remux(video_file, temp_file)
           upload_path = temp_file
         when :full
-          temp_file = "#{video_path}.encoded.mp4"
+          temp_file = "#{video_file}.encoded.mp4"
           puts "  Encoding with h264_videotoolbox..."
-          encode(video_path, temp_file)
+          encode(video_file, temp_file)
           upload_path = temp_file
         else
           puts "  Already H264+AAC+MP4 — uploading original"
@@ -81,7 +84,7 @@ namespace :videos do
         # 3. Create blob via API
         file_size = File.size(upload_path)
         checksum = Digest::MD5.file(upload_path).base64digest
-        filename = "#{File.basename(video_path, File.extname(video_path))}.mp4"
+        filename = "#{File.basename(video_file, File.extname(video_file))}.mp4"
 
         puts "  Creating blob (#{(file_size / 1024.0 / 1024.0).round(1)} MB)..."
         blob_response = RemoteAPI.create_blob(remote_url, token, filename, file_size, checksum, "video/mp4")
@@ -97,20 +100,12 @@ namespace :videos do
 
         # 5. Create video record
         puts "  Creating video record..."
-        video = create_video_record(remote_url, token, signed_id, title, folder_name, season_number, episode_number)
+        video = create_video_record(remote_url, token, signed_id, title, folder_name)
         puts "  Created: \"#{video["title"]}\" (id: #{video["id"]}, status: #{video["status"]})"
 
-        # 6. Move original to _uploaded on the volume root
-        volume_root = if video_path.start_with?("/Volumes/")
-          File.join("/Volumes", video_path.split("/")[2])
-        else
-          File.dirname(video_path)
-        end
-        uploaded_dir = File.join(volume_root, "_uploaded")
-        FileUtils.mkdir_p(uploaded_dir)
-        dest = File.join(uploaded_dir, File.basename(video_path))
-        FileUtils.mv(video_path, dest)
-        puts "  Moved to #{dest}"
+        # 6. Delete local file
+        File.delete(video_file)
+        puts "  Deleted local file"
 
         uploaded += 1
       rescue => e
@@ -120,6 +115,16 @@ namespace :videos do
         if temp_file && File.exist?(temp_file)
           FileUtils.rm_f(temp_file)
         end
+      end
+    end
+
+    # Remove empty directories left behind after file deletions
+    dirs = video_files.map { |f| File.dirname(f) }.uniq.sort_by { |d| -d.length }
+    dirs.each do |dir|
+      while dir != video_path && Dir.exist?(dir) && (Dir.entries(dir) - %w[. ..]).empty?
+        Dir.rmdir(dir)
+        puts "Removed empty directory: #{dir}"
+        dir = File.dirname(dir)
       end
     end
 
@@ -197,7 +202,7 @@ def encode(input, output)
   abort "ffmpeg encode failed" unless success
 end
 
-def create_video_record(remote_url, token, signed_blob_id, title, folder_name, season_number, episode_number)
+def create_video_record(remote_url, token, signed_blob_id, title, folder_name)
   uri = URI.parse("#{remote_url}/api/import/videos")
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = uri.scheme == "https"
@@ -206,8 +211,6 @@ def create_video_record(remote_url, token, signed_blob_id, title, folder_name, s
 
   body = { signed_blob_id: signed_blob_id, title: title }
   body[:folder_name] = folder_name if folder_name
-  body[:season_number] = season_number.to_i if season_number
-  body[:episode_number] = episode_number.to_i if episode_number
 
   request = Net::HTTP::Post.new(uri.request_uri)
   request["Content-Type"] = "application/json"
