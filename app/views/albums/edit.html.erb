@@ -1,7 +1,7 @@
 <div class="w-full max-w-lg">
   <h1 class="text-3xl font-bold font-display mb-6">Edit Album</h1>
 
-  <%= form_with model: @album, class: "space-y-4" do |f| %>
+  <%= form_with model: @album, class: "space-y-5" do |f| %>
     <% if @album.errors.any? %>
       <div class="bg-red-900/20 border border-red-800 rounded-lg p-4">
         <ul class="text-sm text-red-400">
@@ -14,22 +14,22 @@
 
     <div>
       <%= f.label :title, class: "block text-sm font-medium text-gray-400 mb-1" %>
-      <%= f.text_field :title, class: "w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan" %>
+      <%= f.text_field :title, class: "w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-neon-cyan" %>
     </div>
 
     <div>
       <%= f.label :artist_id, "Artist", class: "block text-sm font-medium text-gray-400 mb-1" %>
-      <%= f.collection_select :artist_id, @artists, :id, :name, {}, class: "w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan" %>
+      <%= f.collection_select :artist_id, @artists, :id, :name, {}, class: "w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-neon-cyan" %>
     </div>
 
     <div>
       <%= f.label :year, class: "block text-sm font-medium text-gray-400 mb-1" %>
-      <%= f.number_field :year, class: "w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan" %>
+      <%= f.number_field :year, class: "w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-neon-cyan" %>
     </div>
 
     <div>
       <%= f.label :genre, class: "block text-sm font-medium text-gray-400 mb-1" %>
-      <%= f.text_field :genre, class: "w-full rounded-lg bg-gray-800 border-gray-700 text-white focus:outline-neon-cyan" %>
+      <%= f.text_field :genre, class: "w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-neon-cyan" %>
     </div>
 
     <div>

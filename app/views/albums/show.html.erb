@@ -52,7 +52,7 @@
         <%= form_with model: @album, class: "mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2" do |f| %>
           <%= f.text_field :youtube_playlist_url,
                 placeholder: "YouTube playlist URL",
-                class: "text-sm rounded-md border-gray-600 bg-gray-700 text-white px-2 py-1 flex-1 min-w-0" %>
+                class: "text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 flex-1 min-w-0 focus:outline-neon-cyan" %>
           <%= f.submit "Save",
                 class: "px-3 py-1 text-sm font-medium text-white bg-neon-pink hover:shadow-neon-pink rounded-md cursor-pointer" %>
         <% end %>
@@ -61,13 +61,13 @@
   </div>
   <turbo-frame id="album-tracks" data-turbo-action="advance">
     <form action="<%= album_path(@album) %>" method="get" data-controller="search" data-search-target="form" class="mb-4 flex items-center gap-3">
-      <label for="sort" class="text-sm text-gray-500">Sort by</label>
-      <select name="sort" id="sort" data-action="change->search#submit" class="text-sm rounded-md border-gray-600 bg-gray-700 text-white">
+      <label for="sort" class="text-sm text-gray-400 font-medium">Sort by</label>
+      <select name="sort" id="sort" data-action="change->search#submit" class="text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 focus:outline-neon-cyan">
         <% Track::ALBUM_SORT_OPTIONS.each do |value, label| %>
           <option value="<%= value %>" <%= "selected" if value == @sort %>><%= label %></option>
           <% end %>
         </select>
-        <select name="direction" id="direction" data-action="change->search#submit" class="text-sm rounded-md border-gray-600 bg-gray-700 text-white">
+        <select name="direction" id="direction" data-action="change->search#submit" class="text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 focus:outline-neon-cyan">
           <option value="asc" <%= "selected" if @direction == "asc" %>>Ascending</option>
         <option value="desc" <%= "selected" if @direction == "desc" %>>Descending</option>
       </select>

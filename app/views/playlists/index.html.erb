@@ -12,14 +12,14 @@
                data-search-target="input" autofocus>
 
         <div class="flex items-center gap-3">
-          <label for="sort" class="text-sm text-gray-500">Sort by</label>
-          <select name="sort" id="sort" data-action="change->search#submit" class="text-sm rounded-md border-gray-600 bg-gray-700 text-white">
+          <label for="sort" class="text-sm text-gray-400 font-medium">Sort by</label>
+          <select name="sort" id="sort" data-action="change->search#submit" class="text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 focus:outline-neon-cyan">
             <% Playlist::SORT_OPTIONS.each do |value, label| %>
               <option value="<%= value %>" <%= "selected" if value == @sort %>><%= label %></option>
             <% end %>
           </select>
 
-          <select name="direction" id="direction" data-action="change->search#submit" class="text-sm rounded-md border-gray-600 bg-gray-700 text-white">
+          <select name="direction" id="direction" data-action="change->search#submit" class="text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 focus:outline-neon-cyan">
             <option value="asc" <%= "selected" if @direction == "asc" %>>Ascending</option>
             <option value="desc" <%= "selected" if @direction == "desc" %>>Descending</option>
           </select>
