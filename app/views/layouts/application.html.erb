@@ -30,8 +30,11 @@
     <% end %>
     <meta name="turbo-refresh-method" content="morph">
     <meta name="turbo-refresh-scroll" content="preserve">
+    <% if turbo_native_app? %>
+      <meta name="turbo:native" content="true">
+    <% end %>
   </head>
-  <body class="bg-gray-900 synthwave-bg text-white pb-24 scanlines" data-controller="youtube-player keyboard-shortcuts">
+  <body class="bg-gray-900 synthwave-bg text-white <%= 'pb-24' unless turbo_native_app? %> scanlines" data-controller="youtube-player keyboard-shortcuts<%= ' turbo-native-bridge' if turbo_native_app? %>">
     <% if authenticated? %>
       <%= turbo_stream_from "downloads_#{Current.user.id}" %>
       <%= turbo_stream_from "recordings_#{Current.user.id}" %>
@@ -48,6 +51,7 @@
     <main class="container mx-auto my-28 px-5 flex">
       <%= yield %>
     </main>
+    <% unless turbo_native_app? %>
     <!-- Queue panel (slide-out) -->
     <div id="queue-panel-container" data-turbo-permanent data-controller="queue-panel">
       <div data-queue-panel-target="panel"
@@ -316,5 +320,6 @@
         </div>
       </div>
     </div>
+    <% end %>
   </body>
 </html>

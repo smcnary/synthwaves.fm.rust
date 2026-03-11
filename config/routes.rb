@@ -82,6 +82,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       post "auth/token", to: "auth#create"
+      get "native/credentials", to: "native#credentials"
     end
     namespace :import do
       resources :tracks, only: [:create]

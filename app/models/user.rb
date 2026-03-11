@@ -22,4 +22,12 @@ class User < ApplicationRecord
 
   validates :email_address, presence: true, uniqueness: true,
     format: {with: URI::MailTo::EMAIL_REGEXP}
+
+  before_create :generate_subsonic_password, unless: :subsonic_password?
+
+  private
+
+  def generate_subsonic_password
+    self.subsonic_password = SecureRandom.hex(16)
+  end
 end

@@ -47,6 +47,19 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "subsonic_password auto-generation" do
+    it "generates a subsonic_password on create when none is set" do
+      user = create(:user, subsonic_password: nil)
+      expect(user.subsonic_password).to be_present
+      expect(user.subsonic_password.length).to eq(32)
+    end
+
+    it "preserves an existing subsonic_password on create" do
+      user = create(:user, subsonic_password: "my_custom_password")
+      expect(user.subsonic_password).to eq("my_custom_password")
+    end
+  end
+
   describe "normalizes :email_address" do
     it "strips leading and trailing whitespace" do
       user = create(:user, email_address: "  padded@example.com  ")

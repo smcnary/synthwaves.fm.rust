@@ -1,0 +1,16 @@
+{
+  "settings": {
+    "tabs": [
+      {"title": "Home", "path": "/home", "icon": "house"},
+      {"title": "Search", "path": "/search", "icon": "magnifyingglass"},
+      {"title": "Library", "path": "/library", "icon": "music.note.list"},
+      {"title": "Profile", "path": "/profile", "icon": "person"}
+    ]
+  },
+  "rules": [
+    {"patterns": ["/session/new", "/registration/new"], "properties": {"presentation": "modal"}},
+    {"patterns": ["/passwords/.*"], "properties": {"presentation": "modal"}},
+    {"patterns": ["/admin.*"], "properties": {"presentation": "modal"}},
+    {"patterns": [".*"], "properties": {"presentation": "default"}}
+  ]
+}

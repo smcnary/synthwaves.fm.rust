@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   include Authentication
+  include TurboNativeHelper
   include Pagy::Method
   include Orderable
 
