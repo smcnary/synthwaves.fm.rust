@@ -10,7 +10,7 @@
   <!-- Auth Bar -->
   <nav class="relative z-10 w-full py-4 px-4 sm:py-5 sm:px-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <%= render(LogoComponent.new(size: :md, icon: true)) %>
+      <%= render(LogoComponent.new(size: :md, icon: true, text: false)) %>
       <div class="flex items-center gap-2 sm:gap-4">
         <%= link_to "Log In", new_session_path, class: "text-gray-400 hover:text-neon-cyan font-medium transition-colors" %>
         <%= link_to "Sign Up", new_registration_path, class: "bg-sunset-gradient hover:shadow-neon-pink text-white px-4 py-1.5 sm:px-5 sm:py-2 text-sm sm:text-base rounded-lg font-medium transition-shadow" %>
@@ -19,13 +19,9 @@
   </nav>
   <!-- Hero Content -->
   <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-10 sm:pb-20">
-    <!-- Glowing music icon -->
+    <!-- Glowing sun icon -->
     <div class="mb-5 sm:mb-8">
-      <div class="w-16 h-16 sm:w-24 sm:h-24 bg-sunset-gradient rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-neon-pink animate-pulse" style="animation-duration: 3s;">
-        <svg class="w-9 h-9 sm:w-14 sm:h-14 text-white" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
-        </svg>
-      </div>
+      <%= image_tag "icon.svg", class: "w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl shadow-neon-pink animate-pulse", style: "animation-duration: 3s;", alt: "synthwaves.fm" %>
     </div>
     <!-- Title -->
     <h1 class="text-center mb-4 sm:mb-6 leading-tight">

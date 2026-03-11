@@ -8,9 +8,14 @@ RSpec.describe LogoComponent, type: :component do
   end
 
   describe "text" do
-    it "renders synthwaves.fm" do
+    it "renders synthwaves.fm by default" do
       html = render_component
       expect(html.text).to include("synthwaves.fm")
+    end
+
+    it "hides text when text: false" do
+      html = render_component(icon: true, text: false)
+      expect(html.at_css(".font-display")).to be_nil
     end
   end
 
@@ -52,24 +57,26 @@ RSpec.describe LogoComponent, type: :component do
   describe "icon" do
     it "does not render the icon by default" do
       html = render_component
-      expect(html.css("svg")).to be_empty
+      expect(html.css("img")).to be_empty
     end
 
-    it "renders the music note icon when icon: true" do
+    it "renders the sun icon when icon: true" do
       html = render_component(icon: true)
-      expect(html.at_css("svg")).to be_present
+      img = html.at_css("img")
+      expect(img).to be_present
+      expect(img["alt"]).to eq("synthwaves.fm")
     end
 
-    it "sizes the icon wrapper for sm" do
+    it "sizes the icon for sm" do
       html = render_component(size: :sm, icon: true)
-      wrapper = html.at_css("svg").parent
-      expect(wrapper["class"]).to include("w-7", "h-7")
+      img = html.at_css("img")
+      expect(img["class"]).to include("w-7", "h-7")
     end
 
-    it "sizes the icon wrapper for md" do
+    it "sizes the icon for md" do
       html = render_component(size: :md, icon: true)
-      wrapper = html.at_css("svg").parent
-      expect(wrapper["class"]).to include("w-9", "h-9")
+      img = html.at_css("img")
+      expect(img["class"]).to include("w-9", "h-9")
     end
   end
 end

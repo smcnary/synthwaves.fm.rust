@@ -4,7 +4,7 @@
       <!-- Left side: App name + nav -->
       <div class="flex items-center space-x-4">
         <%= link_to root_path do %>
-          <%= render(LogoComponent.new(size: :md)) %>
+          <%= render(LogoComponent.new(size: :md, icon: true, text: false)) %>
         <% end %>
         <% if authenticated? %>
           <nav class="hidden md:flex items-center space-x-3 text-sm">

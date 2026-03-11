@@ -1,7 +1,8 @@
 class LogoComponent < ViewComponent::Base
-  def initialize(size: :md, icon: false)
+  def initialize(size: :md, icon: false, text: true)
     @size = size
     @icon = icon
+    @text = text
   end
 
   private
@@ -9,20 +10,13 @@ class LogoComponent < ViewComponent::Base
   attr_reader :size
 
   def icon? = @icon
+  def text? = @text
 
   def size_classes
     case size
     when :sm then "text-sm"
     when :md then "text-lg"
     when :lg then "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold"
-    end
-  end
-
-  def icon_size_classes
-    case size
-    when :sm then "w-4 h-4"
-    when :md then "w-5 h-5"
-    when :lg then "w-10 h-10"
     end
   end
 
