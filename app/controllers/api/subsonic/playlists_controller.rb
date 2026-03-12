@@ -23,9 +23,9 @@ class API::Subsonic::PlaylistsController < API::Subsonic::BaseController
       return
     end
 
-    playlist = current_user.playlists.includes(playlist_tracks: {track: [:album, :artist]}).find(params[:id])
+    playlist = current_user.playlists.includes(playlist_tracks: {track: [:album, :artist, :audio_file_attachment]}).find(params[:id])
     render_subsonic(playlist: playlist_to_entry(playlist).merge(
-      entry: playlist.playlist_tracks.order(:position).filter_map { |pt| track_to_child(pt.track) unless pt.track.youtube? }
+      entry: playlist.playlist_tracks.order(:position).filter_map { |pt| track_to_child(pt.track) if pt.track.audio_file.attached? }
     ))
   rescue ActiveRecord::RecordNotFound
     render_subsonic_error(70, "Playlist not found")

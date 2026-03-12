@@ -113,6 +113,31 @@ RSpec.describe "Subsonic Interaction API", type: :request do
       expect(starred["song"].first["starred"]).to be_present
     end
 
+    it "excludes starred tracks without audio files" do
+      youtube_track = create(:track, :youtube)
+      create(:favorite, user: user, favorable: youtube_track)
+
+      get "/api/rest/getStarred2.view", params: auth_params
+      json = JSON.parse(response.body)
+      expect(json["subsonic-response"]["starred2"]["song"]).to eq([])
+    end
+
+    it "includes starred YouTube tracks that have downloaded audio" do
+      youtube_track = create(:track, :youtube)
+      youtube_track.audio_file.attach(
+        io: StringIO.new("fake audio data"),
+        filename: "track.mp3",
+        content_type: "audio/mpeg"
+      )
+      create(:favorite, user: user, favorable: youtube_track)
+
+      get "/api/rest/getStarred2.view", params: auth_params
+      json = JSON.parse(response.body)
+      songs = json["subsonic-response"]["starred2"]["song"]
+      expect(songs.size).to eq(1)
+      expect(songs.first["title"]).to eq(youtube_track.title)
+    end
+
     it "does not return other users' starred items" do
       other = create(:user)
       track = create(:track)

@@ -95,7 +95,7 @@ module SubsonicResponseFormatting
   end
 
   def album_to_entry(album)
-    streamable = album.tracks.reject(&:youtube?)
+    streamable = album.tracks.merge(Track.streamable)
     {
       id: album.id.to_s,
       name: album.title,

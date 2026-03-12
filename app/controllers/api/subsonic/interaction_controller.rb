@@ -16,7 +16,7 @@ class API::Subsonic::InteractionController < API::Subsonic::BaseController
   def get_starred2
     artist_favs = current_user.favorites.where(favorable_type: "Artist").includes(favorable: :albums)
     album_favs = current_user.favorites.where(favorable_type: "Album").includes(favorable: [:artist, :tracks])
-    song_favs = current_user.favorites.where(favorable_type: "Track").includes(favorable: [:album, :artist])
+    song_favs = current_user.favorites.where(favorable_type: "Track").includes(favorable: [:album, :artist, :audio_file_attachment])
 
     render_subsonic(starred2: {
       artist: artist_favs.filter_map { |f|
@@ -34,7 +34,7 @@ class API::Subsonic::InteractionController < API::Subsonic::BaseController
       },
       song: song_favs.filter_map { |f|
         next unless f.favorable
-        next if f.favorable.youtube?
+        next unless f.favorable.audio_file.attached?
         track_to_child(f.favorable).merge(starred: f.created_at.iso8601)
       }
     })

@@ -102,10 +102,10 @@ RSpec.describe "Subsonic Playlists API", type: :request do
       expect(playlist["songCount"]).to eq(3)
     end
 
-    it "excludes YouTube tracks from user playlists" do
+    it "excludes tracks without audio files from user playlists" do
       playlist = create(:playlist, user: user)
       streamable = create(:track, title: "Streamable")
-      youtube = create(:track, :youtube, title: "YouTube")
+      youtube = create(:track, :youtube, title: "No Audio")
       create(:playlist_track, playlist: playlist, track: streamable, position: 1)
       create(:playlist_track, playlist: playlist, track: youtube, position: 2)
 
@@ -115,6 +115,23 @@ RSpec.describe "Subsonic Playlists API", type: :request do
       expect(entries.size).to eq(1)
       expect(entries.first["title"]).to eq("Streamable")
       expect(json["subsonic-response"]["playlist"]["songCount"]).to eq(1)
+    end
+
+    it "includes downloaded YouTube tracks in user playlists" do
+      playlist = create(:playlist, user: user)
+      downloaded_youtube = create(:track, :youtube, title: "Downloaded YouTube")
+      downloaded_youtube.audio_file.attach(
+        io: StringIO.new("fake audio data"),
+        filename: "track.mp3",
+        content_type: "audio/mpeg"
+      )
+      create(:playlist_track, playlist: playlist, track: downloaded_youtube, position: 1)
+
+      get "/api/rest/getPlaylist.view", params: auth_params.merge(id: playlist.id)
+      json = JSON.parse(response.body)
+      entries = json["subsonic-response"]["playlist"]["entry"]
+      expect(entries.size).to eq(1)
+      expect(entries.first["title"]).to eq("Downloaded YouTube")
     end
 
     it "returns error for nonexistent playlist" do
