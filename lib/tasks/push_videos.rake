@@ -194,7 +194,7 @@ def encode(input, output)
   success = system(
     "ffmpeg", "-y", "-i", input,
     "-c:v", "h264_videotoolbox", "-q:v", "65", "-allow_sw", "1",
-    "-c:a", "aac", "-b:a", "128k",
+    "-ac", "2", "-c:a", "aac", "-b:a", "128k",
     "-movflags", "+faststart",
     "-tag:v", "avc1",
     output

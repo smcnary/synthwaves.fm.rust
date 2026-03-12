@@ -46,6 +46,39 @@ RSpec.describe VideoMetadataExtractor do
       expect(result[:container]).to be_nil
     end
 
+    it "extracts audio_channels and audio_channel_layout" do
+      ffprobe_output = {
+        streams: [
+          {codec_type: "video", codec_name: "h264", width: 1920, height: 1080},
+          {codec_type: "audio", codec_name: "aac", channels: 6, channel_layout: "5.1"}
+        ],
+        format: {duration: "120.5", bit_rate: "5000000", format_name: "mov,mp4,m4a,3gp,3g2,mj2"}
+      }.to_json
+
+      allow_any_instance_of(VideoMetadataExtractor).to receive(:`).and_return(ffprobe_output)
+
+      result = VideoMetadataExtractor.call("/fake/path.mp4")
+
+      expect(result[:audio_channels]).to eq(6)
+      expect(result[:audio_channel_layout]).to eq("5.1")
+    end
+
+    it "returns nil audio_channels and audio_channel_layout when no audio stream" do
+      ffprobe_output = {
+        streams: [
+          {codec_type: "video", codec_name: "h264", width: 1920, height: 1080}
+        ],
+        format: {duration: "60.0", bit_rate: "3000000", format_name: "mov,mp4,m4a,3gp,3g2,mj2"}
+      }.to_json
+
+      allow_any_instance_of(VideoMetadataExtractor).to receive(:`).and_return(ffprobe_output)
+
+      result = VideoMetadataExtractor.call("/fake/path.mp4")
+
+      expect(result[:audio_channels]).to be_nil
+      expect(result[:audio_channel_layout]).to be_nil
+    end
+
     it "returns container from format_name for mkv files" do
       ffprobe_output = {
         streams: [

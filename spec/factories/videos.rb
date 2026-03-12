@@ -9,6 +9,7 @@ FactoryBot.define do
     file_size { 50_000_000 }
     video_codec { "h264" }
     audio_codec { "aac" }
+    audio_channels { 2 }
     bitrate { 5000 }
     status { "ready" }
 

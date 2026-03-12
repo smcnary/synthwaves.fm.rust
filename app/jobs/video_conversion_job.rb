@@ -56,6 +56,7 @@ class VideoConversionJob < ApplicationJob
         video_codec: final_metadata[:video_codec] || video.video_codec,
         audio_codec: final_metadata[:audio_codec] || video.audio_codec,
         bitrate: final_metadata[:bitrate] || video.bitrate,
+        audio_channels: final_metadata[:audio_channels] || video.audio_channels,
         file_format: converted ? "mp4" : video.file_format,
         file_size: File.size(final_path)
       )
@@ -77,16 +78,23 @@ class VideoConversionJob < ApplicationJob
     h264 = metadata[:video_codec] == "h264"
     aac = metadata[:audio_codec]&.match?(/aac/)
     mp4_container = MP4_CONTAINERS.any? { |c| metadata[:container]&.include?(c) }
+    normalize_audio = needs_audio_normalization?(metadata)
 
-    if h264 && aac && mp4_container
+    if h264 && aac && mp4_container && !normalize_audio
       :none
-    elsif h264 && aac
+    elsif h264 && aac && !normalize_audio
       :remux
     elsif h264
       :transcode_audio
     else
       :full
     end
+  end
+
+  def needs_audio_normalization?(metadata)
+    return false unless metadata[:audio_channels]
+
+    metadata[:audio_channels] > 2
   end
 
   def remux_to_mp4(input_path, output_path)
@@ -103,7 +111,7 @@ class VideoConversionJob < ApplicationJob
   def transcode_audio_to_mp4(input_path, output_path)
     success = system(
       "ffmpeg", "-y", "-i", input_path,
-      "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
+      "-c:v", "copy", "-ac", "2", "-c:a", "aac", "-b:a", "128k",
       "-movflags", "+faststart",
       output_path,
       out: File::NULL, err: File::NULL
@@ -115,7 +123,7 @@ class VideoConversionJob < ApplicationJob
     success = system(
       "ffmpeg", "-y", "-i", input_path,
       "-c:v", "libx264", "-preset", "medium", "-crf", "23",
-      "-c:a", "aac", "-b:a", "128k",
+      "-ac", "2", "-c:a", "aac", "-b:a", "128k",
       "-movflags", "+faststart",
       "-vf", "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease",
       output_path,

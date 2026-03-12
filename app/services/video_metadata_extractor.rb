@@ -22,6 +22,8 @@ class VideoMetadataExtractor
       height: video_stream&.dig("height"),
       video_codec: video_stream&.dig("codec_name"),
       audio_codec: audio_stream&.dig("codec_name"),
+      audio_channels: audio_stream&.dig("channels"),
+      audio_channel_layout: audio_stream&.dig("channel_layout"),
       bitrate: format["bit_rate"] ? (format["bit_rate"].to_i / 1000) : nil,
       container: format["format_name"]
     }
