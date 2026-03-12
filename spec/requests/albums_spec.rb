@@ -153,6 +153,16 @@ RSpec.describe "Albums", type: :request do
       expect(response.body).to include("page=2")
     end
 
+    it "displays total play length" do
+      album = create(:album)
+      create(:track, album: album, duration: 180.0)
+      create(:track, album: album, duration: 60.0)
+
+      get album_path(album)
+
+      expect(response.body).to include("4:00")
+    end
+
     it "does not show pagination nav with 20 or fewer tracks" do
       album = create(:album)
       5.times { |i| create(:track, album: album, track_number: i + 1) }

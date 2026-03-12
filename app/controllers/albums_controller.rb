@@ -25,6 +25,7 @@ class AlbumsController < ApplicationController
     end
 
     @total_tracks = scope.count
+    @total_duration = @album.tracks.sum(:duration)
     @all_tracks = @album.tracks
     @pagy, @tracks = pagy(:offset, scope)
     @favorited_track_ids = Current.user.favorites.where(favorable_type: "Track").pluck(:favorable_id).to_set
