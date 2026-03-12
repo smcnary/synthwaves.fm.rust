@@ -1,39 +1,36 @@
-<div data-controller="search" class="mb-6">
-  <%= form_with url: music_path, method: :get, data: { turbo_frame: "music-content", search_target: "form", action: "input->search#submit" } do |f| %>
-    <input type="hidden" name="tab" value="tracks">
-    <input type="text" name="q" value="<%= @query %>" placeholder="Search by title, artist, or album..."
-           class="w-full rounded-lg bg-gray-800 border-gray-700 text-white text-lg px-4 py-3 focus:outline-neon-cyan"
-           data-search-target="input" autofocus>
+<%= render CollectionLayoutComponent.new(
+  collection: @tracks,
+  page_key: "music-tracks",
+  form_url: music_path,
+  turbo_frame: "music-content",
+  tab: "tracks",
+  placeholder: "Search by title, artist, or album...",
+  query: @query,
+  pagy: @pagy,
+  view_toggle: false,
+  container_classes: "bg-gray-800 rounded-lg border border-gray-700",
+  empty_label: "tracks"
+) do |c| %>
+  <% c.with_before_grid do %>
+    <% if @query.present? && @tracks.any? %>
+      <div class="flex justify-end mb-3">
+        <%= render BulkPlaylistMenuComponent.new(
+              tracks: @tracks,
+              playlists: current_user_playlists,
+              new_playlist_name: "Search: #{@query}"
+            ) %>
+      </div>
+    <% end %>
   <% end %>
-</div>
-
-<% if @tracks.any? %>
-  <% if @query.present? %>
-    <div class="flex justify-end mb-3">
-      <%= render BulkPlaylistMenuComponent.new(
-            tracks: @tracks,
-            playlists: current_user_playlists,
-            new_playlist_name: "Search: #{@query}"
-          ) %>
-    </div>
-  <% end %>
-  <div class="bg-gray-800 rounded-lg border border-gray-700">
-    <% @tracks.each do |track| %>
-      <%= render TrackRowComponent.new(track: track, link_title: true, link_subtitle: true) do |c| %>
-        <% c.with_trailing do %>
-          <%= render "favorites/button", favorable: track, favorited: @favorited_track_ids.include?(track.id) %>
-          <%= render "playlist_tracks/add_menu", track: track, playlists: current_user_playlists %>
-          <%= link_to edit_track_path(track), data: { turbo_frame: "_top" }, class: "text-gray-400 hover:text-neon-cyan" do %>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-          <% end %>
+  <% @tracks.each do |track| %>
+    <%= render TrackRowComponent.new(track: track, link_title: true, link_subtitle: true) do |c| %>
+      <% c.with_trailing do %>
+        <%= render "favorites/button", favorable: track, favorited: @favorited_track_ids.include?(track.id) %>
+        <%= render "playlist_tracks/add_menu", track: track, playlists: current_user_playlists %>
+        <%= link_to edit_track_path(track), data: { turbo_frame: "_top" }, class: "text-gray-400 hover:text-neon-cyan" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
         <% end %>
       <% end %>
     <% end %>
-  </div>
-
-  <div class="mt-6 flex justify-center">
-    <%== @pagy.series_nav %>
-  </div>
-<% else %>
-  <p class="text-gray-400">No tracks found<%= " for \"#{@query}\"" if @query.present? %>.</p>
+  <% end %>
 <% end %>

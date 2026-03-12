@@ -1,0 +1,80 @@
+<% outer_data = {} %>
+<% if view_toggle? %>
+  <% outer_data[:controller] = "view-toggle" %>
+  <% outer_data[:view_toggle_page_key_value] = page_key %>
+<% end %>
+
+<%= tag.div(data: outer_data) do %>
+  <%= header_content if header_content? %>
+
+  <% if !search? && (actions? || view_toggle?) %>
+    <div class="flex justify-between items-center mb-4">
+      <%= actions if actions? %>
+      <%= render "shared/view_toggle" if view_toggle? %>
+    </div>
+  <% elsif actions? %>
+    <div class="flex justify-end mb-4">
+      <%= actions %>
+    </div>
+  <% end %>
+
+  <% if search? %>
+    <div data-controller="search" class="mb-6">
+      <%= form_with url: form_url, method: :get, data: { turbo_frame: turbo_frame, search_target: "form", action: "input->search#submit" } do |f| %>
+        <%= hidden_field_tag :tab, tab if has_tab? %>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="text" name="q" value="<%= query %>" placeholder="<%= placeholder %>"
+                 class="flex-1 rounded-lg bg-gray-800 border-gray-700 text-white text-lg px-4 py-3 focus:outline-neon-cyan"
+                 data-search-target="input" autofocus>
+          <% if show_controls_row? %>
+            <div class="flex items-center gap-3">
+              <%= filters if filters? %>
+              <% if has_sort? %>
+                <label for="sort" class="text-sm text-gray-400 font-medium">Sort by</label>
+                <select name="sort" id="sort" data-action="change->search#submit" class="text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 focus:outline-neon-cyan">
+                  <% sort_options.each do |value, label| %>
+                    <option value="<%= value %>" <%= "selected" if value == sort %>><%= label %></option>
+                  <% end %>
+                </select>
+                <select name="direction" id="direction" data-action="change->search#submit" class="text-sm rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 focus:outline-neon-cyan">
+                  <option value="asc" <%= "selected" if direction == "asc" %>>Ascending</option>
+                  <option value="desc" <%= "selected" if direction == "desc" %>>Descending</option>
+                </select>
+              <% end %>
+              <%= render "shared/view_toggle" if view_toggle? %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= before_grid if before_grid? %>
+
+  <% grid_and_pagination = capture do %>
+    <% if collection.any? %>
+      <%= tag.div(class: container_classes, data: view_toggle? ? { view_toggle_target: "container" } : {}) do %>
+        <%= content %>
+      <% end %>
+      <% if has_pagination? %>
+        <div class="mt-6 flex justify-center">
+          <%== pagy.series_nav %>
+        </div>
+      <% end %>
+    <% else %>
+      <% if empty_state? %>
+        <%= empty_state %>
+      <% else %>
+        <p class="text-gray-400">No <%= empty_label %> found<%= " for \"#{query}\"" if query.present? %>.</p>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if has_content_frame? %>
+    <turbo-frame id="<%= content_frame %>" data-turbo-action="replace">
+      <%= grid_and_pagination %>
+    </turbo-frame>
+  <% else %>
+    <%= grid_and_pagination %>
+  <% end %>
+<% end %>
