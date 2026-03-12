@@ -17,6 +17,19 @@ RSpec.describe "Subsonic Media API", type: :request do
       expect(response).to have_http_status(:redirect)
     end
 
+    it "redirects to an https URL when audio file is attached" do
+      track = create(:track)
+      track.audio_file.attach(
+        io: File.open(Rails.root.join("spec/fixtures/files/test.mp3")),
+        filename: "test.mp3",
+        content_type: "audio/mpeg"
+      )
+
+      get "/api/rest/stream.view", params: auth_params.merge(id: track.id), headers: {"HTTPS" => "on"}
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to start_with("https://")
+    end
+
     it "returns error when no audio file attached" do
       track = create(:track, :youtube)
       get "/api/rest/stream.view", params: auth_params.merge(id: track.id)
@@ -44,6 +57,19 @@ RSpec.describe "Subsonic Media API", type: :request do
       expect(response).to have_http_status(:redirect)
     end
 
+    it "redirects to an https URL when audio file is attached" do
+      track = create(:track)
+      track.audio_file.attach(
+        io: File.open(Rails.root.join("spec/fixtures/files/test.mp3")),
+        filename: "test.mp3",
+        content_type: "audio/mpeg"
+      )
+
+      get "/api/rest/download.view", params: auth_params.merge(id: track.id), headers: {"HTTPS" => "on"}
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to start_with("https://")
+    end
+
     it "returns error when no audio file attached" do
       track = create(:track, :youtube)
       get "/api/rest/download.view", params: auth_params.merge(id: track.id)
@@ -69,6 +95,19 @@ RSpec.describe "Subsonic Media API", type: :request do
 
       get "/api/rest/getCoverArt.view", params: auth_params.merge(id: album.id)
       expect(response).to have_http_status(:redirect)
+    end
+
+    it "redirects to an https URL when cover image is attached" do
+      album = create(:album)
+      album.cover_image.attach(
+        io: StringIO.new("fake image data"),
+        filename: "cover.jpg",
+        content_type: "image/jpeg"
+      )
+
+      get "/api/rest/getCoverArt.view", params: auth_params.merge(id: album.id), headers: {"HTTPS" => "on"}
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to start_with("https://")
     end
 
     it "returns 404 when no cover image" do
