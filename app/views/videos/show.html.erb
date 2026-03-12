@@ -9,7 +9,13 @@
 
   <% if @video.status == "ready" && @video.file.attached? %>
     <div class="mb-6 relative bg-black rounded-xl overflow-hidden aspect-video"
-         data-controller="video-player">
+         data-controller="video-player"
+         data-video-native-type="uploaded_video"
+         data-video-native-title="<%= @video.title %>"
+         data-video-native-stream-url="<%= stream_video_url(@video) %>"
+         data-video-native-id="<%= @video.id %>"
+         data-video-native-thumbnail-url="<%= @video.thumbnail.attached? ? url_for(@video.thumbnail) : '' %>"
+         data-video-native-duration="<%= @video.duration || 0 %>">
       <video data-video-player-target="video"
              class="w-full h-full"
              controls

@@ -32,7 +32,14 @@ export default class extends Controller {
 
     // Auto-play on show page (works with Turbo navigation)
     if (this.hasAutoplayUrlValue && this.autoplayUrlValue) {
-      this.play({ detail: { url: this.autoplayUrlValue, name: this.autoplayNameValue } })
+      const videoEvent = new CustomEvent("video:playNow", {
+        detail: { url: this.autoplayUrlValue, name: this.autoplayNameValue, type: "hls_channel" },
+        cancelable: true
+      })
+      document.dispatchEvent(videoEvent)
+      if (!videoEvent.defaultPrevented) {
+        this.play({ detail: { url: this.autoplayUrlValue, name: this.autoplayNameValue } })
+      }
     }
   }
 

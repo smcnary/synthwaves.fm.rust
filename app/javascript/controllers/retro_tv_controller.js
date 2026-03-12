@@ -56,9 +56,17 @@ export default class extends Controller {
     const channel = this.channelsValue[this.currentIndex]
     if (!channel) return
 
-    const hlsPlayer = this.application.getControllerForElementAndIdentifier(this.element, "hls-player")
-    if (hlsPlayer) {
-      hlsPlayer.play({ detail: { url: channel.streamUrl, name: channel.name } })
+    const videoEvent = new CustomEvent("video:playNow", {
+      detail: { url: channel.streamUrl, name: channel.name, type: "hls_channel" },
+      cancelable: true
+    })
+    document.dispatchEvent(videoEvent)
+
+    if (!videoEvent.defaultPrevented) {
+      const hlsPlayer = this.application.getControllerForElementAndIdentifier(this.element, "hls-player")
+      if (hlsPlayer) {
+        hlsPlayer.play({ detail: { url: channel.streamUrl, name: channel.name } })
+      }
     }
 
     this.updateChannelDisplay()

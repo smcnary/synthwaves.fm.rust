@@ -8,7 +8,12 @@
     <p class="text-sm text-gray-400 mb-4"><%= @recording.iptv_channel.name %></p>
 
     <% if @recording.ready? && @recording.file.attached? %>
-      <div class="mb-4 rounded-xl overflow-hidden bg-black aspect-video">
+      <div class="mb-4 rounded-xl overflow-hidden bg-black aspect-video"
+           data-video-native-type="recording"
+           data-video-native-title="<%= @recording.title %>"
+           data-video-native-stream-url="<%= rails_blob_url(@recording.file) %>"
+           data-video-native-id="<%= @recording.id %>"
+           data-video-native-duration="<%= @recording.duration || 0 %>">
         <video controls playsinline class="w-full h-full" preload="metadata" airplay="allow" x-webkit-airplay="allow">
           <source src="<%= rails_blob_path(@recording.file) %>" type="video/mp4">
           Your browser does not support the video tag.

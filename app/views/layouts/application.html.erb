@@ -34,13 +34,13 @@
       <meta name="turbo:native" content="true">
     <% end %>
   </head>
-  <body class="bg-gray-900 synthwave-bg text-white <%= 'pb-40 md:pb-24' unless turbo_native_app? %> scanlines" data-controller="youtube-player keyboard-shortcuts<%= ' bridge--playback' if turbo_native_app? %>">
+  <body class="bg-gray-900 synthwave-bg text-white <%= 'pb-40 md:pb-24' unless turbo_native_app? %> scanlines" data-controller="youtube-player keyboard-shortcuts<%= ' bridge--playback bridge--video' if turbo_native_app? %>">
     <% if authenticated? %>
       <%= turbo_stream_from "downloads_#{Current.user.id}" %>
       <%= turbo_stream_from "recordings_#{Current.user.id}" %>
       <div id="download-notifications" class="fixed top-20 right-4 z-50 space-y-2"></div>
     <% end %>
-    <%= render 'navbar' %>
+    <%= render 'navbar' unless turbo_native_app? %>
     <%= render 'alerts' %>
     <%= render TvPlayerComponent.new %>
     <%= render PipComponent.new %>
