@@ -1,5 +1,5 @@
 <% content_for :meta_title, "#{@playlist.name} — synthwaves.fm" %>
-<% content_for :meta_description, "#{pluralize(@playlist_tracks.size, 'track')} on synthwaves.fm" %>
+<% content_for :meta_description, "#{pluralize(@playlist_tracks.size, 'track')} · #{format_duration(@total_duration)} on synthwaves.fm" %>
 <% if (cover_track = @playlist_tracks.find { |pt| pt.track.album.cover_image.attached? }) %>
   <% content_for :meta_image, og_image_url_for(cover_track.track.album.cover_image) %>
 <% end %>
@@ -11,7 +11,10 @@
   </div>
 
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
-    <h1 class="text-3xl font-bold font-display"><%= @playlist.name %></h1>
+    <div>
+      <h1 class="text-3xl font-bold font-display"><%= @playlist.name %></h1>
+      <p class="text-sm text-gray-400 mt-1"><%= pluralize(@playlist_tracks.size, "track") %> · <%= format_duration(@total_duration) %></p>
+    </div>
     <div class="flex flex-wrap gap-2" data-controller="clipboard" data-clipboard-content-value="<%= playlist_tracks_as_text(@playlist_tracks) %>">
       <%= button_to "Download", downloads_path(downloadable_type: "Playlist", downloadable_id: @playlist.id), class: "px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600" %>
       <button data-clipboard-target="button" data-action="clipboard#copy" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Copy track list</button>

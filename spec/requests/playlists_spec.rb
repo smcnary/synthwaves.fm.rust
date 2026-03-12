@@ -160,6 +160,15 @@ RSpec.describe "Playlists", type: :request do
       expect(content).to include("#{track.artist.name} - #{track.title}")
     end
 
+    it "displays track count and total duration" do
+      track_with_duration = create(:track, duration: 245)
+      create(:playlist_track, playlist: playlist, track: track_with_duration, position: 2)
+      get playlist_path(playlist)
+
+      expect(response.body).to include("2 tracks")
+      expect(response.body).to include("7:05")
+    end
+
     it "includes YouTube URL for YouTube tracks" do
       youtube_track = create(:track, youtube_video_id: "abc123")
       create(:playlist_track, playlist: playlist, track: youtube_track, position: 2)
