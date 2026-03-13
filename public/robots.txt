@@ -1,2 +1,8 @@
 User-agent: *
+Allow: /$
+Allow: /albums/
+Allow: /artists/
+Allow: /tracks/
+Allow: /playlists/
+Allow: /privacy
 Disallow: /
