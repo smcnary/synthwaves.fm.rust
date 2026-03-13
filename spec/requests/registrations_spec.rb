@@ -90,4 +90,64 @@ RSpec.describe "Registrations", type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe "DELETE /registration" do
+    it "deletes the user account and redirects to root" do
+      user = create(:user)
+      login_user(user)
+
+      expect {
+        delete registration_path
+      }.to change(User, :count).by(-1)
+
+      expect(response).to redirect_to(root_path)
+      expect(flash[:notice]).to eq("Your account has been deleted.")
+    end
+
+    it "destroys all associated data" do
+      user = create(:user)
+      login_user(user)
+
+      artist = create(:artist, user: user)
+      album = create(:album, artist: artist, user: user)
+      track = create(:track, album: album, artist: artist, user: user)
+      create(:playlist, user: user)
+      create(:favorite, user: user)
+      create(:play_history, user: user, track: track)
+      create(:radio_station, user: user)
+      create(:video, user: user)
+      create(:folder, user: user)
+      create(:api_key, user: user)
+
+      expect {
+        delete registration_path
+      }.to change(User, :count).by(-1)
+        .and change(Artist, :count).by(-1)
+        .and change(Album, :count).by(-1)
+        .and change(Track, :count).by(-1)
+        .and change(Playlist, :count).by(-1)
+        .and change(Favorite, :count).by(-1)
+        .and change(PlayHistory, :count).by(-1)
+        .and change(RadioStation, :count).by(-1)
+        .and change(Video, :count).by(-1)
+        .and change(Folder, :count).by(-1)
+        .and change(APIKey, :count).by(-1)
+    end
+
+    it "clears the session" do
+      user = create(:user)
+      login_user(user)
+
+      delete registration_path
+      follow_redirect!
+
+      get profile_path
+      expect(response).to redirect_to(new_session_path)
+    end
+
+    it "requires authentication" do
+      delete registration_path
+      expect(response).to redirect_to(new_session_path)
+    end
+  end
 end

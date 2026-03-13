@@ -2,7 +2,7 @@ class RegistrationsController < ApplicationController
   allow_unauthenticated_access only: %i[new create]
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_registration_path, alert: "Try again later." }
 
-  before_action :redirect_authenticated_user
+  before_action :redirect_authenticated_user, only: %i[new create]
 
   def new
     @user = User.new
@@ -17,6 +17,12 @@ class RegistrationsController < ApplicationController
     else
       render :new, status: :unprocessable_content
     end
+  end
+
+  def destroy
+    Current.user.destroy
+    terminate_session
+    redirect_to root_path, notice: "Your account has been deleted."
   end
 
   private

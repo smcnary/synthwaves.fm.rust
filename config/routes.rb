@@ -97,7 +97,7 @@ Rails.application.routes.draw do
   resources :api_keys, only: [:index, :new, :create, :destroy]
 
   resource :profile, only: [:show, :edit, :update]
-  resource :registration, only: [:new, :create]
+  resource :registration, only: [:new, :create, :destroy]
   resource :session
   resources :passwords, param: :token
   get "/home", to: "home#show", as: :home
