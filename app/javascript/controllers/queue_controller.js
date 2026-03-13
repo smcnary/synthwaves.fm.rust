@@ -11,6 +11,7 @@ export default class extends Controller {
 
     this.addHandler = (e) => this.add(e.detail)
     this.playNowHandler = (e) => this.playNow(e.detail)
+    this.playAllHandler = (e) => this.playAll(e.detail)
     this.nextHandler = () => this.next()
     this.previousHandler = () => this.previous()
     this.cycleRepeatHandler = () => this.cycleRepeat()
@@ -23,6 +24,7 @@ export default class extends Controller {
 
     document.addEventListener("queue:add", this.addHandler)
     document.addEventListener("queue:playNow", this.playNowHandler)
+    document.addEventListener("queue:playAll", this.playAllHandler)
     document.addEventListener("queue:next", this.nextHandler)
     document.addEventListener("queue:previous", this.previousHandler)
     document.addEventListener("queue:cycleRepeat", this.cycleRepeatHandler)
@@ -37,6 +39,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("queue:add", this.addHandler)
     document.removeEventListener("queue:playNow", this.playNowHandler)
+    document.removeEventListener("queue:playAll", this.playAllHandler)
     document.removeEventListener("queue:next", this.nextHandler)
     document.removeEventListener("queue:previous", this.previousHandler)
     document.removeEventListener("queue:cycleRepeat", this.cycleRepeatHandler)
@@ -66,6 +69,16 @@ export default class extends Controller {
       this.queue.push(track)
       this.currentIndex = this.queue.length - 1
     }
+    if (this.shuffleEnabled) {
+      this.generateShuffleOrder()
+    }
+    this.save()
+    this.playCurrent()
+  }
+
+  playAll({ tracks, startIndex }) {
+    this.queue = tracks
+    this.currentIndex = startIndex
     if (this.shuffleEnabled) {
       this.generateShuffleOrder()
     }

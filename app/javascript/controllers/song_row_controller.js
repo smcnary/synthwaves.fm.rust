@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { buildTrackFromElement } from "helpers/track_builder"
 
 export default class extends Controller {
   static values = { trackId: Number, title: String, artist: String, streamUrl: String, youtubeVideoId: String, isLive: Boolean, coverUrl: String, isPodcast: Boolean, albumTitle: String, duration: Number, nativeStreamUrl: String, nativeCoverArtUrl: String }
@@ -6,8 +7,20 @@ export default class extends Controller {
   play(event) {
     event.preventDefault()
     event.stopPropagation()
-    const track = this.buildTrack()
-    document.dispatchEvent(new CustomEvent("queue:playNow", { detail: track }))
+
+    const container = this.element.parentElement
+    const siblings = container ? container.querySelectorAll("[data-controller~='song-row']") : []
+
+    if (siblings.length > 1) {
+      const tracks = Array.from(siblings).map(el => buildTrackFromElement(el))
+      const startIndex = Array.from(siblings).indexOf(this.element)
+      document.dispatchEvent(new CustomEvent("queue:playAll", {
+        detail: { tracks, startIndex: Math.max(startIndex, 0) }
+      }))
+    } else {
+      const track = this.buildTrack()
+      document.dispatchEvent(new CustomEvent("queue:playNow", { detail: track }))
+    }
   }
 
   addToQueue() {
