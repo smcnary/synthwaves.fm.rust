@@ -32,7 +32,8 @@ export default class extends Controller {
         synthwave: "#0a0a1a",
         reggae: "#0d1a0d",
         punk: "#0a0a0a",
-        jazz: "#0d0f1a"
+        jazz: "#0d0f1a",
+        light: "#f8fafc"
       }
       metaThemeColor.content = metaColors[theme] || metaColors.synthwave
     }

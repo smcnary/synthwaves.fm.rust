@@ -234,3 +234,53 @@
 
   --font-display: "Playfair Display", ui-serif, Georgia, serif;
 }
+
+[data-theme="light"] {
+  /* Invert gray scale: dark backgrounds → light */
+  --color-gray-900: #f8fafc;
+  --color-gray-800: #ffffff;
+  --color-gray-700: #e2e8f0;
+  --color-gray-600: #cbd5e1;
+  --color-gray-500: #64748b;
+  --color-gray-400: #475569;
+  --color-gray-300: #334155;
+  --color-gray-200: #1e293b;
+
+  /* Slate (navbar uses bg-slate-900) */
+  --color-slate-900: #ffffff;
+
+  /* Primary text: text-white → dark */
+  --color-white: #0f172a;
+
+  /* Accent colors */
+  --color-neon-pink: #2563eb;
+  --color-neon-cyan: #0ea5e9;
+  --color-neon-purple: #7c3aed;
+  --color-laser-green: #059669;
+  --color-sunset-orange: #ec4899;
+
+  /* Subtle background effects */
+  --theme-grid-color: rgba(37, 99, 235, 0.04);
+  --theme-glow-color: rgba(37, 99, 235, 0.06);
+
+  /* Font */
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Restore white text inside dark overlays (screensaver, modals, video) */
+[data-theme="light"] :is([class*="bg-black"]) {
+  --color-white: #fff;
+  --color-gray-400: #9ca3af;
+  --color-gray-300: #d1d5db;
+}
+
+/* Restore white text on colored buttons */
+[data-theme="light"] :is(
+  [class*="bg-neon-pink"],
+  [class*="bg-neon-cyan"],
+  [class*="bg-red-"],
+  [class*="bg-green-"],
+  [class*="bg-sunset"]
+) {
+  --color-white: #fff;
+}
