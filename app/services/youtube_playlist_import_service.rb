@@ -3,11 +3,11 @@ class YoutubePlaylistImportService
 
   class Error < StandardError; end
 
-  def self.call(url, category: "music", api_key:, user:)
+  def self.call(url, api_key:, user:, category: "music")
     new(url, category: category, api_key: api_key, user: user).call
   end
 
-  def initialize(url, category: "music", api_key:, user:)
+  def initialize(url, api_key:, user:, category: "music")
     @url = url
     @category = category
     @api_key = api_key
@@ -41,10 +41,17 @@ class YoutubePlaylistImportService
 
     playlist_items.each do |item|
       details = details_by_id[item[:video_id]] || {}
+      enriched = YoutubeMetadataEnricher.call(title: item[:title], channel_name: playlist_info[:channel_name])
+
+      track_artist = if enriched[:source] == :parsed
+        @user.artists.find_or_create_by!(name: enriched[:artist]) { |a| a.category = @category }
+      else
+        artist
+      end
 
       @user.tracks.find_or_create_by!(youtube_video_id: item[:video_id]) do |track|
-        track.title = item[:title]
-        track.artist = artist
+        track.title = enriched[:title]
+        track.artist = track_artist
         track.album = album
         track.track_number = item[:position] + 1
         track.duration = details[:duration]
@@ -55,5 +62,4 @@ class YoutubePlaylistImportService
   end
 
   private
-
 end

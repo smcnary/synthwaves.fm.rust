@@ -35,6 +35,9 @@ class MediaDownloadJob < ApplicationJob
       file_format: "mp3",
       file_size: File.size(file_path)
     )
+
+    enrich_from_embedded_metadata(track, metadata) if track.youtube_video_id.present?
+
     broadcast_download_status(track, user_id, type: "track")
   rescue MediaDownloadService::Error, StandardError => e
     track&.update!(download_status: "failed", download_error: e.message.truncate(500))
@@ -42,5 +45,23 @@ class MediaDownloadJob < ApplicationJob
     raise unless e.is_a?(MediaDownloadService::Error)
   ensure
     FileUtils.rm_rf(temp_dir) if temp_dir
+  end
+
+  private
+
+  def enrich_from_embedded_metadata(track, metadata)
+    if metadata[:artist].present? && metadata[:artist] != track.artist.name
+      artist = track.user.artists.find_or_create_by!(name: metadata[:artist])
+      track.update!(artist: artist)
+    end
+
+    if metadata[:title].present? && metadata[:title] != track.title
+      track.update!(title: metadata[:title])
+    end
+
+    if metadata[:album].present? && track.album.title == YoutubeVideoImportService::SINGLES_ALBUM_TITLE
+      album = track.user.albums.find_or_create_by!(title: metadata[:album], artist: track.artist)
+      track.update!(album: album)
+    end
   end
 end

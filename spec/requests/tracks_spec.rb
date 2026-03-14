@@ -18,14 +18,14 @@ RSpec.describe "Tracks", type: :request do
     end
 
     it "respects page parameter" do
-      tracks = create_list(:track, 25, album: create(:album, artist: create(:artist, user: user)))
+      create_list(:track, 25, album: create(:album, artist: create(:artist, user: user)))
       get tracks_path, params: {page: 2}
       expect(response).to have_http_status(:ok)
     end
 
     it "filters tracks by search query" do
-      matching = create(:track, title: "Bohemian Rhapsody", album: create(:album, artist: create(:artist, user: user)))
-      non_matching = create(:track, title: "Stairway to Heaven", album: create(:album, artist: create(:artist, user: user)))
+      create(:track, title: "Bohemian Rhapsody", album: create(:album, artist: create(:artist, user: user)))
+      create(:track, title: "Stairway to Heaven", album: create(:album, artist: create(:artist, user: user)))
 
       get tracks_path, params: {q: "Bohemian"}
 
@@ -34,8 +34,8 @@ RSpec.describe "Tracks", type: :request do
     end
 
     it "returns all tracks when query is empty" do
-      track1 = create(:track, title: "Track Alpha", album: create(:album, artist: create(:artist, user: user)))
-      track2 = create(:track, title: "Track Beta", album: create(:album, artist: create(:artist, user: user)))
+      create(:track, title: "Track Alpha", album: create(:album, artist: create(:artist, user: user)))
+      create(:track, title: "Track Beta", album: create(:album, artist: create(:artist, user: user)))
 
       get tracks_path, params: {q: ""}
 
@@ -44,9 +44,9 @@ RSpec.describe "Tracks", type: :request do
     end
 
     it "excludes podcast tracks from index" do
-      music_track = create(:track, title: "Music Song", album: create(:album, artist: create(:artist, user: user)))
+      create(:track, title: "Music Song", album: create(:album, artist: create(:artist, user: user)))
       podcast_artist = create(:artist, :podcast, user: user)
-      podcast_track = create(:track, title: "Podcast Episode", artist: podcast_artist, album: create(:album, artist: podcast_artist))
+      create(:track, title: "Podcast Episode", artist: podcast_artist, album: create(:album, artist: podcast_artist))
 
       get tracks_path
 
@@ -63,8 +63,8 @@ RSpec.describe "Tracks", type: :request do
     end
 
     it "sorts tracks by recently added (newest first) by default" do
-      older = create(:track, title: "Older Track", album: create(:album, artist: create(:artist, user: user)), created_at: 2.days.ago)
-      newer = create(:track, title: "Newer Track", album: create(:album, artist: create(:artist, user: user)), created_at: 1.hour.ago)
+      create(:track, title: "Older Track", album: create(:album, artist: create(:artist, user: user)), created_at: 2.days.ago)
+      create(:track, title: "Newer Track", album: create(:album, artist: create(:artist, user: user)), created_at: 1.hour.ago)
 
       get tracks_path
 
@@ -75,7 +75,7 @@ RSpec.describe "Tracks", type: :request do
       create(:track, title: "Zebra Song", album: create(:album, artist: create(:artist, user: user)))
       create(:track, title: "Alpha Song", album: create(:album, artist: create(:artist, user: user)))
 
-      get tracks_path, params: { sort: "title", direction: "asc" }
+      get tracks_path, params: {sort: "title", direction: "asc"}
 
       expect(response.body.index("Alpha Song")).to be < response.body.index("Zebra Song")
     end
@@ -90,7 +90,7 @@ RSpec.describe "Tracks", type: :request do
     end
 
     it "renders the add to playlist menu with search input" do
-      playlist = create(:playlist, user: user, name: "My Favorites")
+      create(:playlist, user: user, name: "My Favorites")
       get track_path(track)
       expect(response.body).to include("Add to playlist")
       expect(response.body).to include("My Favorites")
@@ -410,7 +410,7 @@ RSpec.describe "Tracks", type: :request do
 
     it "returns null lyrics when track has no lyrics and LRCLIB has none" do
       stub_request(:get, /lrclib\.net\/api\/search/)
-        .to_return(status: 200, body: "[]", headers: { "Content-Type" => "application/json" })
+        .to_return(status: 200, body: "[]", headers: {"Content-Type" => "application/json"})
 
       track = create(:track, album: create(:album, artist: create(:artist, user: user)))
       get lyrics_track_path(track), as: :json
@@ -420,11 +420,56 @@ RSpec.describe "Tracks", type: :request do
     end
   end
 
+  describe "POST /tracks/:id/enrich" do
+    it "enriches metadata for YouTube tracks with 'Artist - Song' title" do
+      track = create(:track, :youtube, title: "Daft Punk - Around The World (Official Video)", album: create(:album, artist: create(:artist, name: "DaftPunkVEVO", user: user)))
+
+      post enrich_track_path(track)
+
+      track.reload
+      expect(track.title).to eq("Around The World")
+      expect(track.artist.name).to eq("Daft Punk")
+      expect(response).to redirect_to(track_path(track))
+      expect(flash[:notice]).to include("Daft Punk")
+    end
+
+    it "does not change tracks without 'Artist - Song' pattern" do
+      artist = create(:artist, name: "SomeChannel", user: user)
+      track = create(:track, :youtube, title: "Just A Song Title", album: create(:album, artist: artist))
+
+      post enrich_track_path(track)
+
+      track.reload
+      expect(track.title).to eq("Just A Song Title")
+      expect(track.artist.name).to eq("SomeChannel")
+      expect(flash[:notice]).to include("No artist/title pattern found")
+    end
+
+    it "rejects non-YouTube tracks" do
+      track = create(:track, album: create(:album, artist: create(:artist, user: user)))
+
+      post enrich_track_path(track)
+
+      expect(response).to redirect_to(track_path(track))
+      expect(flash[:alert]).to include("only available for YouTube")
+    end
+
+    it "renders the enrich button only for YouTube tracks" do
+      youtube_track = create(:track, :youtube, album: create(:album, artist: create(:artist, user: user)))
+      get track_path(youtube_track)
+      expect(response.body).to include('title="Enrich metadata"')
+
+      regular_track = create(:track, album: create(:album, artist: create(:artist, user: user)))
+      get track_path(regular_track)
+      expect(response.body).not_to include('title="Enrich metadata"')
+    end
+  end
+
   describe "PATCH /tracks/:id with lyrics" do
     let(:track) { create(:track, album: create(:album, artist: create(:artist, user: user))) }
 
     it "updates lyrics" do
-      patch track_path(track), params: { track: { lyrics: "New lyrics here" } }
+      patch track_path(track), params: {track: {lyrics: "New lyrics here"}}
       expect(track.reload.lyrics).to eq("New lyrics here")
     end
   end

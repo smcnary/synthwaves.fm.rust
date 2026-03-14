@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       get :stream
       get :download
       get :lyrics
+      post :enrich
     end
   end
   resources :downloads, only: [:index, :create, :show, :destroy] do

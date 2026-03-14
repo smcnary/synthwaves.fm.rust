@@ -15,7 +15,7 @@ RSpec.describe MediaDownloadJob, type: :job do
   describe "#perform" do
     it "downloads audio and attaches it to the track" do
       allow(MediaDownloadService).to receive(:download_audio).and_return(temp_mp3.path)
-      allow(MetadataExtractor).to receive(:call).and_return({ duration: 200.0, bitrate: 192 })
+      allow(MetadataExtractor).to receive(:call).and_return({duration: 200.0, bitrate: 192})
 
       described_class.perform_now(track.id, url, user_id: user.id)
       track.reload
@@ -75,6 +75,61 @@ RSpec.describe MediaDownloadJob, type: :job do
 
       temp_dirs = Dir.glob(Rails.root.join("tmp/media_downloads/track_#{track.id}_*"))
       expect(temp_dirs).to be_empty
+    end
+
+    context "post-download metadata enrichment for YouTube tracks" do
+      it "updates artist from embedded metadata" do
+        allow(MediaDownloadService).to receive(:download_audio).and_return(temp_mp3.path)
+        allow(MetadataExtractor).to receive(:call).and_return({artist: "Real Artist", duration: 200.0})
+
+        described_class.perform_now(track.id, url, user_id: user.id)
+        track.reload
+
+        expect(track.artist.name).to eq("Real Artist")
+      end
+
+      it "updates title from embedded metadata" do
+        allow(MediaDownloadService).to receive(:download_audio).and_return(temp_mp3.path)
+        allow(MetadataExtractor).to receive(:call).and_return({title: "Real Song Title", duration: 200.0})
+
+        described_class.perform_now(track.id, url, user_id: user.id)
+        track.reload
+
+        expect(track.title).to eq("Real Song Title")
+      end
+
+      it "updates album from embedded metadata when current album is YouTube Singles" do
+        track.album.update!(title: YoutubeVideoImportService::SINGLES_ALBUM_TITLE)
+        allow(MediaDownloadService).to receive(:download_audio).and_return(temp_mp3.path)
+        allow(MetadataExtractor).to receive(:call).and_return({album: "Discovery", duration: 200.0})
+
+        described_class.perform_now(track.id, url, user_id: user.id)
+        track.reload
+
+        expect(track.album.title).to eq("Discovery")
+      end
+
+      it "does not overwrite album when it is not YouTube Singles" do
+        track.album.update!(title: "Custom Playlist Album")
+        allow(MediaDownloadService).to receive(:download_audio).and_return(temp_mp3.path)
+        allow(MetadataExtractor).to receive(:call).and_return({album: "Different Album", duration: 200.0})
+
+        described_class.perform_now(track.id, url, user_id: user.id)
+        track.reload
+
+        expect(track.album.title).to eq("Custom Playlist Album")
+      end
+
+      it "does not enrich non-YouTube tracks" do
+        non_yt_track = create(:track)
+        allow(MediaDownloadService).to receive(:download_audio).and_return(temp_mp3.path)
+        allow(MetadataExtractor).to receive(:call).and_return({artist: "Other Artist", title: "Other Title", duration: 200.0})
+
+        described_class.perform_now(non_yt_track.id, "https://example.com/audio.mp3", user_id: user.id)
+        non_yt_track.reload
+
+        expect(non_yt_track.artist.name).not_to eq("Other Artist")
+      end
     end
 
     it "broadcasts status updates" do

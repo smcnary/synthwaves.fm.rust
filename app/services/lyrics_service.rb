@@ -3,8 +3,6 @@ class LyricsService
   USER_AGENT = "synthwaves.fm"
   TIMEOUT = 10
 
-  NOISE_PATTERN = /(?:\[.*?\]|\(.*?\)|-?\s*(?:official|lyric|audio|video).*)/i
-
   def initialize(track)
     @track = track
   end
@@ -49,26 +47,21 @@ class LyricsService
     elsif results.first["plainLyrics"].present?
       results.first["plainLyrics"]
     end
-  rescue StandardError
+  rescue
     nil
   end
 
   def build_query(artist, title)
-    # Handle titles like "Artist - Song (Official Video)"
     if title.include?(" - ")
       parts = title.split(" - ", 2)
-      a = clean(parts[0])
-      t = clean(parts[1])
+      a = YoutubeMetadataEnricher.clean_for_search(parts[0])
+      t = YoutubeMetadataEnricher.clean_for_search(parts[1])
       if a.present? && t.present?
         artist = a
         title = t
       end
     end
 
-    "#{clean(artist)} #{clean(title)}".strip.presence
-  end
-
-  def clean(str)
-    str.gsub(NOISE_PATTERN, "").strip
+    "#{YoutubeMetadataEnricher.clean_for_search(artist)} #{YoutubeMetadataEnricher.clean_for_search(title)}".strip.presence
   end
 end

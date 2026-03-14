@@ -2,7 +2,7 @@ class TracksController < ApplicationController
   include Orderable
   include AdminAuthorization
 
-  before_action :set_track, only: [:show, :edit, :update, :destroy, :stream, :download, :lyrics]
+  before_action :set_track, only: [:show, :edit, :update, :destroy, :stream, :download, :lyrics, :enrich]
   before_action :require_admin, only: [:edit, :update, :destroy]
 
   def index
@@ -93,7 +93,7 @@ class TracksController < ApplicationController
   def stream
     if @track.audio_file.attached?
       if params[:resolve].present? && cloud_storage?
-        render json: { url: @track.audio_file.url(expires_in: 4.hours) }
+        render json: {url: @track.audio_file.url(expires_in: 4.hours)}
       elsif params[:proxy].present? || !cloud_storage?
         redirect_to rails_storage_proxy_url(@track.audio_file)
       else
@@ -115,7 +115,24 @@ class TracksController < ApplicationController
 
   def lyrics
     lyrics = LyricsService.new(@track).fetch
-    render json: { lyrics: lyrics }
+    render json: {lyrics: lyrics}
+  end
+
+  def enrich
+    unless @track.youtube?
+      redirect_to @track, alert: "Metadata enrichment is only available for YouTube tracks."
+      return
+    end
+
+    enriched = YoutubeMetadataEnricher.call(title: @track.title, channel_name: @track.artist.name)
+
+    if enriched[:source] == :parsed
+      artist = Current.user.artists.find_or_create_by!(name: enriched[:artist])
+      @track.update!(title: enriched[:title], artist: artist)
+      redirect_to @track, notice: "Metadata enriched: artist set to \"#{enriched[:artist]}\" and title cleaned to \"#{enriched[:title]}\"."
+    else
+      redirect_to @track, notice: "No artist/title pattern found in the track title. No changes made."
+    end
   end
 
   private

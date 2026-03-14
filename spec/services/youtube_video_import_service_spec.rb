@@ -34,12 +34,38 @@ RSpec.describe YoutubeVideoImportService do
       expect(track.album.title).to eq("YouTube Singles")
     end
 
-    it "uses channel name as artist" do
+    it "uses channel name as artist when title has no dash" do
       stub_video_api_call
 
       track = described_class.call("https://youtu.be/R-FxmoVM7X4", api_key: api_key, user: user)
 
       expect(track.artist.name).to eq("Test Channel")
+    end
+
+    it "parses artist from 'Artist - Song' title format" do
+      stub_video_api_call(title: "Daft Punk - Around The World (Official Video)")
+
+      track = described_class.call("https://youtu.be/R-FxmoVM7X4", api_key: api_key, user: user)
+
+      expect(track.artist.name).to eq("Daft Punk")
+      expect(track.title).to eq("Around The World")
+    end
+
+    it "strips bracket noise from title" do
+      stub_video_api_call(title: "Artist - Song [Official Audio] [HD]")
+
+      track = described_class.call("https://youtu.be/R-FxmoVM7X4", api_key: api_key, user: user)
+
+      expect(track.artist.name).to eq("Artist")
+      expect(track.title).to eq("Song")
+    end
+
+    it "preserves feat. in parsed title" do
+      stub_video_api_call(title: "Artist - Song (feat. Other)")
+
+      track = described_class.call("https://youtu.be/R-FxmoVM7X4", api_key: api_key, user: user)
+
+      expect(track.title).to eq("Song (feat. Other)")
     end
 
     it "sets youtube_video_id and duration" do

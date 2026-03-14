@@ -5,11 +5,11 @@ class YoutubeVideoImportService
 
   SINGLES_ALBUM_TITLE = "YouTube Singles"
 
-  def self.call(url, category: "music", api_key:, user:)
+  def self.call(url, api_key:, user:, category: "music")
     new(url, category: category, api_key: api_key, user: user).call
   end
 
-  def initialize(url, category: "music", api_key:, user:)
+  def initialize(url, api_key:, user:, category: "music")
     @url = url
     @category = category
     @api_key = api_key
@@ -26,7 +26,9 @@ class YoutubeVideoImportService
     details = api.fetch_video_details([@video_id]).first
     raise Error, "Video not found" if details.nil?
 
-    artist = @user.artists.find_or_create_by!(name: details[:channel_name] || "Unknown Artist") do |a|
+    enriched = YoutubeMetadataEnricher.call(title: details[:title], channel_name: details[:channel_name])
+
+    artist = @user.artists.find_or_create_by!(name: enriched[:artist] || "Unknown Artist") do |a|
       a.category = @category
     end
 
@@ -39,7 +41,7 @@ class YoutubeVideoImportService
     next_track_number = (album.tracks.maximum(:track_number) || 0) + 1
 
     @user.tracks.create!(
-      title: details[:title],
+      title: enriched[:title],
       artist: artist,
       album: album,
       youtube_video_id: @video_id,
@@ -49,5 +51,4 @@ class YoutubeVideoImportService
   end
 
   private
-
 end

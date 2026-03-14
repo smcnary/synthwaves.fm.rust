@@ -68,7 +68,7 @@ class AudioConversionJob < ApplicationJob
       track.update!(artist: artist)
     end
 
-    if metadata[:album].present? && album.title == "Unknown Album"
+    if metadata[:album].present? && album.title.in?(["Unknown Album", YoutubeVideoImportService::SINGLES_ALBUM_TITLE])
       album.update!(title: metadata[:album])
     end
 
