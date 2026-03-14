@@ -8,20 +8,15 @@ RSpec.describe ThemeHelper, type: :helper do
       expect(helper.current_theme).to eq("jazz")
     end
 
-    it "returns the cookie theme for guests" do
-      allow(Current).to receive(:user).and_return(nil)
-      helper.request.cookies[:theme] = "punk"
-      expect(helper.current_theme).to eq("punk")
-    end
-
-    it "returns default when no user or cookie" do
+    it "returns default when no user is logged in" do
       allow(Current).to receive(:user).and_return(nil)
       expect(helper.current_theme).to eq("synthwave")
     end
 
     it "returns default for invalid theme values" do
-      allow(Current).to receive(:user).and_return(nil)
-      helper.request.cookies[:theme] = "vaporwave"
+      user = create(:user)
+      allow(user).to receive(:theme).and_return("vaporwave")
+      allow(Current).to receive(:user).and_return(user)
       expect(helper.current_theme).to eq("synthwave")
     end
   end

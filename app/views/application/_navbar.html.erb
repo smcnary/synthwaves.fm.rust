@@ -56,7 +56,7 @@
             <%= render Button::Component.new(label: "Maintenance", behavior: :navigation, link_url: "/admin/maintenance_tasks", style: :menu_item) %>
           <% end %>
           <div class="border-t border-gray-700 my-1"></div>
-          <%= button_to "Sign Out", session_path, method: :delete, data: { turbo_method: :delete }, class: "w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700" %>
+          <%= button_to "Sign Out", session_path, method: :delete, class: "w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700" %>
         <% end %>
       <% else %>
         <div class="flex items-center space-x-1">

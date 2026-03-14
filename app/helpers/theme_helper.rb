@@ -1,6 +1,6 @@
 module ThemeHelper
   def current_theme
-    theme = Current.user&.theme || cookies[:theme] || Themeable::DEFAULT_THEME
+    theme = Current.user&.theme || Themeable::DEFAULT_THEME
     Themeable::THEMES.key?(theme) ? theme : Themeable::DEFAULT_THEME
   end
 

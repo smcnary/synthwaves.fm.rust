@@ -4,11 +4,12 @@ export default class extends Controller {
   static values = { fonts: Object }
 
   connect() {
-    // Sync server-rendered theme to localStorage
-    const serverTheme = this.element.dataset.theme
-    if (serverTheme) {
-      localStorage.setItem("theme", serverTheme)
-    }
+    this.syncOnRender = this.#syncThemeFromResponse.bind(this)
+    document.addEventListener("turbo:before-render", this.syncOnRender)
+  }
+
+  disconnect() {
+    document.removeEventListener("turbo:before-render", this.syncOnRender)
   }
 
   switch(event) {
@@ -17,7 +18,6 @@ export default class extends Controller {
 
     // Apply theme to DOM immediately
     document.documentElement.dataset.theme = theme
-    localStorage.setItem("theme", theme)
 
     // Swap font stylesheet
     const fontLink = document.getElementById("theme-font")
@@ -54,9 +54,15 @@ export default class extends Controller {
           "X-CSRF-Token": csrfToken
         },
         body: JSON.stringify({ user: { theme: theme } })
-      }).catch(() => {
-        // Silent fail — localStorage already has it
-      })
+      }).catch(() => {})
+    }
+  }
+
+  // Sync data-theme from the server-rendered response on Turbo navigations
+  #syncThemeFromResponse(event) {
+    const newTheme = event.detail.newBody.parentElement?.dataset?.theme
+    if (newTheme) {
+      document.documentElement.dataset.theme = newTheme
     }
   }
 }

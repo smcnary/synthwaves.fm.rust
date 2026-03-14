@@ -10,9 +10,6 @@
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <script>
-      var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;
-    </script>
     <%= yield :head %>
     <%= storage_preconnect_tag %>
     <!-- Theme fonts -->

@@ -97,9 +97,9 @@ Four music-genre-inspired themes: **Synthwave** (default), **Reggae**, **Punk**,
 ### How It Works
 
 - `Themeable` concern (`app/models/concerns/themeable.rb`) is the single source of truth for the theme registry (label, font, meta color per theme)
-- `ThemeHelper` provides `current_theme`, `current_theme_font_url`, etc. to layouts
+- `ThemeHelper` provides `current_theme` (`Current.user&.theme` or default), `current_theme_font_url`, etc. to layouts
 - `@theme` vars in `app/assets/tailwind/application.css` define the default (synthwave) palette; `[data-theme="reggae|punk|jazz"]` blocks override the same `--color-*` vars
-- `theme_controller.js` handles instant client-side switching (CSS var swap + font swap + localStorage + server persist via JSON PATCH)
+- `theme_controller.js` handles instant client-side switching (CSS var swap + font swap + server persist via JSON PATCH) and syncs the server-rendered `data-theme` attribute on Turbo navigations via `turbo:before-render`
 - Users choose their theme on the profile edit page
 
 ### Adding a New Theme
