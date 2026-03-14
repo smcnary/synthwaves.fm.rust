@@ -208,18 +208,20 @@
           </button>
         </div>
         <!-- Crossfade control -->
-        <div class="hidden md:block relative group">
-          <button class="text-gray-400 hover:text-neon-cyan p-1" title="Crossfade">
+        <div class="hidden md:block relative">
+          <button data-action="player#toggleCrossfadeMenu" data-player-target="crossfadeButton" class="text-gray-400 hover:text-neon-cyan p-1" title="Crossfade">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
             </svg>
           </button>
-          <div class="hidden group-hover:block absolute bottom-full right-0 mb-1 bg-gray-800 border border-neon-purple/30 rounded shadow-xl py-1 min-w-[90px]">
-            <button data-action="player#setCrossfade" data-duration="0" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">Off</button>
-            <button data-action="player#setCrossfade" data-duration="3" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">3s</button>
-            <button data-action="player#setCrossfade" data-duration="6" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">6s</button>
-            <button data-action="player#setCrossfade" data-duration="9" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">9s</button>
-            <button data-action="player#setCrossfade" data-duration="12" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">12s</button>
+          <div data-player-target="crossfadeMenu" class="hidden absolute bottom-full right-0 pb-1 min-w-[90px] z-10">
+            <div class="bg-gray-800 border border-neon-purple/30 rounded shadow-xl py-1">
+              <button data-action="player#setCrossfade" data-duration="0" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">Off</button>
+              <button data-action="player#setCrossfade" data-duration="3" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">3s</button>
+              <button data-action="player#setCrossfade" data-duration="6" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">6s</button>
+              <button data-action="player#setCrossfade" data-duration="9" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">9s</button>
+              <button data-action="player#setCrossfade" data-duration="12" class="block w-full text-left px-3 py-1 text-xs text-gray-300 hover:text-white hover:bg-gray-700">12s</button>
+            </div>
           </div>
         </div>
         <!-- Fullscreen now playing toggle -->

@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["progress", "title", "artist", "artwork", "playIcon", "pauseIcon", "currentTime", "duration", "volume", "progressBar", "liveIndicator", "prevButton", "nextButton", "repeatOff", "repeatAll", "repeatOne", "shuffleIcon", "speedControl", "speedDisplay"]
+  static targets = ["progress", "title", "artist", "artwork", "playIcon", "pauseIcon", "currentTime", "duration", "volume", "progressBar", "liveIndicator", "prevButton", "nextButton", "repeatOff", "repeatAll", "repeatOne", "shuffleIcon", "speedControl", "speedDisplay", "crossfadeMenu", "crossfadeButton"]
   static values = { playHistoryUrl: String }
 
   connect() {
@@ -75,10 +75,27 @@ export default class extends Controller {
       navigator.mediaSession.setActionHandler("nexttrack", () => this.next())
     }
 
+    // Reflect saved crossfade state on the button
+    const savedCrossfade = parseInt(localStorage.getItem("crossfadeDuration") || "0")
+    if (savedCrossfade > 0 && this.hasCrossfadeButtonTarget) {
+      this.crossfadeButtonTarget.classList.replace("text-gray-400", "text-neon-cyan")
+    }
+
+    // Close crossfade menu on outside click
+    this._closeCrossfadeOnOutsideClick = (e) => {
+      if (this.hasCrossfadeMenuTarget && !this.crossfadeMenuTarget.classList.contains("hidden") &&
+          !this.crossfadeMenuTarget.contains(e.target) &&
+          !(this.hasCrossfadeButtonTarget && this.crossfadeButtonTarget.contains(e.target))) {
+        this.crossfadeMenuTarget.classList.add("hidden")
+      }
+    }
+    document.addEventListener("click", this._closeCrossfadeOnOutsideClick)
+
     this.restoreSession()
   }
 
   disconnect() {
+    document.removeEventListener("click", this._closeCrossfadeOnOutsideClick)
     this.stopPositionSave()
     document.removeEventListener("player:play", this.playTrackHandler)
     document.removeEventListener("player:playYouTube", this.playYouTubeHandler)
@@ -274,8 +291,10 @@ export default class extends Controller {
     this.dispatchNowPlaying({ trackId, title, artist, coverUrl })
     this._applyPlaybackRate()
 
-    // If casting, send to cast device instead of local audio
-    if (this.castActive) {
+    // If crossfade already started playback, skip audio source reset
+    if (this._crossfadeJustCompleted) {
+      this._crossfadeJustCompleted = false
+    } else if (this.castActive) {
       document.dispatchEvent(new CustomEvent("cast:loadMedia", {
         detail: { streamUrl, title, artist }
       }))
@@ -755,15 +774,38 @@ export default class extends Controller {
           detail: { streamUrl: preload.dataset.appStreamUrl || preload.src }
         }))
         // Trigger queue advance (without playing since we already started)
+        this._crossfadeJustCompleted = true
         document.dispatchEvent(new CustomEvent("queue:next"))
       }
     }
     requestAnimationFrame(fade)
   }
 
+  toggleCrossfadeMenu() {
+    if (!this.hasCrossfadeMenuTarget) return
+    const isHidden = this.crossfadeMenuTarget.classList.toggle("hidden")
+    if (!isHidden) this._highlightActiveCrossfade()
+  }
+
   setCrossfade(event) {
     const duration = parseInt(event.currentTarget.dataset.duration)
     localStorage.setItem("crossfadeDuration", duration.toString())
+    if (this.hasCrossfadeMenuTarget) this.crossfadeMenuTarget.classList.add("hidden")
+    if (this.hasCrossfadeButtonTarget) {
+      this.crossfadeButtonTarget.classList.toggle("text-neon-cyan", duration > 0)
+      this.crossfadeButtonTarget.classList.toggle("text-gray-400", duration === 0)
+    }
+    this._highlightActiveCrossfade()
+  }
+
+  _highlightActiveCrossfade() {
+    if (!this.hasCrossfadeMenuTarget) return
+    const current = parseInt(localStorage.getItem("crossfadeDuration") || "0")
+    this.crossfadeMenuTarget.querySelectorAll("[data-duration]").forEach(btn => {
+      const active = parseInt(btn.dataset.duration) === current
+      btn.classList.toggle("text-neon-cyan", active)
+      btn.classList.toggle("text-gray-300", !active)
+    })
   }
 
   // Playback speed (podcasts)
