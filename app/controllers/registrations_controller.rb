@@ -1,7 +1,10 @@
 class RegistrationsController < ApplicationController
+  include FeatureFlagged
+
   allow_unauthenticated_access only: %i[new create]
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_registration_path, alert: "Try again later." }
 
+  require_feature :open_registration, only: %i[new create]
   before_action :redirect_authenticated_user, only: %i[new create]
 
   def new

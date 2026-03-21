@@ -3,10 +3,12 @@
     <p class="py-2 px-3 bg-red-500/10 border border-red-500/20 mb-5 text-red-400 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
   <% end %>
 
-<div class="mt-6 text-sm text-gray-400">
-  Don't have an account?
-  <%= render Button::Component.new(label: "Sign up", behavior: :navigation, link_url: new_registration_path, style: :link) %>
-</div>
+<% if Flipper.enabled?(:open_registration) %>
+  <div class="mt-6 text-sm text-gray-400">
+    Don't have an account?
+    <%= render Button::Component.new(label: "Sign up", behavior: :navigation, link_url: new_registration_path, style: :link) %>
+  </div>
+<% end %>
 
   <% if notice = flash[:notice] %>
     <p class="py-2 px-3 bg-laser-green/10 border border-laser-green/20 mb-5 text-laser-green font-medium rounded-lg inline-block" id="notice"><%= notice %></p>

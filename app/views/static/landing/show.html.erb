@@ -17,7 +17,9 @@
           </svg>
         </a>
         <%= render Button::Component.new(label: "Log In", behavior: :navigation, link_url: new_session_path, style: :link) %>
-        <%= render Button::Component.new(label: "Sign Up", behavior: :navigation, link_url: new_registration_path, style: :gradient) %>
+        <% if Flipper.enabled?(:open_registration) %>
+          <%= render Button::Component.new(label: "Sign Up", behavior: :navigation, link_url: new_registration_path, style: :gradient) %>
+        <% end %>
       </div>
     </div>
   </nav>
@@ -41,7 +43,9 @@
       </p>
       <!-- CTA Buttons -->
       <div class="flex flex-col sm:flex-row gap-4">
-        <%= render Button::Component.new(label: "Start Listening", behavior: :navigation, link_url: new_registration_path, style: :gradient, extra_classes: "shadow-lg") %>
+        <% if Flipper.enabled?(:open_registration) %>
+          <%= render Button::Component.new(label: "Start Listening", behavior: :navigation, link_url: new_registration_path, style: :gradient, extra_classes: "shadow-lg") %>
+        <% end %>
         <a href="#features" class="bg-gray-800/60 backdrop-blur border border-neon-cyan/30 hover:border-neon-cyan/60 hover:shadow-neon-cyan text-neon-cyan px-8 py-3.5 sm:px-10 sm:py-4 rounded-xl font-semibold text-lg transition-all text-center">
           See Features
         </a>
@@ -282,7 +286,9 @@
       <p class="text-gray-400 text-lg mb-10">
         Set up your server, add your media, and start streaming in minutes.
       </p>
-      <%= render Button::Component.new(label: "Get Started Free", behavior: :navigation, link_url: new_registration_path, style: :gradient, extra_classes: "shadow-lg") %>
+      <% if Flipper.enabled?(:open_registration) %>
+        <%= render Button::Component.new(label: "Get Started Free", behavior: :navigation, link_url: new_registration_path, style: :gradient, extra_classes: "shadow-lg") %>
+      <% end %>
     </div>
   </section>
   <!-- Footer -->

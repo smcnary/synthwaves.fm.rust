@@ -61,7 +61,9 @@
       <% else %>
         <div class="flex items-center space-x-1">
           <%= render Button::Component.new(label: "Log in", behavior: :navigation, link_url: new_session_path, style: :secondary) %>
-          <%= render Button::Component.new(label: "Sign up", behavior: :navigation, link_url: new_registration_path, style: :gradient) %>
+          <% if Flipper.enabled?(:open_registration) %>
+            <%= render Button::Component.new(label: "Sign up", behavior: :navigation, link_url: new_registration_path, style: :gradient) %>
+          <% end %>
         </div>
       <% end %>
     </div>
