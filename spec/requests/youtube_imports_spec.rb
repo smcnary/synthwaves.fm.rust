@@ -161,6 +161,44 @@ RSpec.describe "YoutubeImports", type: :request do
       end
     end
 
+    context "without API key (yt-dlp fallback)" do
+      before { user.update!(youtube_api_key: nil) }
+
+      it "imports a single video using yt-dlp metadata" do
+        album = create(:album)
+        track = create(:track, album: album, youtube_video_id: "R-FxmoVM7X4")
+        allow(YoutubeVideoImportService).to receive(:call).and_return(track)
+
+        post youtube_imports_path, params: {youtube_url: "https://youtu.be/R-FxmoVM7X4"}
+
+        expect(YoutubeVideoImportService).to have_received(:call).with(
+          "https://youtu.be/R-FxmoVM7X4", category: "music", api_key: nil, user: user
+        )
+        expect(MediaDownloadJob).to have_been_enqueued.with(track.id, "https://youtu.be/R-FxmoVM7X4", user_id: user.id)
+        expect(response).to redirect_to(album_path(album))
+      end
+
+      it "imports a playlist using yt-dlp metadata" do
+        post youtube_imports_path, params: {youtube_url: "https://www.youtube.com/playlist?list=PLtest123"}
+
+        expect(YoutubeImportJob).to have_been_enqueued.with(
+          "https://www.youtube.com/playlist?list=PLtest123",
+          category: "music",
+          download: true,
+          user_id: user.id
+        )
+      end
+
+      it "handles MediaDownloadService errors gracefully" do
+        allow(YoutubeVideoImportService).to receive(:call)
+          .and_raise(MediaDownloadService::Error, "Failed to fetch video metadata")
+
+        post youtube_imports_path, params: {youtube_url: "https://youtu.be/R-FxmoVM7X4"}
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
     context "with video media type" do
       it "creates a Video record and enqueues VideoDownloadJob for a single video" do
         details = {video_id: "dQw4w9WgXcQ", title: "Test Video", channel_name: "Test Channel", duration: 120.0}
@@ -180,6 +218,39 @@ RSpec.describe "YoutubeImports", type: :request do
         expect(video.youtube_video_id).to eq("dQw4w9WgXcQ")
         expect(VideoDownloadJob).to have_been_enqueued.with(video.id, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", user_id: user.id)
         expect(response).to redirect_to(video_path(video))
+      end
+
+      context "without API key (yt-dlp fallback)" do
+        before { user.update!(youtube_api_key: nil) }
+
+        it "creates a Video using yt-dlp metadata and enqueues download" do
+          metadata = {video_id: "dQw4w9WgXcQ", title: "Test Video", channel_name: "Test Channel", duration: 120.0, thumbnail_url: nil}
+          allow(MediaDownloadService).to receive(:fetch_metadata).and_return(metadata)
+
+          expect {
+            post youtube_imports_path, params: {
+              youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+              media_type: "video"
+            }
+          }.to change(Video, :count).by(1)
+
+          video = Video.last
+          expect(video.title).to eq("Test Video")
+          expect(video.youtube_video_id).to eq("dQw4w9WgXcQ")
+          expect(VideoDownloadJob).to have_been_enqueued.with(video.id, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", user_id: user.id)
+        end
+
+        it "does not call YoutubeAPIService" do
+          metadata = {video_id: "dQw4w9WgXcQ", title: "Test Video", channel_name: "Test Channel", duration: 120.0, thumbnail_url: nil}
+          allow(MediaDownloadService).to receive(:fetch_metadata).and_return(metadata)
+
+          expect(YoutubeAPIService).not_to receive(:new)
+
+          post youtube_imports_path, params: {
+            youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            media_type: "video"
+          }
+        end
       end
 
       it "rejects playlist URLs for video import" do

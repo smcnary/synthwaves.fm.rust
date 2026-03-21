@@ -150,30 +150,35 @@ Get a key from the [Google Cloud Console](https://console.cloud.google.com/) und
 
 Manage with `bin/rails credentials:edit --environment=production`:
 
-| Credential | Purpose | Required? |
-|---|---|---|
-| `linode.*` | S3 storage for uploads | Yes, for production |
-| `synthwaves.*` | Remote upload rake tasks | Only for rake tasks |
-| `secret_key_base` | JWT signing, sessions | Auto-generated |
+| Credential        | Purpose                  | Required?           |
+| ----------------- | ------------------------ | ------------------- |
+| `linode.*`        | S3 storage for uploads   | Yes, for production |
+| `remote.*`        | Remote upload rake tasks | Only for rake tasks |
+| `secret_key_base` | JWT signing, sessions    | Auto-generated      |
 
 ### Environment Variables
 
-| Variable | Purpose | Default |
-|---|---|---|
-| `RAILS_MASTER_KEY` | Decrypt credentials in production | — |
-| `MUSIC_PATH` | Source directory for `library:push` | `~/Music` |
-| `VIDEO_PATH` | Source directory for `videos:push` | `~/Movies` |
-| `PORT` | Server port | 3000 |
-| `SOLID_QUEUE_IN_PUMA` | Run job queue in-process | — |
-| `WEB_CONCURRENCY` | Puma worker processes | auto |
-| `RAILS_MAX_THREADS` | Puma threads per worker | 3 |
-| `JOB_CONCURRENCY` | Solid Queue workers | 2 |
+| Variable              | Purpose                           | Default |
+| --------------------- | --------------------------------- | ------- |
+| `RAILS_MASTER_KEY`    | Decrypt credentials in production | —       |
+| `PORT`                | Server port                       | 3000    |
+| `SOLID_QUEUE_IN_PUMA` | Run job queue in-process          | —       |
+| `WEB_CONCURRENCY`     | Puma worker processes             | auto    |
+| `RAILS_MAX_THREADS`   | Puma threads per worker           | 3       |
+| `JOB_CONCURRENCY`     | Solid Queue workers               | 2       |
+
+Most users will upload music and videos through the web UI. If you have an existing local library you'd like to bulk-import to a remote deployment, the rake tasks in the next section accept these optional variables:
+
+| Variable     | Purpose                             | Default    |
+| ------------ | ----------------------------------- | ---------- |
+| `MUSIC_PATH` | Source directory for `library:push` | `~/Music`  |
+| `VIDEO_PATH` | Source directory for `videos:push`  | `~/Movies` |
 
 ## Uploading Your Library
 
 ### Push Music
 
-Upload a directory of audio files. Uses Rails credentials (`synthwaves.*`) for authentication:
+Upload a directory of audio files. Uses Rails credentials (`remote.*`) for authentication:
 
 ```
 MUSIC_PATH=/path/to/music bundle exec rake library:push
@@ -186,9 +191,9 @@ MUSIC_PATH=/path/to/music bundle exec rake library:push
 Upload playlists from cliamp's TOML playlist files. Uses environment variables for authentication:
 
 ```
-SYNTHWAVES_REMOTE_URL=https://synthwaves.example.com \
-SYNTHWAVES_CLIENT_ID=bc_xxxx \
-SYNTHWAVES_SECRET_KEY=xxxx \
+REMOTE_URL=https://your-instance.example.com \
+REMOTE_CLIENT_ID=bc_xxxx \
+REMOTE_SECRET_KEY=xxxx \
 bundle exec rake playlists:push
 ```
 
@@ -196,7 +201,7 @@ Tracks are matched against your existing library by title, artist, and album.
 
 ### Push Videos
 
-Upload a directory of video files. Uses Rails credentials (`synthwaves.*`) for authentication:
+Upload a directory of video files. Uses Rails credentials (`remote.*`) for authentication:
 
 ```
 VIDEO_PATH=/path/to/videos bundle exec rake videos:push
@@ -208,11 +213,11 @@ You can also upload tracks and videos through the web UI.
 
 ## APIs & Client Apps
 
-| API | Auth | Use Case |
-|---|---|---|
-| JWT REST API | `client_id` + `secret_key` | Building custom integrations |
-| Import API | JWT bearer token | Bulk uploading via rake tasks |
-| Subsonic API | Username + token/password | Connecting dedicated music apps |
+| API          | Auth                       | Use Case                        |
+| ------------ | -------------------------- | ------------------------------- |
+| JWT REST API | `client_id` + `secret_key` | Building custom integrations    |
+| Import API   | JWT bearer token           | Bulk uploading via rake tasks   |
+| Subsonic API | Username + token/password  | Connecting dedicated music apps |
 
 Full documentation is in [`docs/api/`](docs/api/).
 

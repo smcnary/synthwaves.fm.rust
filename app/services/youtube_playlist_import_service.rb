@@ -17,16 +17,9 @@ class YoutubePlaylistImportService
   end
 
   def call
-    api = YoutubeAPIService.new(api_key: @api_key)
+    playlist_info, items = fetch_playlist_data
 
-    playlist_info = api.fetch_playlist_info(@playlist_id)
-    playlist_items = api.fetch_playlist_items(@playlist_id)
-
-    return nil if playlist_items.empty?
-
-    video_ids = playlist_items.map { |item| item[:video_id] }
-    video_details = api.fetch_video_details(video_ids)
-    details_by_id = video_details.index_by { |v| v[:video_id] }
+    return nil if items.empty?
 
     artist = @user.artists.find_or_create_by!(name: playlist_info[:channel_name] || "Unknown Artist") do |a|
       a.category = @category
@@ -39,8 +32,7 @@ class YoutubePlaylistImportService
       attach_thumbnail(album, playlist_info[:thumbnail_url])
     end
 
-    playlist_items.each do |item|
-      details = details_by_id[item[:video_id]] || {}
+    items.each do |item|
       enriched = YoutubeMetadataEnricher.call(title: item[:title], channel_name: playlist_info[:channel_name])
 
       track_artist = if enriched[:source] == :parsed
@@ -54,7 +46,7 @@ class YoutubePlaylistImportService
         track.artist = track_artist
         track.album = album
         track.track_number = item[:position] + 1
-        track.duration = details[:duration]
+        track.duration = item[:duration]
       end
     end
 
@@ -62,4 +54,47 @@ class YoutubePlaylistImportService
   end
 
   private
+
+  def fetch_playlist_data
+    if @api_key.present?
+      fetch_playlist_data_via_api
+    else
+      fetch_playlist_data_via_ytdlp
+    end
+  end
+
+  def fetch_playlist_data_via_api
+    api = YoutubeAPIService.new(api_key: @api_key)
+
+    playlist_info = api.fetch_playlist_info(@playlist_id)
+    playlist_items = api.fetch_playlist_items(@playlist_id)
+
+    video_ids = playlist_items.map { |item| item[:video_id] }
+    video_details = api.fetch_video_details(video_ids)
+    details_by_id = video_details.index_by { |v| v[:video_id] }
+
+    items = playlist_items.map do |item|
+      details = details_by_id[item[:video_id]] || {}
+      {
+        video_id: item[:video_id],
+        title: item[:title],
+        position: item[:position],
+        duration: details[:duration]
+      }
+    end
+
+    [playlist_info, items]
+  end
+
+  def fetch_playlist_data_via_ytdlp
+    metadata = MediaDownloadService.fetch_playlist_metadata(@url)
+
+    playlist_info = {
+      title: metadata[:title],
+      channel_name: metadata[:channel_name],
+      thumbnail_url: metadata[:thumbnail_url]
+    }
+
+    [playlist_info, metadata[:entries]]
+  end
 end

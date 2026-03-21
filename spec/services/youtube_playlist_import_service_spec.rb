@@ -134,7 +134,86 @@ RSpec.describe YoutubePlaylistImportService do
     end
   end
 
+  context "without API key (yt-dlp fallback)" do
+    let(:api_key) { nil }
+
+    it "imports a playlist using yt-dlp metadata" do
+      stub_ytdlp_playlist_metadata
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key, user: user)
+
+      expect(album).to be_persisted
+      expect(album.title).to eq("Test Playlist")
+      expect(album.artist.name).to eq("Test Channel")
+      expect(album.tracks.count).to eq(2)
+
+      track1 = album.tracks.find_by(youtube_video_id: "vid1")
+      expect(track1.title).to eq("Song 1")
+      expect(track1.track_number).to eq(1)
+      expect(track1.duration).to eq(225.0)
+    end
+
+    it "does not call YoutubeAPIService" do
+      stub_ytdlp_playlist_metadata
+
+      expect(YoutubeAPIService).not_to receive(:new)
+
+      described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key, user: user)
+    end
+
+    it "parses artist from track titles" do
+      stub_ytdlp_playlist_metadata(track_titles: ["Daft Punk - Around The World", "Kraftwerk - Trans-Europe Express"])
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key, user: user)
+
+      track1 = album.tracks.find_by(youtube_video_id: "vid1")
+      expect(track1.artist.name).to eq("Daft Punk")
+      expect(track1.title).to eq("Around The World")
+    end
+
+    it "saves youtube_playlist_url on the album" do
+      stub_ytdlp_playlist_metadata
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key, user: user)
+
+      expect(album.youtube_playlist_url).to eq("https://www.youtube.com/playlist?list=PLtest123")
+    end
+
+    it "returns nil when playlist has no entries" do
+      stub_ytdlp_playlist_metadata(track_titles: [])
+
+      album = described_class.call("https://www.youtube.com/playlist?list=PLtest123", api_key: api_key, user: user)
+
+      expect(album).to be_nil
+    end
+  end
+
   private
+
+  def stub_ytdlp_playlist_metadata(track_titles: ["Song 1", "Song 2"])
+    entries = track_titles.each_with_index.map do |title, index|
+      {"id" => "vid#{index + 1}", "title" => title, "duration" => 225.0}
+    end
+
+    json = {
+      id: "PLtest123",
+      title: "Test Playlist",
+      channel: "Test Channel",
+      uploader: "Test Channel",
+      thumbnails: [
+        {"url" => "https://i.ytimg.com/vi/abc/hqdefault.jpg", "preference" => 5}
+      ],
+      entries: entries
+    }.to_json
+
+    allow(Open3).to receive(:capture2e).with(
+      "yt-dlp", "--flat-playlist", "--dump-single-json", "--no-download",
+      "https://www.youtube.com/playlist?list=PLtest123"
+    ).and_return([json, instance_double(Process::Status, success?: true)])
+
+    stub_request(:get, "https://i.ytimg.com/vi/abc/hqdefault.jpg")
+      .to_return(status: 200, body: "fake_image_data", headers: {"Content-Type" => "image/jpeg"})
+  end
 
   def stub_playlist_api_calls(track_titles: ["Song 1", "Song 2"])
     title1, title2 = track_titles

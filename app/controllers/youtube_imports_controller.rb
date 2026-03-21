@@ -34,7 +34,7 @@ class YoutubeImportsController < ApplicationController
       flash.now[:alert] = "Please enter a valid YouTube URL."
       render :new, status: :unprocessable_content
     end
-  rescue YoutubeVideoImportService::Error, YoutubeAPIService::Error => e
+  rescue YoutubeVideoImportService::Error, YoutubeAPIService::Error, MediaDownloadService::Error => e
     flash.now[:alert] = e.message
     render :new, status: :unprocessable_content
   end
@@ -61,9 +61,14 @@ class YoutubeImportsController < ApplicationController
       return
     end
 
-    api = YoutubeAPIService.new(api_key: Current.user.youtube_api_key)
-    details = api.fetch_video_details([video_id]).first
-    raise YoutubeAPIService::Error, "Video not found" if details.nil?
+    details = if Current.user.youtube_api_key.present?
+      api = YoutubeAPIService.new(api_key: Current.user.youtube_api_key)
+      api.fetch_video_details([video_id]).first.tap do |d|
+        raise YoutubeAPIService::Error, "Video not found" if d.nil?
+      end
+    else
+      MediaDownloadService.fetch_metadata(url)
+    end
 
     video = Video.create!(
       title: details[:title],

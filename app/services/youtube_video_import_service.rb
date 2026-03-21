@@ -22,9 +22,7 @@ class YoutubeVideoImportService
     existing_track = @user.tracks.find_by(youtube_video_id: @video_id)
     return existing_track if existing_track
 
-    api = YoutubeAPIService.new(api_key: @api_key)
-    details = api.fetch_video_details([@video_id]).first
-    raise Error, "Video not found" if details.nil?
+    details = fetch_video_details
 
     enriched = YoutubeMetadataEnricher.call(title: details[:title], channel_name: details[:channel_name])
 
@@ -51,4 +49,15 @@ class YoutubeVideoImportService
   end
 
   private
+
+  def fetch_video_details
+    if @api_key.present?
+      api = YoutubeAPIService.new(api_key: @api_key)
+      details = api.fetch_video_details([@video_id]).first
+      raise Error, "Video not found" if details.nil?
+      details
+    else
+      MediaDownloadService.fetch_metadata("https://www.youtube.com/watch?v=#{@video_id}")
+    end
+  end
 end

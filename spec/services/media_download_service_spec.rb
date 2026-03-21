@@ -126,6 +126,154 @@ RSpec.describe MediaDownloadService do
     end
   end
 
+  describe ".fetch_metadata" do
+    let(:ytdlp_json) do
+      {
+        id: "R-FxmoVM7X4",
+        title: "Daft Punk - Around The World (Official Video)",
+        channel: "Daft Punk",
+        uploader: "Daft Punk",
+        duration: 225.3,
+        thumbnail: "https://i.ytimg.com/vi/R-FxmoVM7X4/maxresdefault.jpg",
+        is_live: false
+      }.to_json
+    end
+
+    it "returns structured metadata from yt-dlp" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--dump-json", "--no-download", "--no-playlist",
+        "https://youtube.com/watch?v=R-FxmoVM7X4"
+      ).and_return([ytdlp_json, instance_double(Process::Status, success?: true)])
+
+      result = described_class.fetch_metadata("https://youtube.com/watch?v=R-FxmoVM7X4")
+
+      expect(result).to eq(
+        video_id: "R-FxmoVM7X4",
+        title: "Daft Punk - Around The World (Official Video)",
+        channel_name: "Daft Punk",
+        duration: 225.3,
+        thumbnail_url: "https://i.ytimg.com/vi/R-FxmoVM7X4/maxresdefault.jpg"
+      )
+    end
+
+    it "falls back to uploader when channel is absent" do
+      json = {id: "abc", title: "Test", uploader: "UploaderName", duration: 60, is_live: false}.to_json
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--dump-json", "--no-download", "--no-playlist", anything
+      ).and_return([json, instance_double(Process::Status, success?: true)])
+
+      result = described_class.fetch_metadata("https://youtube.com/watch?v=abc")
+
+      expect(result[:channel_name]).to eq("UploaderName")
+    end
+
+    it "raises Error when yt-dlp fails" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--dump-json", "--no-download", "--no-playlist", anything
+      ).and_return(["ERROR\n", instance_double(Process::Status, success?: false)])
+
+      expect {
+        described_class.fetch_metadata("https://youtube.com/watch?v=bad")
+      }.to raise_error(MediaDownloadService::Error, "Failed to fetch video metadata")
+    end
+
+    it "raises Error for live streams" do
+      json = {id: "live1", title: "Live Stream", is_live: true}.to_json
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--dump-json", "--no-download", "--no-playlist", anything
+      ).and_return([json, instance_double(Process::Status, success?: true)])
+
+      expect {
+        described_class.fetch_metadata("https://youtube.com/watch?v=live1")
+      }.to raise_error(MediaDownloadService::Error, /Cannot download a live stream/)
+    end
+
+    it "raises Error when JSON is unparseable" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--dump-json", "--no-download", "--no-playlist", anything
+      ).and_return(["not json", instance_double(Process::Status, success?: true)])
+
+      expect {
+        described_class.fetch_metadata("https://youtube.com/watch?v=abc")
+      }.to raise_error(MediaDownloadService::Error, "Failed to parse video metadata")
+    end
+  end
+
+  describe ".fetch_playlist_metadata" do
+    let(:ytdlp_playlist_json) do
+      {
+        id: "PLtest123",
+        title: "Synthwave Essentials",
+        channel: "MusicChannel",
+        uploader: "MusicChannel",
+        thumbnails: [
+          {"url" => "https://example.com/small.jpg", "preference" => -1},
+          {"url" => "https://example.com/large.jpg", "preference" => 5}
+        ],
+        entries: [
+          {"id" => "vid1", "title" => "Artist - Song One", "duration" => 180.0},
+          {"id" => "vid2", "title" => "Artist - Song Two", "duration" => 240.5}
+        ]
+      }.to_json
+    end
+
+    it "returns structured playlist metadata from yt-dlp" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--flat-playlist", "--dump-single-json", "--no-download", anything
+      ).and_return([ytdlp_playlist_json, instance_double(Process::Status, success?: true)])
+
+      result = described_class.fetch_playlist_metadata("https://youtube.com/playlist?list=PLtest123")
+
+      expect(result[:title]).to eq("Synthwave Essentials")
+      expect(result[:channel_name]).to eq("MusicChannel")
+      expect(result[:thumbnail_url]).to eq("https://example.com/large.jpg")
+      expect(result[:entries].length).to eq(2)
+      expect(result[:entries].first).to eq(video_id: "vid1", title: "Artist - Song One", position: 0, duration: 180.0)
+      expect(result[:entries].last).to eq(video_id: "vid2", title: "Artist - Song Two", position: 1, duration: 240.5)
+    end
+
+    it "selects the highest-preference thumbnail" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--flat-playlist", "--dump-single-json", "--no-download", anything
+      ).and_return([ytdlp_playlist_json, instance_double(Process::Status, success?: true)])
+
+      result = described_class.fetch_playlist_metadata("https://youtube.com/playlist?list=PLtest123")
+
+      expect(result[:thumbnail_url]).to eq("https://example.com/large.jpg")
+    end
+
+    it "returns nil thumbnail when thumbnails array is absent" do
+      json = {id: "PL1", title: "Test", entries: []}.to_json
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--flat-playlist", "--dump-single-json", "--no-download", anything
+      ).and_return([json, instance_double(Process::Status, success?: true)])
+
+      result = described_class.fetch_playlist_metadata("https://youtube.com/playlist?list=PL1")
+
+      expect(result[:thumbnail_url]).to be_nil
+    end
+
+    it "raises Error when yt-dlp fails" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--flat-playlist", "--dump-single-json", "--no-download", anything
+      ).and_return(["ERROR\n", instance_double(Process::Status, success?: false)])
+
+      expect {
+        described_class.fetch_playlist_metadata("https://youtube.com/playlist?list=PLbad")
+      }.to raise_error(MediaDownloadService::Error, "Failed to fetch playlist metadata")
+    end
+
+    it "raises Error when JSON is unparseable" do
+      allow(Open3).to receive(:capture2e).with(
+        "yt-dlp", "--flat-playlist", "--dump-single-json", "--no-download", anything
+      ).and_return(["not json", instance_double(Process::Status, success?: true)])
+
+      expect {
+        described_class.fetch_playlist_metadata("https://youtube.com/playlist?list=PL1")
+      }.to raise_error(MediaDownloadService::Error, "Failed to parse playlist metadata")
+    end
+  end
+
   describe "live stream detection" do
     it "proceeds when metadata check fails" do
       mp3_path = File.join(temp_dir, "abc123.mp3")

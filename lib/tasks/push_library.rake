@@ -6,12 +6,12 @@ namespace :library do
     require "digest"
     require "base64"
 
-    synthwaves = Rails.application.credentials.synthwaves
-    abort "synthwaves credentials not configured" unless synthwaves
+    remote = Rails.application.credentials.remote
+    abort "remote credentials not configured" unless remote
 
-    remote_url = synthwaves[:url] || abort("synthwaves.url is required in credentials")
-    client_id = synthwaves[:client_id] || abort("synthwaves.client_id is required in credentials")
-    secret_key = synthwaves[:secret_key] || abort("synthwaves.secret_key is required in credentials")
+    remote_url = remote[:url] || abort("remote.url is required in credentials")
+    client_id = remote[:client_id] || abort("remote.client_id is required in credentials")
+    secret_key = remote[:secret_key] || abort("remote.secret_key is required in credentials")
     music_path = File.expand_path(ENV.fetch("MUSIC_PATH", "~/Music"))
     exclude_path = File.expand_path(ENV.fetch("EXCLUDE_PATH", "~/Music/Music"))
 
