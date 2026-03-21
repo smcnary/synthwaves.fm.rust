@@ -10,6 +10,14 @@ Self-hosted music, video, radio, and podcast streaming for your personal library
 
 synthwaves.fm is a self-hosted music and video streaming server built with Rails 8. Upload your media library, organize it by artist, album, and genre, and stream it from any device. Videos are automatically converted to H264/AAC/MP4 for broad compatibility. It also supports internet radio via the Radio Browser API, YouTube playlist imports, smart playlists, downloads, lyrics, and four switchable themes. It implements the Subsonic API so you can use your favorite dedicated music apps. The entire stack runs on SQLite — no Postgres, Redis, or external services required. It installs as a Progressive Web App for a native feel on any platform.
 
+## Screenshots
+
+| | | |
+|---|---|---|
+| ![Home](docs/screenshots/home.png) | ![Album](docs/screenshots/album.png) | ![Library](docs/screenshots/library.png) |
+| ![Lyrics](docs/screenshots/lyrics.png) | ![TV Guide](docs/screenshots/tv-guide.png) | ![Live TV](docs/screenshots/live-tv.png) |
+| ![Podcasts](docs/screenshots/podcasts.png) | | |
+
 ## Features
 
 ### Music Library
