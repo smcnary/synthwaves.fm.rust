@@ -9,6 +9,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      RAILS_ENV: test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,8 +22,11 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
+      - name: Write test credentials key
+        run: echo "${{ secrets.RAILS_TEST_KEY }}" > config/credentials/test.key
+
       - name: Prepare database
-        run: bin/rails db:prepare
+        run: bin/rails db:test:prepare
 
       - name: Run tests
         run: bundle exec rspec
