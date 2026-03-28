@@ -9,10 +9,16 @@ module API
           return
         end
 
+        # When Liquidsoap requests the next track, the previously queued
+        # track is now actually playing — promote it to current_track
+        if station.queued_track_id && station.queued_track_id != station.current_track_id
+          station.update!(current_track_id: station.queued_track_id, last_track_at: Time.current)
+          station.broadcast_now_playing
+        end
+
         result = NextTrackService.call(station)
 
         if result
-          station.broadcast_now_playing
           render json: {
             url: result.url,
             track_id: result.track.id,
@@ -35,6 +41,7 @@ module API
             last_track_at: Time.current,
             status: "active"
           )
+          station.broadcast_now_playing
         when "error"
           station.update!(status: "error", error_message: params[:message])
         when "idle"
