@@ -1,8 +1,0 @@
-<%% content_for :title, "Showing <%= human_name.downcase %>" %>
-<%%= turbo_stream_from @<%= singular_table_name %> %>
-
-<div class="max-w-4xl w-full mx-auto">
-  <h1 class="font-display font-bold text-4xl mb-6 text-white">Showing <%= human_name.downcase %></h1>
-
-  <%%= render @<%= singular_table_name %> %>
-</div>
