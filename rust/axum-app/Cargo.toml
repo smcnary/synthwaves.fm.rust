@@ -1,0 +1,26 @@
+[package]
+name = "axum-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow.workspace = true
+askama.workspace = true
+axum.workspace = true
+chrono.workspace = true
+config.workspace = true
+domain = { path = "../domain" }
+headers.workspace = true
+http.workspace = true
+infra = { path = "../infra" }
+jobs = { path = "../jobs" }
+jsonwebtoken.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true

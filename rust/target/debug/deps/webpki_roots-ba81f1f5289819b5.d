@@ -1,0 +1,7 @@
+/Users/seanmcnary/repos/synthwave.fm.rust/synthwaves.fm.rust/rust/target/debug/deps/webpki_roots-ba81f1f5289819b5.d: /Users/seanmcnary/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/webpki-roots-0.26.11/src/lib.rs
+
+/Users/seanmcnary/repos/synthwave.fm.rust/synthwaves.fm.rust/rust/target/debug/deps/libwebpki_roots-ba81f1f5289819b5.rlib: /Users/seanmcnary/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/webpki-roots-0.26.11/src/lib.rs
+
+/Users/seanmcnary/repos/synthwave.fm.rust/synthwaves.fm.rust/rust/target/debug/deps/libwebpki_roots-ba81f1f5289819b5.rmeta: /Users/seanmcnary/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/webpki-roots-0.26.11/src/lib.rs
+
+/Users/seanmcnary/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/webpki-roots-0.26.11/src/lib.rs:

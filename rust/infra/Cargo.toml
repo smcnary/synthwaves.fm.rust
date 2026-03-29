@@ -1,0 +1,22 @@
+[package]
+name = "infra"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow.workspace = true
+argon2.workspace = true
+chrono.workspace = true
+config.workspace = true
+domain = { path = "../domain" }
+hmac.workspace = true
+jsonwebtoken.workspace = true
+md-5.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
