@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-theme="synthwave">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Radio Test</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, sans-serif; margin: 2rem; max-width: 800px; }
+      label { display: block; margin-top: 1rem; font-weight: 600; }
+      input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+      button { margin-top: 1rem; margin-right: 0.5rem; padding: 0.5rem 0.9rem; }
+      pre { background: #111827; color: #e5e7eb; padding: 1rem; overflow-x: auto; border-radius: 6px; }
+      .row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      audio { margin-top: 1rem; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <h1>Radio Station Test</h1>
+    <p>Import a YouTube playlist URL, then fetch and play the next track URL returned by the internal API.</p>
+
+    <label for="token">Internal API token</label>
+    <input id="token" value="{{ default_token }}" />
+
+    <label for="station">Station ID</label>
+    <input id="station" type="number" value="1" min="1" />
+
+    <label for="url">YouTube playlist URL</label>
+    <input id="url" value="{{ default_url }}" />
+
+    <div class="row">
+      <button id="importBtn" type="button">Import Playlist</button>
+      <button id="nextBtn" type="button">Get Next Track</button>
+      <button id="playBtn" type="button">Play Latest URL</button>
+    </div>
+
+    <audio id="player" controls></audio>
+    <pre id="output">Ready.</pre>
+
+    <script>
+      const output = document.getElementById("output");
+      const tokenEl = document.getElementById("token");
+      const stationEl = document.getElementById("station");
+      const urlEl = document.getElementById("url");
+      const player = document.getElementById("player");
+      let lastTrackUrl = "";
+
+      function headers() {
+        return {
+          "Authorization": `Bearer ${tokenEl.value.trim()}`,
+          "Content-Type": "application/json"
+        };
+      }
+
+      async function importPlaylist() {
+        const station = stationEl.value.trim();
+        const body = JSON.stringify({ url: urlEl.value.trim() });
+        const res = await fetch(`/api/internal/radio_stations/${station}/import_youtube`, {
+          method: "POST",
+          headers: headers(),
+          body
+        });
+        const data = await res.json();
+        output.textContent = JSON.stringify({ status: res.status, data }, null, 2);
+      }
+
+      async function getNextTrack() {
+        const station = stationEl.value.trim();
+        const res = await fetch(`/api/internal/radio_stations/${station}/next_track`, {
+          method: "GET",
+          headers: headers()
+        });
+        const data = await res.json();
+        if (data.url) {
+          lastTrackUrl = data.url;
+          player.src = lastTrackUrl;
+        }
+        output.textContent = JSON.stringify({ status: res.status, data }, null, 2);
+      }
+
+      async function playLatest() {
+        if (!lastTrackUrl) {
+          output.textContent = "No URL yet. Click 'Get Next Track' first.";
+          return;
+        }
+        player.src = lastTrackUrl;
+        try {
+          await player.play();
+        } catch (error) {
+          output.textContent = `Playback blocked until user gesture: ${error}`;
+        }
+      }
+
+      document.getElementById("importBtn").addEventListener("click", importPlaylist);
+      document.getElementById("nextBtn").addEventListener("click", getNextTrack);
+      document.getElementById("playBtn").addEventListener("click", playLatest);
+    </script>
+  </body>
+</html>

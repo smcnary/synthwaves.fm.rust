@@ -1312,6 +1312,7 @@ dependencies = [
  "chrono",
  "infra",
  "serde",
+ "sqlx",
  "tokio",
  "tracing",
 ]

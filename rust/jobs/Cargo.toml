@@ -8,5 +8,6 @@ anyhow.workspace = true
 chrono.workspace = true
 infra = { path = "../infra" }
 serde.workspace = true
+sqlx.workspace = true
 tokio.workspace = true
 tracing.workspace = true

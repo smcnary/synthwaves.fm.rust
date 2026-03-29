@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" data-theme="synthwave">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ station.name }} - Radio</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: #f8fafc;
+        background: radial-gradient(circle at 20% 10%, #2a0d4e 0%, #0b1025 55%, #050814 100%);
+      }
+      .wrap { max-width: 860px; margin: 0 auto; padding: 1.2rem; }
+      .panel {
+        background: rgba(10, 18, 40, 0.86);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .hero {
+        min-height: 180px;
+        border-radius: 14px;
+        background:
+          radial-gradient(circle at 20% 25%, rgba(255, 45, 149, 0.45), transparent 35%),
+          radial-gradient(circle at 80% 75%, rgba(0, 240, 255, 0.35), transparent 40%),
+          linear-gradient(145deg, #25185c, #0f1a38 50%, #140f3f);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1rem;
+      }
+      .hero h1 { margin: 0; font-size: 1.8rem; }
+      .meta { color: #cbd5e1; margin-top: 0.4rem; }
+      .listen-btn {
+        margin-top: 0.9rem;
+        border: 0;
+        background: linear-gradient(90deg, #ff2d95, #ff5ab0);
+        color: #fff;
+        font-size: 1.3rem;
+        font-weight: 700;
+        border-radius: 12px;
+        width: 100%;
+        padding: 0.8rem 1rem;
+        cursor: pointer;
+      }
+      .section-title {
+        margin: 0 0 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        font-size: 0.82rem;
+      }
+      .list { list-style: none; padding: 0; margin: 0; }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.6rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      }
+      .row:last-child { border-bottom: 0; }
+      .track-title { margin: 0; }
+      .track-meta { color: #94a3b8; font-size: 0.85rem; }
+      .duration { color: #94a3b8; font-size: 0.9rem; }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+      }
+      .stat {
+        text-align: center;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        padding: 0.8rem;
+      }
+      .stat strong { display: block; font-size: 1.9rem; line-height: 1.05; }
+      .stat span { color: #94a3b8; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; }
+      audio { width: 100%; margin-top: 0.8rem; }
+      .response { white-space: pre-wrap; color: #93c5fd; margin-top: 0.6rem; font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a href="/radio" style="color:#93c5fd;">&larr; Back to all stations</a>
+      <section class="panel hero">
+        <h1>{{ station.name }}</h1>
+        <div class="meta">{{ station.mount_point }} &middot; {{ station.status }}</div>
+        <button id="listenBtn" class="listen-btn" data-station-id="{{ station.id }}">Listening</button>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Up Next</h2>
+        {% if up_next.len() == 0 %}
+        <div class="track-meta">No queued tracks yet.</div>
+        {% else %}
+        <ul class="list">
+          {% for item in up_next %}
+          <li class="row">
+            <div>
+              <p class="track-title">{{ item.title }}</p>
+              <div class="track-meta">{{ item.source }}</div>
+            </div>
+            <div class="duration">{{ item.duration_label }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Recently Played</h2>
+        {% if recent.len() == 0 %}
+        <div class="track-meta">No recent playback events yet.</div>
+        {% else %}
+        <ul class="list">
+          {% for item in recent %}
+          <li class="row">
+            <div>
+              <p class="track-title">{{ item.title }}</p>
+              <div class="track-meta">{{ item.source }}</div>
+            </div>
+            <div class="duration">{{ item.duration_label }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </section>
+
+      <section class="stats">
+        <div class="stat"><strong id="listeners">{{ station.listeners }}</strong><span>Listeners</span></div>
+        <div class="stat"><strong id="kbps">{{ station.bitrate_kbps }}</strong><span>Kbps</span></div>
+      </section>
+
+      <section class="panel">
+        <audio id="player" controls preload="none"></audio>
+        <input id="token" type="hidden" value="{{ internal_token }}" />
+        <div id="response" class="response">Ready.</div>
+      </section>
+    </main>
+
+    <script>
+      const stationId = {{ station.id }};
+      const token = document.getElementById("token").value;
+      const listenBtn = document.getElementById("listenBtn");
+      const player = document.getElementById("player");
+      const response = document.getElementById("response");
+      const listenersEl = document.getElementById("listeners");
+
+      async function fetchNextTrack() {
+        const res = await fetch(`/api/internal/radio_stations/${stationId}/next_track`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        response.textContent = JSON.stringify({ status: res.status, data }, null, 2);
+        if (!res.ok || !data.url) return;
+        player.src = data.url;
+        await player.play();
+      }
+
+      async function refreshStats() {
+        try {
+          const res = await fetch(`/api/internal/radio_stations/${stationId}/stats`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok) listenersEl.textContent = data.listeners ?? listenersEl.textContent;
+        } catch (_) {}
+      }
+
+      listenBtn.addEventListener("click", fetchNextTrack);
+      refreshStats();
+      setInterval(refreshStats, 30000);
+    </script>
+  </body>
+</html>

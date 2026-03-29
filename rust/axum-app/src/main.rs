@@ -5,7 +5,7 @@ mod handlers;
 use anyhow::Context;
 use app_state::AppState;
 use axum::{Router, routing::get};
-use handlers::{admin, api, health, radio, web};
+use handlers::{admin, api, health, media, radio, web};
 use infra::{config::AppConfig, db};
 use std::net::SocketAddr;
 use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
@@ -25,12 +25,19 @@ async fn main() -> anyhow::Result<()> {
         liquidsoap_api_token: "dev-liquidsoap-token".to_string(),
         rails_host: "localhost:4000".to_string(),
         rails_protocol: "http".to_string(),
+        icecast_protocol: "http".to_string(),
+        icecast_host: "localhost".to_string(),
+        icecast_port: 8000,
+        icecast_admin_username: "admin".to_string(),
+        icecast_admin_password: "hackme".to_string(),
     });
     let pool = db::connect(&config.database_url).await?;
     let state = AppState { config, pool };
 
     let app = Router::new()
         .route("/up", get(health::up))
+        .route("/tracks/{id}/stream", get(media::track_stream))
+        .route("/demo/stream", get(media::demo_stream))
         .merge(web::router())
         .nest("/rest", api::subsonic_router())
         .nest("/api/rest", api::subsonic_router())
