@@ -48,3 +48,4 @@ db/*.sqlite3
 .beads/dolt-monitor.pid.lock
 .claude/prove_it
 .DS_store
+rust/target/
