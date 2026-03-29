@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["audio", "toggleButton", "playIcon", "pauseIcon", "label", "nowPlaying"]
+  static targets = ["audio", "toggleButton", "playIcon", "pauseIcon", "label", "nowPlaying", "coverArt", "lyricsPanel"]
   static values = { url: String }
 
   connect() {
@@ -20,9 +20,13 @@ export default class extends Controller {
     document.addEventListener("music-video:showing", this._onVideoShowing)
     document.addEventListener("music-video:hidden", this._onVideoHidden)
 
-    // Observe the now-playing container for Turbo Stream replacements
+    // Observe the now-playing container for Turbo Stream replacements.
+    // Use requestAnimationFrame to defer reads until the DOM has settled
+    // after Turbo's replacement.
     if (this.hasNowPlayingTarget) {
-      this._observer = new MutationObserver(() => this._onNowPlayingChanged())
+      this._observer = new MutationObserver(() => {
+        this._rafId = requestAnimationFrame(() => this._onNowPlayingChanged())
+      })
       this._observer.observe(this.nowPlayingTarget, { childList: true, subtree: true })
       // Dispatch initial state
       this._onNowPlayingChanged()
@@ -32,6 +36,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("music-video:showing", this._onVideoShowing)
     document.removeEventListener("music-video:hidden", this._onVideoHidden)
+    if (this._rafId) cancelAnimationFrame(this._rafId)
     if (this._observer) {
       this._observer.disconnect()
       this._observer = null
@@ -58,6 +63,14 @@ export default class extends Controller {
     this.labelTarget.textContent = "Listen Live"
   }
 
+  showLyrics() {
+    if (this.hasLyricsPanelTarget) this.lyricsPanelTarget.classList.remove("hidden")
+  }
+
+  hideLyrics() {
+    if (this.hasLyricsPanelTarget) this.lyricsPanelTarget.classList.add("hidden")
+  }
+
   _onNowPlayingChanged() {
     if (!this.hasNowPlayingTarget) return
 
@@ -66,6 +79,16 @@ export default class extends Controller {
 
     const trackId = parseInt(trackEl.dataset.trackId)
     const youtubeVideoId = trackEl.dataset.youtubeVideoId || null
+    const coverUrl = trackEl.dataset.coverUrl || null
+
+    // Update album art if we have a coverArt target
+    if (this.hasCoverArtTarget && coverUrl) {
+      this.coverArtTarget.src = coverUrl
+      this.coverArtTarget.classList.remove("hidden")
+      // Hide placeholder if present
+      const placeholder = this.coverArtTarget.closest("[data-music-video-fallback]")?.querySelector("[data-placeholder]")
+      if (placeholder) placeholder.classList.add("hidden")
+    }
 
     if (trackId) {
       document.dispatchEvent(new CustomEvent("player:nowPlaying", {

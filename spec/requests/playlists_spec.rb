@@ -206,6 +206,114 @@ RSpec.describe "Playlists", type: :request do
 
       expect(content).to include("https://youtube.com/watch?v=abc123")
     end
+
+    it "renders search input inside a turbo frame" do
+      doc = Nokogiri::HTML(response.body)
+      frame = doc.at_css("turbo-frame#playlist-tracks")
+      expect(frame).to be_present
+      expect(frame.at_css('input[name="q"]')).to be_present
+    end
+
+    it "filters tracks by search query" do
+      matching_track = create(:track, title: "Neon Sunset")
+      other_track = create(:track, title: "Ocean Waves")
+      create(:playlist_track, playlist: playlist, track: matching_track, position: 2)
+      create(:playlist_track, playlist: playlist, track: other_track, position: 3)
+
+      get playlist_path(playlist), params: {q: "Neon"}
+
+      doc = Nokogiri::HTML(response.body)
+      frame = doc.at_css("turbo-frame#playlist-tracks")
+      expect(frame.text).to include("Neon Sunset")
+      expect(frame.text).not_to include("Ocean Waves")
+    end
+
+    it "shows total track count in header regardless of search filter" do
+      matching_track = create(:track, title: "Neon Sunset")
+      other_track = create(:track, title: "Ocean Waves")
+      create(:playlist_track, playlist: playlist, track: matching_track, position: 2)
+      create(:playlist_track, playlist: playlist, track: other_track, position: 3)
+
+      get playlist_path(playlist), params: {q: "Neon"}
+
+      doc = Nokogiri::HTML(response.body)
+      header = doc.at_css("h1").parent
+      expect(header.text).to include("3 tracks")
+    end
+
+    it "paginates tracks when over 50" do
+      52.times do |i|
+        t = create(:track)
+        create(:playlist_track, playlist: playlist, track: t, position: i + 2)
+      end
+
+      get playlist_path(playlist)
+
+      doc = Nokogiri::HTML(response.body)
+      track_rows = doc.css('[data-controller~="song-row"]')
+      expect(track_rows.size).to eq(50)
+      expect(doc.at_css(".pagy")).to be_present
+    end
+
+    it "shows empty state when search matches nothing" do
+      get playlist_path(playlist), params: {q: "zzzznonexistent"}
+
+      expect(response.body).to include("No tracks found")
+    end
+  end
+
+  describe "POST /playlists/:id/merge" do
+    let(:target) { create(:playlist, user: user) }
+    let(:source) { create(:playlist, user: user) }
+
+    before do
+      create(:playlist_track, playlist: source, track: create(:track), position: 1)
+    end
+
+    it "merges source into target and redirects with notice" do
+      post merge_playlist_path(target), params: {source_playlist_id: source.id}
+
+      expect(response).to redirect_to(playlist_path(target))
+      follow_redirect!
+      expect(response.body).to include("Merged")
+    end
+
+    it "redirects with alert when source belongs to another user" do
+      other_user = create(:user)
+      other_playlist = create(:playlist, user: other_user)
+
+      post merge_playlist_path(target), params: {source_playlist_id: other_playlist.id}
+
+      expect(response).to redirect_to(playlist_path(target))
+      follow_redirect!
+      expect(response.body).to include("Source playlist not found")
+    end
+
+    it "redirects with alert when merging into itself" do
+      post merge_playlist_path(target), params: {source_playlist_id: target.id}
+
+      expect(response).to redirect_to(playlist_path(target))
+      follow_redirect!
+      expect(response.body).to include("Cannot merge a playlist into itself")
+    end
+
+    it "redirects with alert when source has an active radio station" do
+      create(:radio_station, playlist: source, user: user, status: "active")
+
+      post merge_playlist_path(target), params: {source_playlist_id: source.id}
+
+      expect(response).to redirect_to(playlist_path(target))
+      follow_redirect!
+      expect(response.body).to include("active radio station")
+    end
+
+    it "redirects with alert when source playlist does not exist" do
+      post merge_playlist_path(target), params: {source_playlist_id: 0}
+
+      expect(response).to redirect_to(playlist_path(target))
+      follow_redirect!
+      expect(response.body).to include("Source playlist not found")
+    end
   end
 
   describe "DELETE /playlists/:id" do

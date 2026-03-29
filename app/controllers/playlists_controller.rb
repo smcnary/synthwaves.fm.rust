@@ -1,7 +1,7 @@
 class PlaylistsController < ApplicationController
   include Orderable
 
-  before_action :set_playlist, only: [:show, :edit, :update, :destroy]
+  before_action :set_playlist, only: [:show, :edit, :update, :destroy, :merge]
 
   def index
     @query = params[:q]
@@ -13,8 +13,17 @@ class PlaylistsController < ApplicationController
   end
 
   def show
-    @playlist_tracks = @playlist.playlist_tracks.includes(track: [:artist, :album])
-    @total_duration = @playlist_tracks.sum { |pt| pt.track.duration || 0 }
+    @query = params[:q]
+    @total_track_count = @playlist.playlist_tracks_count
+    @total_duration = @playlist.tracks.sum(:duration)
+
+    scope = @playlist.playlist_tracks.includes(track: [:artist, :album]).order(:position)
+    if @query.present?
+      track_ids = Track.search(@query).select(:id)
+      scope = scope.where(track_id: track_ids)
+    end
+
+    @pagy, @playlist_tracks = pagy(:offset, scope, limit: 50)
     @favorited_track_ids = Current.user.favorited_ids_for("Track")
   end
 
@@ -41,6 +50,16 @@ class PlaylistsController < ApplicationController
     else
       render :edit, status: :unprocessable_content
     end
+  end
+
+  def merge
+    source = Current.user.playlists.find(params[:source_playlist_id])
+    PlaylistMergeService.call(target: @playlist, source: source)
+    redirect_to @playlist, notice: "Merged \"#{source.name}\" into this playlist."
+  rescue PlaylistMergeService::Error => e
+    redirect_to @playlist, alert: e.message
+  rescue ActiveRecord::RecordNotFound
+    redirect_to @playlist, alert: "Source playlist not found."
   end
 
   def destroy

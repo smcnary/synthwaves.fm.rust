@@ -4,7 +4,7 @@ const LRC_REGEX = /\[(\d{2,}):(\d{2})\.(\d{2,3})\](.*)/
 
 export default class extends Controller {
   static targets = ["content"]
-  static values = { trackId: Number }
+  static values = { trackId: Number, live: { type: Boolean, default: false } }
 
   connect() {
     this._syncedLines = null
@@ -66,24 +66,36 @@ export default class extends Controller {
 
     try {
       const response = await fetch(`/tracks/${trackId}/lyrics.json`)
-      if (!response.ok) return
+      if (!response.ok) { this._setEmpty(); return }
       const data = await response.json()
       if (!data.lyrics) {
-        this.contentTarget.innerHTML = '<span class="text-gray-400">No lyrics available</span>'
+        this._setEmpty()
         return
       }
 
       const parsed = this._parseLRC(data.lyrics)
-      if (parsed) {
+      if (parsed && !this.liveValue) {
+        // Synced mode: highlight lines in time with audio playback
         this._syncedLines = parsed
         this._renderSyncedLines()
       } else {
-        this.contentTarget.textContent = data.lyrics
+        // Plain text mode: strip LRC timestamps if present, show as readable text
+        const plainText = parsed
+          ? parsed.map(l => l.text).filter(t => t).join("\n")
+          : data.lyrics
+        this.contentTarget.textContent = plainText
         this.contentTarget.classList.add("whitespace-pre-line", "text-gray-400")
       }
+      this.dispatch("found")
     } catch (e) {
-      this.contentTarget.innerHTML = '<span class="text-gray-400">No lyrics available</span>'
+      console.error("[lyrics]", e)
+      this._setEmpty()
     }
+  }
+
+  _setEmpty() {
+    if (this.hasContentTarget) this.contentTarget.innerHTML = ""
+    this.dispatch("empty")
   }
 
   _parseLRC(text) {
