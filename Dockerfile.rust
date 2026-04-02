@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+# Production image for the Rust Axum backend (synthwaves.fm workspace).
+# Railway: set `build.dockerfilePath` to this file in railway.json.
+
+FROM rust:1-bookworm AS builder
+WORKDIR /build
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends pkg-config libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY rust/Cargo.toml rust/Cargo.lock ./
+COPY rust/axum-app ./axum-app
+COPY rust/domain ./domain
+COPY rust/infra ./infra
+COPY rust/jobs ./jobs
+
+RUN cargo build --locked --release -p axum-app
+
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libsqlite3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/target/release/axum-app /usr/local/bin/axum-app
+
+ENV RUST_LOG=info
+
+# Railway sets PORT; the app reads it via AppConfig.
+EXPOSE 8080
+
+CMD ["/usr/local/bin/axum-app"]

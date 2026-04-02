@@ -1,44 +1,41 @@
-name: CI
+name: Rust CI
 
 on:
   pull_request:
   push:
     branches: [main]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
-    env:
-      RAILS_ENV: test
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ruby/setup-ruby@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          bundler-cache: true
+          components: rustfmt, clippy
 
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> target
 
-      - name: Write test credentials key
-        run: echo "${{ secrets.RAILS_TEST_KEY }}" > config/credentials/test.key
-
-      - name: Prepare database
-        run: bin/rails db:test:prepare
-
-      - name: Run tests
-        run: bundle exec rspec
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
       - name: Lint
-        run: bundle exec standardrb
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Security - Gem audit
-        run: bin/bundler-audit
+      - name: Test
+        run: cargo test --workspace
 
-      - name: Security - Importmap audit
-        run: bin/importmap audit
-
-      - name: Security - Brakeman
-        run: bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+      - name: Compile check
+        run: cargo check --workspace
