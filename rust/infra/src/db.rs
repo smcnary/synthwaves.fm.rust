@@ -3,12 +3,15 @@ use sqlx::{Pool, Sqlite, sqlite::SqlitePoolOptions};
 use std::path::Path;
 
 pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
-    // SQLite URLs look like "sqlite:///absolute/path/to/db.sqlite3" or
-    // "sqlite://relative/path/to/db.sqlite3". Strip the scheme prefix and
-    // ensure the parent directory exists so SQLite can create the file.
+    // SQLite URLs look like "sqlite:/absolute/path" (sqlx absolute),
+    // "sqlite:///absolute/path" (three-slash legacy), or a bare file path.
+    // Strip the scheme prefix to get the raw filesystem path so we can
+    // ensure the parent directory exists before sqlx opens the file.
     let file_path = database_url
-        .strip_prefix("sqlite://")
-        .unwrap_or(database_url);
+        .strip_prefix("sqlite:///")
+        .map(|p| format!("/{p}"))
+        .or_else(|| database_url.strip_prefix("sqlite:/").map(|p| format!("/{p}")))
+        .unwrap_or_else(|| database_url.to_string());
 
     if let Some(parent) = Path::new(file_path).parent() {
         if !parent.as_os_str().is_empty() {
