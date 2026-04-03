@@ -1,5 +1,10 @@
 use askama::Template;
-use axum::{Router, extract::{Path, State}, response::Html, routing::get};
+use axum::{
+    Router,
+    extract::{Path, State},
+    response::Html,
+    routing::get,
+};
 use sqlx::Row;
 use std::collections::HashSet;
 
@@ -79,11 +84,21 @@ pub fn router() -> Router<AppState> {
 }
 
 pub async fn home(State(_state): State<AppState>) -> Html<String> {
-    Html(HomeTemplate { title: "synthwaves.fm (Rust/Axum)" }.render().unwrap_or_else(|_| "<h1>synthwaves.fm</h1>".to_string()))
+    Html(
+        HomeTemplate {
+            title: "synthwaves.fm (Rust/Axum)",
+        }
+        .render()
+        .unwrap_or_else(|_| "<h1>synthwaves.fm</h1>".to_string()),
+    )
 }
 
 pub async fn music() -> Html<String> {
-    Html(MusicTemplate { heading: "Music" }.render().unwrap_or_else(|_| "<h1>Music</h1>".to_string()))
+    Html(
+        MusicTemplate { heading: "Music" }
+            .render()
+            .unwrap_or_else(|_| "<h1>Music</h1>".to_string()),
+    )
 }
 
 pub async fn radio(State(state): State<AppState>) -> Html<String> {
@@ -280,7 +295,10 @@ async fn load_station_detail(
     })
 }
 
-async fn load_up_next_rows(state: &AppState, station_id: i64) -> Result<Vec<RadioTrackRow>, sqlx::Error> {
+async fn load_up_next_rows(
+    state: &AppState,
+    station_id: i64,
+) -> Result<Vec<RadioTrackRow>, sqlx::Error> {
     let next_pos = sqlx::query_scalar::<_, i64>(
         "SELECT next_position FROM radio_station_import_state WHERE station_id = ?",
     )
@@ -323,7 +341,10 @@ async fn load_up_next_rows(state: &AppState, station_id: i64) -> Result<Vec<Radi
     Ok(out)
 }
 
-async fn load_recent_rows(state: &AppState, station_id: i64) -> Result<Vec<RadioTrackRow>, sqlx::Error> {
+async fn load_recent_rows(
+    state: &AppState,
+    station_id: i64,
+) -> Result<Vec<RadioTrackRow>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
         SELECT title, source, duration_seconds

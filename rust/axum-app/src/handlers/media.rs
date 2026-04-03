@@ -60,7 +60,11 @@ async fn read_storage_blob(key: &str) -> std::io::Result<Vec<u8>> {
     } else {
         format!("storage/{key}")
     };
-    let candidates = [nested, format!("../storage/{key}"), format!("storage/{key}")];
+    let candidates = [
+        nested,
+        format!("../storage/{key}"),
+        format!("storage/{key}"),
+    ];
     for candidate in &candidates {
         if let Ok(bytes) = fs::read(candidate).await {
             return Ok(bytes);

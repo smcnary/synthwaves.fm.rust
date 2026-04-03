@@ -95,7 +95,10 @@ pub async fn subsonic_ping(
     State(state): State<AppState>,
     query: Query<crate::auth::SubsonicAuthQuery>,
 ) -> impl IntoResponse {
-    if crate::auth::require_subsonic(query, State(state)).await.is_err() {
+    if crate::auth::require_subsonic(query, State(state))
+        .await
+        .is_err()
+    {
         return (
             StatusCode::UNAUTHORIZED,
             Json(serde_json::json!({"subsonic-response": {"status": "failed", "error": {"code": 40, "message": "Wrong username or password"}}})),

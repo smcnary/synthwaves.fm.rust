@@ -25,16 +25,24 @@ pub fn generate_config(
             .trim_start_matches('/')
             .trim_end_matches(".mp3")
             .replace('-', "_");
-        out.push(format!("# Station {}: {}", station.id, station.playlist_name));
+        out.push(format!(
+            "# Station {}: {}",
+            station.id, station.playlist_name
+        ));
         out.push(format!("def next_track_{slug}() ="));
         out.push(format!(
             "  url = \"{rails_protocol}://{rails_host}/api/internal/radio_stations/{}/next_track\"",
             station.id
         ));
-        out.push("  body = http.get(headers=[(\"Authorization\", \"Bearer \" ^ auth_token)], url)".to_string());
+        out.push(
+            "  body = http.get(headers=[(\"Authorization\", \"Bearer \" ^ auth_token)], url)"
+                .to_string(),
+        );
         out.push("  if body == \"\" then null() else".to_string());
         out.push("    let json.parse (data : {url: string}) = body".to_string());
-        out.push("    if data.url == \"\" then null() else request.create(data.url) end".to_string());
+        out.push(
+            "    if data.url == \"\" then null() else request.create(data.url) end".to_string(),
+        );
         out.push("  end".to_string());
         out.push("end".to_string());
         out.push(format!(

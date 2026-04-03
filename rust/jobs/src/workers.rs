@@ -13,7 +13,16 @@ pub async fn audio_conversion_job(input: &str, output: &str) -> anyhow::Result<(
 pub async fn video_conversion_job(input: &str, output: &str) -> anyhow::Result<()> {
     let status = Command::new("ffmpeg")
         .args([
-            "-y", "-i", input, "-c:v", "libx264", "-c:a", "aac", "-movflags", "+faststart", output,
+            "-y",
+            "-i",
+            input,
+            "-c:v",
+            "libx264",
+            "-c:a",
+            "aac",
+            "-movflags",
+            "+faststart",
+            output,
         ])
         .status()
         .context("failed to spawn ffmpeg for video conversion")?;

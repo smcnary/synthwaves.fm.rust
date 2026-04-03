@@ -105,7 +105,10 @@ pub async fn next_track(
         .and_then(Result::ok);
 
         let url = stream_url.unwrap_or_else(|| {
-            format!("{}://{}/demo/stream", state.config.rails_protocol, state.config.rails_host)
+            format!(
+                "{}://{}/demo/stream",
+                state.config.rails_protocol, state.config.rails_host
+            )
         });
         return Json(serde_json::json!({ "url": url, "title": item.title })).into_response();
     }
@@ -430,14 +433,8 @@ pub async fn notify(
                 true,
             )
             .await;
-            let _ = append_recent_track(
-                &state,
-                id,
-                &title,
-                &source,
-                payload.duration_seconds,
-            )
-            .await;
+            let _ =
+                append_recent_track(&state, id, &title, &source, payload.duration_seconds).await;
         }
         _ => {}
     }
@@ -526,7 +523,10 @@ async fn ensure_detail_tables(state: &AppState) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-async fn next_import_item(state: &AppState, station_id: i64) -> Result<Option<ImportedQueueItem>, sqlx::Error> {
+async fn next_import_item(
+    state: &AppState,
+    station_id: i64,
+) -> Result<Option<ImportedQueueItem>, sqlx::Error> {
     let mut tx = state.pool.begin().await?;
 
     let count = sqlx::query_scalar::<_, i64>(
@@ -743,7 +743,11 @@ async fn get_station_mount_and_bitrate(state: &AppState, station_id: i64) -> (St
     } else {
         "'/radio/' || id || '.mp3'"
     };
-    let bitrate_expr = if has_bitrate { "COALESCE(bitrate, 192)" } else { "192" };
+    let bitrate_expr = if has_bitrate {
+        "COALESCE(bitrate, 192)"
+    } else {
+        "192"
+    };
     let sql = format!(
         "SELECT {mount_expr} AS station_mount, {bitrate_expr} AS station_bitrate FROM radio_stations WHERE id = ? LIMIT 1"
     );
@@ -774,7 +778,11 @@ async fn read_listener_stats(state: &AppState, station_id: i64) -> Result<i64, s
     .map(|v| v.unwrap_or(0))
 }
 
-async fn refresh_listener_stats(state: &AppState, station_id: i64, mount_point: &str) -> anyhow::Result<i64> {
+async fn refresh_listener_stats(
+    state: &AppState,
+    station_id: i64,
+    mount_point: &str,
+) -> anyhow::Result<i64> {
     let cfg = infra::icecast::IcecastConfig {
         protocol: state.config.icecast_protocol.clone(),
         host: state.config.icecast_host.clone(),

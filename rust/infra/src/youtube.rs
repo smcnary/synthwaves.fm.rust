@@ -68,7 +68,9 @@ pub fn resolve_audio_stream_url(video_id: &str) -> anyhow::Result<String> {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow!("yt-dlp failed to resolve audio stream URL: {stderr}"));
+        return Err(anyhow!(
+            "yt-dlp failed to resolve audio stream URL: {stderr}"
+        ));
     }
 
     let line = String::from_utf8_lossy(&output.stdout)
