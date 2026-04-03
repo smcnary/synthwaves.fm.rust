@@ -3,15 +3,26 @@ use sqlx::{Pool, Sqlite, sqlite::SqlitePoolOptions};
 use std::path::Path;
 
 pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
-    // SQLite URLs look like "sqlite:/absolute/path" (sqlx absolute),
-    // "sqlite:///absolute/path" (three-slash legacy), or a bare file path.
+    // SQLite URLs look like:
+    //   "sqlite:relative/path"       (relative, no leading slash — sqlx relative)
+    //   "sqlite:/absolute/path"      (sqlx absolute, single slash)
+    //   "sqlite:///absolute/path"    (three-slash legacy absolute)
+    //   or a bare file path with no scheme at all.
     // Strip the scheme prefix to get the raw filesystem path so we can
     // ensure the parent directory exists before sqlx opens the file.
-    let file_path = database_url
-        .strip_prefix("sqlite:///")
-        .map(|p| format!("/{p}"))
-        .or_else(|| database_url.strip_prefix("sqlite:/").map(|p| format!("/{p}")))
-        .unwrap_or_else(|| database_url.to_string());
+    let file_path = if let Some(p) = database_url.strip_prefix("sqlite:///") {
+        // Three-slash form: "sqlite:///abs/path" → "/abs/path"
+        format!("/{p}")
+    } else if let Some(p) = database_url.strip_prefix("sqlite:/") {
+        // Single-slash absolute form: "sqlite:/abs/path" → "/abs/path"
+        format!("/{p}")
+    } else if let Some(p) = database_url.strip_prefix("sqlite:") {
+        // Relative form: "sqlite:rel/path" → "rel/path" (resolved against cwd)
+        p.to_string()
+    } else {
+        // Bare path, no scheme
+        database_url.to_string()
+    };
 
     tracing::debug!(file_path, "resolved sqlite file path after stripping scheme prefix");
 

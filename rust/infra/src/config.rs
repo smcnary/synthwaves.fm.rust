@@ -22,7 +22,7 @@ impl AppConfig {
         let cfg = Config::builder()
             .set_default("host", "127.0.0.1")?
             .set_default("port", 4000)?
-            .set_default("database_url", "sqlite:/rails/storage/development.sqlite3")?
+            .set_default("database_url", "sqlite:storage/development.sqlite3")?
             .set_default("jwt_secret", "dev-secret")?
             .set_default("liquidsoap_api_token", "dev-liquidsoap-token")?
             .set_default("rails_host", "localhost:4000")?
