@@ -15,7 +15,7 @@ pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
 
     tracing::debug!(file_path, "resolved sqlite file path after stripping scheme prefix");
 
-    if let Some(parent) = Path::new(file_path).parent() {
+    if let Some(parent) = Path::new(&file_path).parent() {
         if !parent.as_os_str().is_empty() {
             let parent_exists_before = parent.exists();
             tracing::debug!(
