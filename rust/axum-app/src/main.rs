@@ -7,9 +7,22 @@ use app_state::AppState;
 use axum::{Router, routing::get};
 use handlers::{admin, api, health, media, radio, web};
 use infra::{config::AppConfig, db};
-use std::net::SocketAddr;
+use std::{net::SocketAddr, path::Path};
 use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
-use tracing::info;
+use tracing::{info, warn};
+
+fn sqlite_file_path(database_url: &str) -> Option<String> {
+    if let Some(p) = database_url.strip_prefix("sqlite:///") {
+        return Some(format!("/{p}"));
+    }
+    if let Some(p) = database_url.strip_prefix("sqlite:/") {
+        return Some(format!("/{p}"));
+    }
+    if let Some(p) = database_url.strip_prefix("sqlite:") {
+        return Some(p.to_string());
+    }
+    None
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -32,7 +45,39 @@ async fn main() -> anyhow::Result<()> {
         icecast_admin_password: "hackme".to_string(),
         icecast_public_base_url: None,
     });
-    let pool = db::connect(&config.database_url).await?;
+    info!(
+        host = %config.host,
+        port = config.port,
+        database_url = %config.database_url,
+        "loaded application configuration"
+    );
+
+    if let Some(file_path) = sqlite_file_path(&config.database_url) {
+        let db_path = Path::new(&file_path);
+        let parent_dir = db_path
+            .parent()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|| ".".to_string());
+        info!(
+            sqlite_file_path = %db_path.display(),
+            sqlite_parent_dir = %parent_dir,
+            "sqlite database configuration detected"
+        );
+    } else {
+        warn!(
+            database_url = %config.database_url,
+            "non-sqlite database url configured; current build is optimized for sqlite workflows"
+        );
+    }
+
+    let pool = db::connect(&config.database_url)
+        .await
+        .context("database connection/bootstrap failed during startup")?;
+    sqlx::migrate!("../migrations")
+        .run(&pool)
+        .await
+        .context("database migrations failed during startup")?;
+    info!("database connection established and migrations applied");
     let state = AppState { config, pool };
 
     let app = Router::new()

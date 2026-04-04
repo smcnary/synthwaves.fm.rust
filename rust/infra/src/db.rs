@@ -1,6 +1,10 @@
 use anyhow::Context;
-use sqlx::{Pool, Sqlite, sqlite::SqlitePoolOptions};
+use sqlx::{
+    Pool, Sqlite,
+    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+};
 use std::path::Path;
+use std::str::FromStr;
 
 pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
     // SQLite URLs look like:
@@ -79,11 +83,50 @@ pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
 
     tracing::debug!(database_url, "connecting to sqlite with database_url");
 
+    let connect_options = SqliteConnectOptions::from_str(database_url)
+        .with_context(|| format!("invalid sqlite database url: {database_url}"))?
+        .create_if_missing(true);
+
     SqlitePoolOptions::new()
         .max_connections(10)
-        .connect(database_url)
+        .connect_with(connect_options)
         .await
         .with_context(|| {
             format!("failed to connect to sqlite at {database_url} (file path: {file_path})")
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::connect;
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn connect_creates_missing_parent_directory_for_sqlite_file() -> anyhow::Result<()> {
+        let root =
+            std::env::temp_dir().join(format!("synthwaves-db-connect-test-{}", Uuid::new_v4()));
+        let db_path = root.join("nested").join("development.sqlite3");
+
+        let parent = db_path.parent().expect("db path should have parent");
+        assert!(
+            !parent.exists(),
+            "test precondition: parent directory should not exist"
+        );
+
+        let database_url = format!("sqlite://{}", db_path.display());
+        let pool = connect(&database_url).await?;
+        sqlx::query("SELECT 1").execute(&pool).await?;
+        drop(pool);
+
+        assert!(parent.exists(), "connect should create parent directory");
+        assert!(
+            db_path.exists(),
+            "sqlite file should be created after first query"
+        );
+
+        let _ = std::fs::remove_file(&db_path);
+        let _ = std::fs::remove_dir_all(&root);
+
+        Ok(())
+    }
 }

@@ -79,6 +79,24 @@ with app config env names (uppercase underscore format), including:
 
 Post-deploy health check endpoint: `/up`.
 
+### Database strategy (Railway)
+
+- SQLite is currently supported and configured by default via `DATABASE_URL=sqlite:/data/development.sqlite3`.
+- The app creates missing parent directories at startup before connecting to SQLite, then runs SQL migrations on boot.
+- For current traffic/operational constraints, the near-term direction is:
+  - keep SQLite + mounted volume for production stability restoration
+  - keep SQLite defaults for local development
+  - prepare migration path to Postgres when higher concurrency/HA is required
+
+### Postgres migration plan (staged)
+
+1. Add Postgres support in workspace dependencies (`sqlx` postgres feature) while retaining SQLite for local usage.
+2. Introduce environment-driven DB selection (`DATABASE_URL` determines backend), with Railway production set to managed Postgres.
+3. Port SQL schema/migrations to Postgres-compatible DDL and run dual-environment validation in CI.
+4. Add query compatibility checks for SQLite-specific assumptions (types, date functions, upsert patterns, and locking behavior).
+5. Perform a one-time production data migration (SQLite file export/import) and switch Railway runtime variables.
+6. Keep SQLite as fallback for local/dev test workflows until the team decides to standardize on Postgres everywhere.
+
 ## Radio: Icecast + Liquidsoap (local)
 
 1. Run the Axum app on the host (`cargo run -p axum-app`). Set `DATABASE_URL`, `LIQUIDSOAP_API_TOKEN`, and Icecast-related env vars so they match the compose stack (defaults use `hackme` for source/admin passwords).
