@@ -14,6 +14,7 @@ COPY rust/axum-app ./axum-app
 COPY rust/domain ./domain
 COPY rust/infra ./infra
 COPY rust/jobs ./jobs
+COPY rust/migrations ./migrations
 
 RUN cargo build --locked --release -p axum-app
 
