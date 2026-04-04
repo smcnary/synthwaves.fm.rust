@@ -1,8 +1,39 @@
 # synthwaves.fm - Self-hosted music streaming
 # Quick start: docker compose up -d
 # Configuration: copy .env.example to .env and customize as needed
+#
+# Rust Axum API (matches Railway: SQLite on a persistent volume under /data/db):
+#   docker compose up -d --build axum
+# With radio profile, point Liquidsoap at the API (e.g. RAILS_HOST=axum:4000) and
+# set ICECAST_HOST=icecast so the API container can reach Icecast.
 
 services:
+  axum:
+    build:
+      context: .
+      dockerfile: Dockerfile.rust
+    ports:
+      - "${AXUM_PORT:-4000}:4000"
+    volumes:
+      - axum_data:/data
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "4000"
+      DATABASE_URL: "sqlite:/data/db/development.sqlite3"
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      LIQUIDSOAP_API_TOKEN: ${LIQUIDSOAP_API_TOKEN:-dev-liquidsoap-token}
+      RAILS_HOST: ${RAILS_HOST:-localhost:4000}
+      RAILS_PROTOCOL: ${RAILS_PROTOCOL:-http}
+      ICECAST_PROTOCOL: ${ICECAST_PROTOCOL:-http}
+      ICECAST_HOST: ${ICECAST_HOST:-localhost}
+      ICECAST_PORT: ${ICECAST_PORT:-8000}
+      ICECAST_ADMIN_USERNAME: ${ICECAST_ADMIN_USERNAME:-admin}
+      ICECAST_ADMIN_PASSWORD: ${ICECAST_ADMIN_PASSWORD:-hackme}
+    restart: unless-stopped
+
   web:
     image: ghcr.io/leopolicastro/synthwaves:latest
     ports:
@@ -68,3 +99,4 @@ services:
 
 volumes:
   storage:
+  axum_data:
