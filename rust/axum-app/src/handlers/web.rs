@@ -9,6 +9,7 @@ use sqlx::Row;
 use std::collections::HashSet;
 
 use crate::app_state::AppState;
+use infra::config::AppConfig;
 
 #[derive(Template)]
 #[template(path = "home.html")]
@@ -33,7 +34,6 @@ struct RadioTestTemplate<'a> {
 #[template(path = "radio.html")]
 struct RadioTemplate<'a> {
     stations: &'a [RadioCard],
-    internal_token: &'a str,
 }
 
 #[derive(Template)]
@@ -50,6 +50,7 @@ struct RadioCard {
     id: i64,
     name: String,
     mount_point: String,
+    stream_url: String,
     status: String,
 }
 
@@ -58,6 +59,7 @@ struct RadioStationDetail {
     id: i64,
     name: String,
     mount_point: String,
+    stream_url: String,
     status: String,
     listeners: i64,
     bitrate_kbps: i64,
@@ -106,7 +108,6 @@ pub async fn radio(State(state): State<AppState>) -> Html<String> {
     Html(
         RadioTemplate {
             stations: &stations,
-            internal_token: &state.config.liquidsoap_api_token,
         }
         .render()
         .unwrap_or_else(|_| "<h1>Radio</h1>".to_string()),
@@ -125,12 +126,14 @@ pub async fn radio_test(State(state): State<AppState>) -> Html<String> {
 }
 
 pub async fn radio_station(State(state): State<AppState>, Path(id): Path<i64>) -> Html<String> {
+    let default_mount = format!("/radio/{id}.mp3");
     let station = load_station_detail(&state, id)
         .await
         .unwrap_or(RadioStationDetail {
             id,
             name: format!("Station #{id}"),
-            mount_point: format!("/radio/{id}.mp3"),
+            mount_point: default_mount.clone(),
+            stream_url: station_stream_url(&state.config, &default_mount),
             status: "live".to_string(),
             listeners: 0,
             bitrate_kbps: 192,
@@ -159,6 +162,10 @@ pub async fn stats() -> Html<String> {
 
 pub async fn search() -> Html<String> {
     Html("<h1>Search</h1>".to_string())
+}
+
+fn station_stream_url(config: &AppConfig, mount_point: &str) -> String {
+    infra::icecast::icecast_stream_url(&config.icecast_public_base(), mount_point)
 }
 
 async fn load_radio_cards(state: &AppState) -> Result<Vec<RadioCard>, sqlx::Error> {
@@ -206,14 +213,17 @@ async fn load_radio_cards(state: &AppState) -> Result<Vec<RadioCard>, sqlx::Erro
     let rows = sqlx::query(&sql).fetch_all(&state.pool).await?;
     let mut stations = Vec::with_capacity(rows.len());
     for row in rows {
+        let mount_point = row
+            .try_get::<String, _>("station_mount")
+            .unwrap_or_else(|_| "/radio/unknown.mp3".to_string());
+        let stream_url = station_stream_url(&state.config, &mount_point);
         stations.push(RadioCard {
             id: row.try_get::<i64, _>("id").unwrap_or_default(),
             name: row
                 .try_get::<String, _>("station_name")
                 .unwrap_or_else(|_| "Untitled Station".to_string()),
-            mount_point: row
-                .try_get::<String, _>("station_mount")
-                .unwrap_or_else(|_| "/radio/unknown.mp3".to_string()),
+            mount_point,
+            stream_url,
             status: row
                 .try_get::<String, _>("station_status")
                 .unwrap_or_else(|_| "live".to_string()),
@@ -279,14 +289,17 @@ async fn load_station_detail(
     .await
     .unwrap_or(None)
     .unwrap_or(0);
+    let mount_point = row
+        .try_get::<String, _>("station_mount")
+        .unwrap_or_else(|_| format!("/radio/{station_id}.mp3"));
+    let stream_url = station_stream_url(&state.config, &mount_point);
     Ok(RadioStationDetail {
         id: row.try_get::<i64, _>("id").unwrap_or(station_id),
         name: row
             .try_get::<String, _>("station_name")
             .unwrap_or_else(|_| format!("Station #{station_id}")),
-        mount_point: row
-            .try_get::<String, _>("station_mount")
-            .unwrap_or_else(|_| format!("/radio/{station_id}.mp3")),
+        mount_point,
+        stream_url,
         status: row
             .try_get::<String, _>("station_status")
             .unwrap_or_else(|_| "live".to_string()),

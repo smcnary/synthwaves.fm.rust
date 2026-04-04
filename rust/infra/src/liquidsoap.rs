@@ -1,5 +1,39 @@
 use domain::models::RadioStation;
 
+/// Stable Liquidsoap identifier for a station (function names, `request.dynamic` id).
+pub fn liquidsoap_station_slug(station: &RadioStation) -> String {
+    let trimmed = station
+        .mount_point
+        .trim()
+        .trim_start_matches('/')
+        .trim_end_matches(".mp3");
+    let mut slug: String = trimmed
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    while slug.contains("__") {
+        slug = slug.replace("__", "_");
+    }
+    slug = slug.trim_matches('_').to_string();
+    if slug.is_empty() {
+        return format!("station_{}", station.id);
+    }
+    if slug
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_digit())
+    {
+        slug = format!("st_{slug}");
+    }
+    format!("{slug}_{}", station.id)
+}
+
 pub fn generate_config(
     stations: &[RadioStation],
     rails_host: &str,
@@ -20,11 +54,7 @@ pub fn generate_config(
     ];
 
     for station in stations {
-        let slug = station
-            .mount_point
-            .trim_start_matches('/')
-            .trim_end_matches(".mp3")
-            .replace('-', "_");
+        let slug = liquidsoap_station_slug(station);
         out.push(format!(
             "# Station {}: {}",
             station.id, station.playlist_name
@@ -62,4 +92,40 @@ pub fn generate_config(
         out.push(String::new());
     }
     out.join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use domain::models::RadioStation;
+
+    #[test]
+    fn liquidsoap_slug_allows_slashes_in_mount() {
+        let station = RadioStation {
+            id: 3,
+            playlist_name: "Main".to_string(),
+            mount_point: "/radio/cool-1.mp3".to_string(),
+            bitrate: 192,
+            crossfade: false,
+            crossfade_duration: 6,
+        };
+        assert_eq!(liquidsoap_station_slug(&station), "radio_cool_1_3");
+    }
+
+    #[test]
+    fn generate_config_contains_icecast_and_slug() {
+        let stations = vec![RadioStation {
+            id: 7,
+            playlist_name: "Test FM".to_string(),
+            mount_point: "/radio/cool-1.mp3".to_string(),
+            bitrate: 192,
+            crossfade: false,
+            crossfade_duration: 6,
+        }];
+        let config = generate_config(&stations, "localhost:4000", "http");
+        assert!(config.contains("output.icecast"));
+        assert!(config.contains("mount=\"/radio/cool-1.mp3\""));
+        assert!(config.contains("next_track_radio_cool_1_7"));
+        assert!(config.contains("radio_stations/7/next_track"));
+    }
 }

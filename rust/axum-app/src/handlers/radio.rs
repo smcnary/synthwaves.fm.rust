@@ -1,8 +1,9 @@
 use axum::{
     Json, Router,
+    body::Body,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
-    response::IntoResponse,
+    http::{HeaderMap, StatusCode, header},
+    response::{IntoResponse, Response},
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
@@ -12,6 +13,7 @@ use crate::{app_state::AppState, auth};
 
 pub fn internal_router() -> Router<AppState> {
     Router::new()
+        .route("/liquidsoap_config", get(liquidsoap_config))
         .route("/radio_stations/active", get(active))
         .route("/radio_stations/{id}/import_youtube", post(import_youtube))
         .route("/radio_stations/{id}/next_track", get(next_track))
@@ -54,6 +56,15 @@ pub struct RadioStatsResponse {
     pub bitrate_kbps: i64,
 }
 
+#[derive(Debug, Serialize)]
+pub struct ActiveStationRow {
+    pub id: i64,
+    pub mount_point: String,
+    pub playlist_name: String,
+    pub bitrate: i32,
+    pub stream_url: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct NotifyPayload {
     pub event: Option<String>,
@@ -67,7 +78,46 @@ pub async fn active(State(state): State<AppState>, headers: HeaderMap) -> impl I
     if auth::require_internal_token(&headers, &state).is_err() {
         return StatusCode::UNAUTHORIZED.into_response();
     }
-    Json(serde_json::json!({ "stations": [] })).into_response()
+    match load_radio_stations_for_liquidsoap(&state.pool).await {
+        Ok(stations) => {
+            let public_base = state.config.icecast_public_base();
+            let rows: Vec<ActiveStationRow> = stations
+                .into_iter()
+                .map(|s| ActiveStationRow {
+                    stream_url: infra::icecast::icecast_stream_url(&public_base, &s.mount_point),
+                    id: s.id,
+                    mount_point: s.mount_point,
+                    playlist_name: s.playlist_name,
+                    bitrate: s.bitrate,
+                })
+                .collect();
+            Json(serde_json::json!({ "stations": rows })).into_response()
+        }
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    }
+}
+
+pub async fn liquidsoap_config(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if auth::require_internal_token(&headers, &state).is_err() {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+    let stations = match load_radio_stations_for_liquidsoap(&state.pool).await {
+        Ok(s) => s,
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+    let body = infra::liquidsoap::generate_config(
+        &stations,
+        &state.config.rails_host,
+        &state.config.rails_protocol,
+    );
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+        .body(Body::from(body))
+        .unwrap()
 }
 
 pub async fn next_track(
@@ -445,6 +495,47 @@ pub async fn notify(
 struct ImportedQueueItem {
     video_id: String,
     title: String,
+}
+
+async fn load_radio_stations_for_liquidsoap(
+    pool: &sqlx::SqlitePool,
+) -> Result<Vec<domain::models::RadioStation>, sqlx::Error> {
+    let table_ok: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'radio_stations'",
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(0);
+    if table_ok == 0 {
+        return Ok(Vec::new());
+    }
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            rs.id,
+            p.name AS playlist_name,
+            rs.mount_point,
+            rs.bitrate,
+            rs.crossfade,
+            rs.crossfade_duration
+        FROM radio_stations rs
+        JOIN playlists p ON p.id = rs.playlist_id
+        ORDER BY rs.id ASC
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| domain::models::RadioStation {
+            id: row.get("id"),
+            playlist_name: row.get::<String, _>("playlist_name"),
+            mount_point: row.get::<String, _>("mount_point"),
+            bitrate: row.get::<i64, _>("bitrate") as i32,
+            crossfade: row.get::<i64, _>("crossfade") != 0,
+            crossfade_duration: row.get::<i64, _>("crossfade_duration") as i32,
+        })
+        .collect())
 }
 
 async fn ensure_import_tables(state: &AppState) -> Result<(), sqlx::Error> {

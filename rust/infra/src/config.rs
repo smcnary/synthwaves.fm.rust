@@ -15,6 +15,10 @@ pub struct AppConfig {
     pub icecast_port: u16,
     pub icecast_admin_username: String,
     pub icecast_admin_password: String,
+    /// When set (e.g. `https://radio.example.com`), browser stream URLs use this base instead of
+    /// `ICECAST_PROTOCOL` + `ICECAST_HOST` + `ICECAST_PORT` (needed behind TLS or when admin host is internal).
+    #[serde(default)]
+    pub icecast_public_base_url: Option<String>,
 }
 
 impl AppConfig {
@@ -35,5 +39,21 @@ impl AppConfig {
             .add_source(Environment::default().separator("_"))
             .build()?;
         Ok(cfg.try_deserialize()?)
+    }
+
+    /// Base URL for listeners (no trailing slash). Used to build mount URLs for `<audio src>`.
+    pub fn icecast_public_base(&self) -> String {
+        if let Some(ref url) = self.icecast_public_base_url {
+            let t = url.trim();
+            if !t.is_empty() {
+                return t.trim_end_matches('/').to_string();
+            }
+        }
+        format!(
+            "{}://{}:{}",
+            self.icecast_protocol.trim_end_matches('/'),
+            self.icecast_host,
+            self.icecast_port
+        )
     }
 }

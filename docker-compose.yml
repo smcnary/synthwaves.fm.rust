@@ -35,5 +35,36 @@ services:
   #     - SOLID_QUEUE_IN_PUMA=false
   #   restart: unless-stopped
 
+  # Icecast + Liquidsoap for local radio (Rust axum-app on host). Usage: see README.md.
+  icecast:
+    profiles: ["radio"]
+    image: moul/icecast:latest
+    ports:
+      - "${ICECAST_PORT:-8000}:8000"
+    environment:
+      ICECAST_SOURCE_PASSWORD: ${ICECAST_SOURCE_PASSWORD:-hackme}
+      ICECAST_ADMIN_PASSWORD: ${ICECAST_ADMIN_PASSWORD:-hackme}
+      ICECAST_HOSTNAME: ${ICECAST_HOSTNAME:-localhost}
+    restart: unless-stopped
+
+  liquidsoap:
+    profiles: ["radio"]
+    image: savonet/liquidsoap:v2.3.3
+    depends_on:
+      - icecast
+    environment:
+      LIQUIDSOAP_API_TOKEN: ${LIQUIDSOAP_API_TOKEN:-dev-liquidsoap-token}
+      ICECAST_INTERNAL_HOST: icecast
+      ICECAST_INTERNAL_PORT: "8000"
+      ICECAST_SOURCE_PASSWORD: ${ICECAST_SOURCE_PASSWORD:-hackme}
+      RAILS_HOST: ${RAILS_HOST:-host.docker.internal:4000}
+      RAILS_PROTOCOL: ${RAILS_PROTOCOL:-http}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./docker/radio/radio.liq:/etc/liquidsoap/radio.liq:ro
+    command: ["liquidsoap", "/etc/liquidsoap/radio.liq"]
+    restart: unless-stopped
+
 volumes:
   storage:

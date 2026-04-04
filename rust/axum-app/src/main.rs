@@ -30,6 +30,7 @@ async fn main() -> anyhow::Result<()> {
         icecast_port: 8000,
         icecast_admin_username: "admin".to_string(),
         icecast_admin_password: "hackme".to_string(),
+        icecast_public_base_url: None,
     });
     let pool = db::connect(&config.database_url).await?;
     let state = AppState { config, pool };

@@ -1,6 +1,18 @@
 use anyhow::Context;
 use serde_json::Value;
 
+/// Builds a full stream URL for a mount such as `/radio/1.mp3`.
+pub fn icecast_stream_url(public_base: &str, mount_point: &str) -> String {
+    let base = public_base.trim_end_matches('/');
+    let mount = mount_point.trim();
+    let path = if mount.starts_with('/') {
+        mount.to_string()
+    } else {
+        format!("/{mount}")
+    };
+    format!("{base}{path}")
+}
+
 #[derive(Debug, Clone)]
 pub struct IcecastConfig {
     pub protocol: String,
@@ -61,4 +73,25 @@ pub async fn fetch_listener_count(cfg: &IcecastConfig, mount_point: &str) -> any
         }
     }
     Ok(0)
+}
+
+#[cfg(test)]
+mod stream_url_tests {
+    use super::icecast_stream_url;
+
+    #[test]
+    fn joins_base_and_mount() {
+        assert_eq!(
+            icecast_stream_url("http://localhost:8000", "/radio/1.mp3"),
+            "http://localhost:8000/radio/1.mp3"
+        );
+    }
+
+    #[test]
+    fn trims_base_slash_and_normalizes_mount() {
+        assert_eq!(
+            icecast_stream_url("https://stream.example/", "radio/2.mp3"),
+            "https://stream.example/radio/2.mp3"
+        );
+    }
 }

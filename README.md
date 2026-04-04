@@ -75,5 +75,33 @@ with app config env names (uppercase underscore format), including:
 - `ICECAST_PORT`
 - `ICECAST_ADMIN_USERNAME`
 - `ICECAST_ADMIN_PASSWORD`
+- `ICECAST_PUBLIC_BASE_URL` (optional) — public base URL for browser `<audio>` mounts, e.g. `https://stream.example.com` when the site is HTTPS or when `ICECAST_HOST` is an internal Docker hostname. If unset, listeners use `ICECAST_PROTOCOL` + `ICECAST_HOST` + `ICECAST_PORT`.
 
 Post-deploy health check endpoint: `/up`.
+
+## Radio: Icecast + Liquidsoap (local)
+
+1. Run the Axum app on the host (`cargo run -p axum-app`). Set `DATABASE_URL`, `LIQUIDSOAP_API_TOKEN`, and Icecast-related env vars so they match the compose stack (defaults use `hackme` for source/admin passwords).
+2. Start Icecast and Liquidsoap (does not start the legacy `web` service unless you run compose without a profile filter):
+
+   ```bash
+   docker compose --profile radio up -d icecast liquidsoap
+   ```
+
+3. Generate Liquidsoap script from the database and restart the encoder:
+
+   ```bash
+   export LIQUIDSOAP_API_TOKEN=dev-liquidsoap-token   # match your app config
+   curl -fsS -H "Authorization: Bearer $LIQUIDSOAP_API_TOKEN" \
+     "http://127.0.0.1:4000/api/internal/liquidsoap_config" -o docker/radio/radio.liq
+   docker compose --profile radio restart liquidsoap
+   ```
+
+4. Open `/radio` in the browser. Stream URLs target your Icecast mounts (default public base `http://localhost:8000` when `ICECAST_PUBLIC_BASE_URL` is unset).
+
+Internal API additions:
+
+- `GET /api/internal/liquidsoap_config` — Bearer `LIQUIDSOAP_API_TOKEN`; returns `text/plain` Liquidsoap script.
+- `GET /api/internal/radio_stations/active` — same auth; JSON list of stations with `stream_url`, `mount_point`, etc.
+
+YouTube-backed `next_track` URLs require `yt-dlp` wherever Liquidsoap runs; playlist/library tracks use your app’s `/tracks/:id/stream` URLs and work without it.

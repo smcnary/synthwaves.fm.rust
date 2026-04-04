@@ -119,8 +119,7 @@
       <p class="subtitle">Curated playlists, streaming around the clock. Pick a station and tune in.</p>
 
       <section class="player-panel">
-        <div><strong>Shared Player</strong></div>
-        <input id="internal-token" type="hidden" value="{{ internal_token }}" />
+        <div><strong>Shared Player</strong> <span style="font-size:0.8rem;color:#94a3b8;">(Icecast live mount)</span></div>
         <audio id="player" controls preload="none"></audio>
         <div id="response" class="response">Ready.</div>
       </section>
@@ -138,8 +137,8 @@
               <span class="badge">{{ station.status }}</span>
             </div>
             <p class="mount">{{ station.mount_point }}</p>
-            <button class="play-btn" data-station-id="{{ station.id }}">Play</button>
-            <div id="np-{{ station.id }}" class="now-playing">Now Playing: tap Play to load track</div>
+            <button class="play-btn" data-station-id="{{ station.id }}" data-stream-url="{{ station.stream_url }}">Play</button>
+            <div id="np-{{ station.id }}" class="now-playing">Live stream: tap Play</div>
           </div>
         </article>
         {% endfor %}
@@ -148,37 +147,29 @@
     </main>
 
     <script>
-      const token = document.getElementById("internal-token").value;
       const player = document.getElementById("player");
       const response = document.getElementById("response");
       const buttons = document.querySelectorAll(".play-btn");
 
-      async function playStation(stationId) {
-        response.textContent = `Loading station ${stationId}...`;
+      async function playStation(stationId, streamUrl) {
+        response.textContent = `Tuning station ${stationId}...`;
+        const nowPlaying = document.getElementById(`np-${stationId}`);
         try {
-          const res = await fetch(`/api/internal/radio_stations/${stationId}/next_track`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const data = await res.json();
-          if (!res.ok || !data.url) {
-            response.textContent = JSON.stringify({ status: res.status, data }, null, 2);
-            return;
-          }
-
-          const nowPlaying = document.getElementById(`np-${stationId}`);
-          if (nowPlaying) {
-            nowPlaying.textContent = `Now Playing: ${data.title || data.url}`;
-          }
-          player.src = data.url;
+          player.src = streamUrl;
           await player.play();
-          response.textContent = JSON.stringify({ status: res.status, data }, null, 2);
+          if (nowPlaying) {
+            nowPlaying.textContent = `Live: ${streamUrl}`;
+          }
+          response.textContent = "Playing Icecast mount.";
         } catch (error) {
-          response.textContent = `Playback request failed: ${error}`;
+          response.textContent = `Playback failed: ${error}`;
         }
       }
 
       for (const button of buttons) {
-        button.addEventListener("click", () => playStation(button.dataset.stationId));
+        button.addEventListener("click", () =>
+          playStation(button.dataset.stationId, button.dataset.streamUrl)
+        );
       }
     </script>
   </body>
