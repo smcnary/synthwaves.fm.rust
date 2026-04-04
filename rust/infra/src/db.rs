@@ -39,8 +39,9 @@ pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
             "parent directory status before create_dir_all"
         );
 
-        std::fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create database directory: {}", parent.display()))?;
+        std::fs::create_dir_all(parent).with_context(|| {
+            format!("failed to create database directory: {}", parent.display())
+        })?;
 
         let parent_exists_after = parent.exists();
         tracing::debug!(
