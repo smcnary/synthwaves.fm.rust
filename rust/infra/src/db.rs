@@ -24,7 +24,10 @@ pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
         database_url.to_string()
     };
 
-    tracing::debug!(file_path, "resolved sqlite file path after stripping scheme prefix");
+    tracing::debug!(
+        file_path,
+        "resolved sqlite file path after stripping scheme prefix"
+    );
 
     if let Some(parent) = Path::new(&file_path).parent() {
         if !parent.as_os_str().is_empty() {
@@ -81,8 +84,6 @@ pub async fn connect(database_url: &str) -> anyhow::Result<Pool<Sqlite>> {
         .connect(database_url)
         .await
         .with_context(|| {
-            format!(
-                "failed to connect to sqlite at {database_url} (file path: {file_path})"
-            )
+            format!("failed to connect to sqlite at {database_url} (file path: {file_path})")
         })
 }

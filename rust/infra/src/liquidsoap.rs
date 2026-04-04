@@ -9,13 +9,7 @@ pub fn liquidsoap_station_slug(station: &RadioStation) -> String {
         .trim_end_matches(".mp3");
     let mut slug: String = trimmed
         .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c
-            } else {
-                '_'
-            }
-        })
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
         .collect();
     while slug.contains("__") {
         slug = slug.replace("__", "_");
@@ -24,11 +18,7 @@ pub fn liquidsoap_station_slug(station: &RadioStation) -> String {
     if slug.is_empty() {
         return format!("station_{}", station.id);
     }
-    if slug
-        .chars()
-        .next()
-        .is_some_and(|c| c.is_ascii_digit())
-    {
+    if slug.chars().next().is_some_and(|c| c.is_ascii_digit()) {
         slug = format!("st_{slug}");
     }
     format!("{slug}_{}", station.id)
