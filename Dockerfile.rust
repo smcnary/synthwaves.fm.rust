@@ -20,7 +20,11 @@ RUN cargo build --locked --release -p axum-app
 FROM debian:bookworm-slim AS runtime
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates libsqlite3-0 \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      ffmpeg \
+      libsqlite3-0 \
+      yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /build/target/release/axum-app /usr/local/bin/axum-app

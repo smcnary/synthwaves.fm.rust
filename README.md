@@ -105,3 +105,92 @@ Internal API additions:
 - `GET /api/internal/radio_stations/active` — same auth; JSON list of stations with `stream_url`, `mount_point`, etc.
 
 YouTube-backed `next_track` URLs require `yt-dlp` wherever Liquidsoap runs; playlist/library tracks use your app’s `/tracks/:id/stream` URLs and work without it.
+
+## Radio: Production Preflight and Test Runbook
+
+Use this runbook before testing playlist import and live Icecast playback in production.
+
+### 1) Runtime preflight checklist
+
+- Axum runtime image includes `yt-dlp` and `ffmpeg` (required for playlist import and stream URL resolution).
+- Railway service variables include:
+  - `LIQUIDSOAP_API_TOKEN`
+  - `RAILS_HOST`
+  - `RAILS_PROTOCOL`
+  - `ICECAST_PROTOCOL`
+  - `ICECAST_HOST`
+  - `ICECAST_PORT`
+  - `ICECAST_ADMIN_USERNAME`
+  - `ICECAST_ADMIN_PASSWORD`
+  - `ICECAST_PUBLIC_BASE_URL` (required if browser-facing stream host differs from internal Icecast host)
+- Icecast and Liquidsoap are running and Liquidsoap uses the same `LIQUIDSOAP_API_TOKEN`.
+- At least one station exists in DB (`playlists` + `radio_stations`). A bootstrap script is provided at `ops/sql/bootstrap_radio_station.sql`.
+
+### 2) Bootstrap a station (if needed)
+
+Use the SQL script in `ops/sql/bootstrap_radio_station.sql` to create a playlist and station row, then note the created station id and mount.
+
+If `DATABASE_URL` is SQLite (for example `sqlite://storage/development.sqlite3`), you can run:
+
+```bash
+sqlite3 "${DATABASE_URL#sqlite://}" < ops/sql/bootstrap_radio_station.sql
+```
+
+For Railway production, run the same SQL statements in your Railway database console/shell against the deployed database.
+
+### 3) Import a YouTube playlist into a station
+
+```bash
+export API_BASE_URL="https://<your-production-host>"
+export LIQUIDSOAP_API_TOKEN="<token>"
+export STATION_ID="<station-id>"
+export PLAYLIST_URL="https://www.youtube.com/watch?v=6aouLxiL4Cw&list=PLfAwSvgqO_M_aT7SOI4jdCCpJbZvDvOT-"
+
+curl -fsS -X POST \
+  -H "Authorization: Bearer $LIQUIDSOAP_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"url\":\"$PLAYLIST_URL\"}" \
+  "$API_BASE_URL/api/internal/radio_stations/$STATION_ID/import_youtube"
+```
+
+Expected response shape:
+
+```json
+{"station_id":1,"playlist_id":"...","imported":42}
+```
+
+### 4) Regenerate Liquidsoap config from production DB
+
+```bash
+curl -fsS \
+  -H "Authorization: Bearer $LIQUIDSOAP_API_TOKEN" \
+  "$API_BASE_URL/api/internal/liquidsoap_config" \
+  -o radio.liq
+```
+
+Deploy `radio.liq` to Liquidsoap and restart/reload Liquidsoap so it picks up the latest station list and mount settings.
+
+### 5) Verify active stations and streaming
+
+```bash
+curl -fsS \
+  -H "Authorization: Bearer $LIQUIDSOAP_API_TOKEN" \
+  "$API_BASE_URL/api/internal/radio_stations/active"
+```
+
+Then verify:
+
+- `/radio` and `/radio/<id>` load in browser and play the Icecast mount.
+- `/up` returns healthy.
+- `/api/internal/radio_stations/<id>/stats` shows listener data over time.
+
+### 6) Failure triage
+
+- `yt-dlp failed while fetching playlist` or `yt-dlp failed to resolve audio stream URL`:
+  - confirm `yt-dlp` is installed in the Axum runtime
+  - confirm outbound network access to YouTube
+  - confirm playlist URL contains `list=...`
+- Browser audio fails on HTTPS site:
+  - set `ICECAST_PUBLIC_BASE_URL` to an HTTPS stream endpoint to avoid mixed content
+- Unauthorized (`401`) from internal endpoints:
+  - ensure Bearer token exactly matches `LIQUIDSOAP_API_TOKEN`

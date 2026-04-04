@@ -83,7 +83,7 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Validate Railway secrets
+      - name: Validate Railway deploy inputs
         run: |
           set -euo pipefail
           if [[ -z "${RAILWAY_TOKEN:-}" ]]; then
@@ -94,6 +94,35 @@ jobs:
             echo "Missing required secret: RAILWAY_PROJECT_ID"
             exit 1
           fi
+          if [[ -z "${RAILWAY_ENVIRONMENT:-}" ]]; then
+            echo "Missing required secret: RAILWAY_ENVIRONMENT"
+            echo "Set this to the production environment selector before deploy."
+            exit 1
+          fi
+          if [[ -z "${RAILWAY_SERVICE:-}" ]]; then
+            echo "Missing required secret: RAILWAY_SERVICE"
+            echo "Set this to the backend service selector before deploy."
+            exit 1
+          fi
+
+      - name: Radio runtime variable preflight checklist
+        run: |
+          cat <<'EOF'
+          Verify these Railway service variables are set before deploy:
+            HOST
+            PORT
+            DATABASE_URL
+            JWT_SECRET
+            LIQUIDSOAP_API_TOKEN
+            RAILS_HOST
+            RAILS_PROTOCOL
+            ICECAST_PROTOCOL
+            ICECAST_HOST
+            ICECAST_PORT
+            ICECAST_ADMIN_USERNAME
+            ICECAST_ADMIN_PASSWORD
+            ICECAST_PUBLIC_BASE_URL (required when public stream host differs from internal Icecast host)
+          EOF
 
       - name: Link Railway project
         run: |
