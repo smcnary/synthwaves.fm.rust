@@ -27,7 +27,11 @@ RUN apt-get update \
       yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /rails/storage && chmod 777 /rails/storage
+
 COPY --from=builder /build/target/release/axum-app /usr/local/bin/axum-app
+
+RUN mkdir -p /data && chmod 777 /data
 
 ENV RUST_LOG=info
 
