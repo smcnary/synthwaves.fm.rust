@@ -734,6 +734,7 @@ async fn ensure_playlist_track(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn upsert_item_state(
     pool: &SqlitePool,
     source_id: i64,
@@ -783,6 +784,7 @@ async fn track_for_video(pool: &SqlitePool, video_id: &str) -> anyhow::Result<Op
     Ok(row)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn finalize_run(
     pool: &SqlitePool,
     run_id: i64,
