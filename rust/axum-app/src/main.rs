@@ -88,10 +88,10 @@ async fn main() -> anyhow::Result<()> {
     bootstrap_admin_user(&pool, &config)
         .await
         .context("failed during optional bootstrap admin initialization")?;
-    if config.youtube_import_enabled {
-        if let Err(err) = infra::youtube_import::dependency_check() {
-            warn!(error = %err, "youtube import dependencies are not healthy");
-        }
+    if config.youtube_import_enabled
+        && let Err(err) = infra::youtube_import::dependency_check()
+    {
+        warn!(error = %err, "youtube import dependencies are not healthy");
     }
     info!("database connection established and migrations applied");
     let state = AppState { config, pool };
