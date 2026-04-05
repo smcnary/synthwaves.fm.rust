@@ -1,3 +1,7 @@
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+};
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use domain::auth::AuthError;
@@ -76,4 +80,43 @@ pub fn decode_subsonic_password(input: &str) -> String {
         .filter_map(|part| u8::from_str_radix(part, 16).ok())
         .map(char::from)
         .collect()
+}
+
+pub fn hash_password(plain: &str) -> anyhow::Result<String> {
+    let salt = SaltString::encode_b64(Uuid::new_v4().as_bytes())
+        .map_err(|err| anyhow::anyhow!("failed to encode salt bytes: {err}"))?;
+    let hash = Argon2::default()
+        .hash_password(plain.as_bytes(), &salt)
+        .map_err(|err| anyhow::anyhow!("failed to hash password: {err}"))?
+        .to_string();
+    Ok(hash)
+}
+
+pub fn verify_password(plain: &str, password_hash: &str) -> bool {
+    let parsed = PasswordHash::new(password_hash);
+    let Ok(parsed) = parsed else {
+        return false;
+    };
+    Argon2::default()
+        .verify_password(plain.as_bytes(), &parsed)
+        .is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{hash_password, verify_password};
+
+    #[test]
+    fn hash_and_verify_password_round_trip() -> anyhow::Result<()> {
+        let hash = hash_password("synthwave-forever")?;
+        assert!(verify_password("synthwave-forever", &hash));
+        Ok(())
+    }
+
+    #[test]
+    fn verify_password_rejects_wrong_secret() -> anyhow::Result<()> {
+        let hash = hash_password("correct-horse-battery-staple")?;
+        assert!(!verify_password("wrong-password", &hash));
+        Ok(())
+    }
 }

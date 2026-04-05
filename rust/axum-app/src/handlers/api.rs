@@ -5,16 +5,20 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
-use infra::auth::issue_jwt;
+use infra::auth::{issue_jwt, verify_password};
 use serde::{Deserialize, Serialize};
+use sqlx::Row;
 use uuid::Uuid;
 
 use crate::{app_state::AppState, auth};
 
 #[derive(Debug, Deserialize)]
 pub struct TokenRequest {
-    pub client_id: String,
-    pub secret_key: String,
+    pub email: Option<String>,
+    pub password: Option<String>,
+    // Backward compatibility for old clients using api-key style names.
+    pub client_id: Option<String>,
+    pub secret_key: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -41,7 +45,67 @@ pub async fn create_token(
     State(state): State<AppState>,
     Json(req): Json<TokenRequest>,
 ) -> impl IntoResponse {
-    if req.client_id.is_empty() || req.secret_key.is_empty() {
+    let email = req
+        .email
+        .as_deref()
+        .or(req.client_id.as_deref())
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+    let password = req
+        .password
+        .as_deref()
+        .or(req.secret_key.as_deref())
+        .filter(|s| !s.is_empty());
+
+    let (Some(email), Some(password)) = (email, password) else {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(ErrorResponse {
+                error: "Unauthorized".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    let row = match sqlx::query(
+        r#"
+        SELECT id, password_hash
+        FROM users
+        WHERE lower(email_address) = lower(?)
+        LIMIT 1
+        "#,
+    )
+    .bind(email)
+    .fetch_optional(&state.pool)
+    .await
+    {
+        Ok(row) => row,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    let Some(row) = row else {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(ErrorResponse {
+                error: "Unauthorized".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    let password_hash = row.try_get::<String, _>("password_hash").ok();
+    let valid = password_hash
+        .as_deref()
+        .map(|hash| verify_password(password, hash))
+        .unwrap_or(false);
+    if !valid {
         return (
             StatusCode::UNAUTHORIZED,
             Json(ErrorResponse {
@@ -51,8 +115,42 @@ pub async fn create_token(
             .into_response();
     }
 
-    let token = issue_jwt(Uuid::new_v4(), Uuid::new_v4(), &state.config.jwt_secret)
-        .unwrap_or_else(|_| "invalid".to_string());
+    let user_id_raw: String = match row.try_get("id") {
+        Ok(v) => v,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    let user_id = match Uuid::parse_str(&user_id_raw) {
+        Ok(v) => v,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    let token = match issue_jwt(user_id, Uuid::nil(), &state.config.jwt_secret) {
+        Ok(token) => token,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
     (
         StatusCode::OK,
         Json(TokenResponse {
@@ -111,4 +209,153 @@ pub async fn subsonic_ping(
         Json(serde_json::json!({"subsonic-response": {"status": "ok", "version": "1.16.1"}})),
     )
         .into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TokenRequest, create_token};
+    use crate::app_state::AppState;
+    use axum::{
+        extract::State,
+        response::IntoResponse,
+        Json,
+        body::to_bytes,
+        http::StatusCode,
+    };
+    use infra::{auth::hash_password, config::AppConfig};
+    use sqlx::SqlitePool;
+    use uuid::Uuid;
+
+    fn test_config() -> AppConfig {
+        AppConfig {
+            host: "127.0.0.1".to_string(),
+            port: 4000,
+            database_url: "sqlite::memory:".to_string(),
+            jwt_secret: "test-secret".to_string(),
+            liquidsoap_api_token: "token".to_string(),
+            rails_host: "localhost:4000".to_string(),
+            rails_protocol: "http".to_string(),
+            icecast_protocol: "http".to_string(),
+            icecast_host: "localhost".to_string(),
+            icecast_port: 8000,
+            icecast_admin_username: "admin".to_string(),
+            icecast_admin_password: "hackme".to_string(),
+            icecast_public_base_url: None,
+            youtube_import_enabled: true,
+            youtube_import_max_items_per_run: 100,
+            youtube_import_download_timeout_seconds: 180,
+            youtube_import_default_sync_interval_minutes: 60,
+            youtube_import_scheduler_enabled: false,
+            bootstrap_admin_email: None,
+            bootstrap_admin_password: None,
+        }
+    }
+
+    async fn setup_pool() -> anyhow::Result<SqlitePool> {
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+        sqlx::query(
+            r#"
+            CREATE TABLE users (
+              id TEXT PRIMARY KEY,
+              email_address TEXT NOT NULL UNIQUE,
+              password_hash TEXT,
+              subsonic_password TEXT,
+              theme TEXT NOT NULL DEFAULT 'synthwave',
+              admin INTEGER NOT NULL DEFAULT 0,
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            "#,
+        )
+        .execute(&pool)
+        .await?;
+        Ok(pool)
+    }
+
+    #[tokio::test]
+    async fn create_token_returns_unauthorized_for_missing_user() -> anyhow::Result<()> {
+        let pool = setup_pool().await?;
+        let state = AppState {
+            config: test_config(),
+            pool,
+        };
+        let resp = create_token(
+            State(state),
+            Json(TokenRequest {
+                email: Some("nobody@example.com".to_string()),
+                password: Some("bad".to_string()),
+                client_id: None,
+                secret_key: None,
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn create_token_returns_unauthorized_for_bad_password() -> anyhow::Result<()> {
+        let pool = setup_pool().await?;
+        let user_id = Uuid::new_v4().to_string();
+        let password_hash = hash_password("correct-password")?;
+        sqlx::query("INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 0)")
+            .bind(&user_id)
+            .bind("listener@example.com")
+            .bind(password_hash)
+            .execute(&pool)
+            .await?;
+        let state = AppState {
+            config: test_config(),
+            pool,
+        };
+        let resp = create_token(
+            State(state),
+            Json(TokenRequest {
+                email: Some("listener@example.com".to_string()),
+                password: Some("wrong-password".to_string()),
+                client_id: None,
+                secret_key: None,
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn create_token_returns_token_for_valid_credentials() -> anyhow::Result<()> {
+        let pool = setup_pool().await?;
+        let user_id = Uuid::new_v4().to_string();
+        let password_hash = hash_password("correct-password")?;
+        sqlx::query("INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 1)")
+            .bind(&user_id)
+            .bind("admin@example.com")
+            .bind(password_hash)
+            .execute(&pool)
+            .await?;
+        let state = AppState {
+            config: test_config(),
+            pool,
+        };
+        let resp = create_token(
+            State(state),
+            Json(TokenRequest {
+                email: Some("admin@example.com".to_string()),
+                password: Some("correct-password".to_string()),
+                client_id: None,
+                secret_key: None,
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = to_bytes(resp.into_body(), 1024 * 1024).await?;
+        let value: serde_json::Value = serde_json::from_slice(&body)?;
+        assert_eq!(value["token_type"], "Bearer");
+        assert_eq!(value["expires_in"], 3600);
+        assert!(value["token"].as_str().unwrap_or_default().len() > 16);
+        Ok(())
+    }
 }

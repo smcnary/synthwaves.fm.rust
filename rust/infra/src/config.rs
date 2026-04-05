@@ -29,6 +29,10 @@ pub struct AppConfig {
     pub youtube_import_default_sync_interval_minutes: i64,
     #[serde(default)]
     pub youtube_import_scheduler_enabled: bool,
+    #[serde(default)]
+    pub bootstrap_admin_email: Option<String>,
+    #[serde(default)]
+    pub bootstrap_admin_password: Option<String>,
 }
 
 impl AppConfig {

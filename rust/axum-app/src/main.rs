@@ -50,6 +50,8 @@ async fn main() -> anyhow::Result<()> {
         youtube_import_download_timeout_seconds: 180,
         youtube_import_default_sync_interval_minutes: 60,
         youtube_import_scheduler_enabled: false,
+        bootstrap_admin_email: None,
+        bootstrap_admin_password: None,
     });
     info!(
         host = %config.host,
@@ -83,6 +85,9 @@ async fn main() -> anyhow::Result<()> {
         .run(&pool)
         .await
         .context("database migrations failed during startup")?;
+    bootstrap_admin_user(&pool, &config)
+        .await
+        .context("failed during optional bootstrap admin initialization")?;
     if config.youtube_import_enabled {
         if let Err(err) = infra::youtube_import::dependency_check() {
             warn!(error = %err, "youtube import dependencies are not healthy");
@@ -127,5 +132,60 @@ async fn main() -> anyhow::Result<()> {
     info!("axum listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
+    Ok(())
+}
+
+async fn bootstrap_admin_user(pool: &sqlx::SqlitePool, config: &AppConfig) -> anyhow::Result<()> {
+    let email = config
+        .bootstrap_admin_email
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    let password = config
+        .bootstrap_admin_password
+        .as_deref()
+        .filter(|value| !value.is_empty());
+    let (Some(email), Some(password)) = (email, password) else {
+        return Ok(());
+    };
+
+    let admin_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users WHERE admin = 1")
+        .fetch_one(pool)
+        .await
+        .unwrap_or(0);
+    if admin_count > 0 {
+        return Ok(());
+    }
+
+    let existing_user: Option<String> =
+        sqlx::query_scalar("SELECT id FROM users WHERE lower(email_address) = lower(?) LIMIT 1")
+            .bind(email)
+            .fetch_optional(pool)
+            .await?;
+    if existing_user.is_some() {
+        info!(
+            email = email,
+            "bootstrap admin skipped because user already exists and no admins are present"
+        );
+        return Ok(());
+    }
+
+    let user_id = uuid::Uuid::new_v4().to_string();
+    let password_hash = infra::auth::hash_password(password)?;
+    sqlx::query(
+        r#"
+        INSERT INTO users (id, email_address, password_hash, admin, theme)
+        VALUES (?, ?, ?, 1, 'synthwave')
+        "#,
+    )
+    .bind(user_id)
+    .bind(email)
+    .bind(password_hash)
+    .execute(pool)
+    .await?;
+    info!(
+        email = email,
+        "created bootstrap admin user from environment configuration"
+    );
     Ok(())
 }
