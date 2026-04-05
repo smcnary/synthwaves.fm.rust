@@ -97,7 +97,11 @@ async fn main() -> anyhow::Result<()> {
     let state = AppState { config, pool };
 
     if state.config.youtube_import_scheduler_enabled {
-        let sync_every = (state.config.youtube_import_default_sync_interval_minutes.max(1) as u64) * 60;
+        let sync_every = (state
+            .config
+            .youtube_import_default_sync_interval_minutes
+            .max(1) as u64)
+            * 60;
         tokio::spawn(async move {
             jobs::scheduler::run_scheduler(vec![RecurringJob {
                 name: "youtube_playlist_sync".to_string(),

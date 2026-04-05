@@ -215,13 +215,7 @@ pub async fn subsonic_ping(
 mod tests {
     use super::{TokenRequest, create_token};
     use crate::app_state::AppState;
-    use axum::{
-        extract::State,
-        response::IntoResponse,
-        Json,
-        body::to_bytes,
-        http::StatusCode,
-    };
+    use axum::{Json, body::to_bytes, extract::State, http::StatusCode, response::IntoResponse};
     use infra::{auth::hash_password, config::AppConfig};
     use sqlx::SqlitePool;
     use uuid::Uuid;
@@ -299,12 +293,14 @@ mod tests {
         let pool = setup_pool().await?;
         let user_id = Uuid::new_v4().to_string();
         let password_hash = hash_password("correct-password")?;
-        sqlx::query("INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 0)")
-            .bind(&user_id)
-            .bind("listener@example.com")
-            .bind(password_hash)
-            .execute(&pool)
-            .await?;
+        sqlx::query(
+            "INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 0)",
+        )
+        .bind(&user_id)
+        .bind("listener@example.com")
+        .bind(password_hash)
+        .execute(&pool)
+        .await?;
         let state = AppState {
             config: test_config(),
             pool,
@@ -329,12 +325,14 @@ mod tests {
         let pool = setup_pool().await?;
         let user_id = Uuid::new_v4().to_string();
         let password_hash = hash_password("correct-password")?;
-        sqlx::query("INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 1)")
-            .bind(&user_id)
-            .bind("admin@example.com")
-            .bind(password_hash)
-            .execute(&pool)
-            .await?;
+        sqlx::query(
+            "INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 1)",
+        )
+        .bind(&user_id)
+        .bind("admin@example.com")
+        .bind(password_hash)
+        .execute(&pool)
+        .await?;
         let state = AppState {
             config: test_config(),
             pool,

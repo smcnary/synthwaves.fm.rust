@@ -267,7 +267,10 @@ pub async fn update_source(
     get_source(pool, source_id).await
 }
 
-pub async fn get_source(pool: &SqlitePool, source_id: i64) -> anyhow::Result<YoutubePlaylistSource> {
+pub async fn get_source(
+    pool: &SqlitePool,
+    source_id: i64,
+) -> anyhow::Result<YoutubePlaylistSource> {
     ensure_schema(pool).await?;
     let row = sqlx::query(
         r#"
@@ -357,7 +360,10 @@ pub async fn due_source_ids(pool: &SqlitePool, default_minutes: i64) -> anyhow::
     .bind(default_minutes.max(1))
     .fetch_all(pool)
     .await?;
-    Ok(rows.into_iter().filter_map(|row| row.try_get("id").ok()).collect())
+    Ok(rows
+        .into_iter()
+        .filter_map(|row| row.try_get("id").ok())
+        .collect())
 }
 
 pub async fn run_source_import(
@@ -419,7 +425,17 @@ pub async fn run_source_import(
     {
         Ok(Ok(entries)) => entries,
         Ok(Err(err)) => {
-            finalize_run(pool, run_id, source_id, "failed", 0, 0, 1, Some(err.to_string())).await?;
+            finalize_run(
+                pool,
+                run_id,
+                source_id,
+                "failed",
+                0,
+                0,
+                1,
+                Some(err.to_string()),
+            )
+            .await?;
             return Ok(YoutubeImportRunResult {
                 run_id,
                 source_id,
@@ -432,7 +448,17 @@ pub async fn run_source_import(
         }
         Err(err) => {
             let message = format!("playlist worker join failed: {err}");
-            finalize_run(pool, run_id, source_id, "failed", 0, 0, 1, Some(message.clone())).await?;
+            finalize_run(
+                pool,
+                run_id,
+                source_id,
+                "failed",
+                0,
+                0,
+                1,
+                Some(message.clone()),
+            )
+            .await?;
             return Ok(YoutubeImportRunResult {
                 run_id,
                 source_id,
@@ -749,10 +775,11 @@ async fn upsert_item_state(
 }
 
 async fn track_for_video(pool: &SqlitePool, video_id: &str) -> anyhow::Result<Option<i64>> {
-    let row = sqlx::query_scalar::<_, i64>("SELECT id FROM tracks WHERE youtube_video_id = ? LIMIT 1")
-        .bind(video_id)
-        .fetch_optional(pool)
-        .await?;
+    let row =
+        sqlx::query_scalar::<_, i64>("SELECT id FROM tracks WHERE youtube_video_id = ? LIMIT 1")
+            .bind(video_id)
+            .fetch_optional(pool)
+            .await?;
     Ok(row)
 }
 

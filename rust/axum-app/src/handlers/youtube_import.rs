@@ -173,15 +173,18 @@ pub async fn run_source(
             .into_response();
     }
     match infra::youtube_import::run_source_import(&state.pool, &state.config, id, "manual").await {
-        Ok(result) => (StatusCode::OK, Json(serde_json::json!({
-            "run_id": result.run_id,
-            "source_id": result.source_id,
-            "status": result.status,
-            "imported_count": result.imported_count,
-            "skipped_count": result.skipped_count,
-            "failed_count": result.failed_count,
-            "last_error": result.last_error,
-        })))
+        Ok(result) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "run_id": result.run_id,
+                "source_id": result.source_id,
+                "status": result.status,
+                "imported_count": result.imported_count,
+                "skipped_count": result.skipped_count,
+                "failed_count": result.failed_count,
+                "last_error": result.last_error,
+            })),
+        )
             .into_response(),
         Err(err) => (
             StatusCode::BAD_GATEWAY,

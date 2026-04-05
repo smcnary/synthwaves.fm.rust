@@ -1,8 +1,8 @@
+use anyhow::Context;
 use argon2::{
     Argon2,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
-use anyhow::Context;
 use chrono::{Duration, Utc};
 use domain::auth::AuthError;
 use hmac::{Hmac, Mac};

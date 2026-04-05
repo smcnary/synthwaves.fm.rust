@@ -96,9 +96,11 @@ pub async fn youtube_playlist_sync_job() -> anyhow::Result<()> {
         return Ok(());
     }
     let pool = infra::db::connect(&cfg.database_url).await?;
-    let source_ids =
-        infra::youtube_import::due_source_ids(&pool, cfg.youtube_import_default_sync_interval_minutes)
-            .await?;
+    let source_ids = infra::youtube_import::due_source_ids(
+        &pool,
+        cfg.youtube_import_default_sync_interval_minutes,
+    )
+    .await?;
     for source_id in source_ids {
         let _ = infra::youtube_import::run_source_import(&pool, &cfg, source_id, "scheduler").await;
     }
