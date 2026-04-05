@@ -7,6 +7,7 @@ use app_state::AppState;
 use axum::{Router, routing::get};
 use handlers::{admin, api, health, media, radio, web};
 use infra::{config::AppConfig, db};
+use jobs::scheduler::RecurringJob;
 use std::{net::SocketAddr, path::Path};
 use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
 use tracing::{info, warn};
@@ -44,6 +45,11 @@ async fn main() -> anyhow::Result<()> {
         icecast_admin_username: "admin".to_string(),
         icecast_admin_password: "hackme".to_string(),
         icecast_public_base_url: None,
+        youtube_import_enabled: true,
+        youtube_import_max_items_per_run: 100,
+        youtube_import_download_timeout_seconds: 180,
+        youtube_import_default_sync_interval_minutes: 60,
+        youtube_import_scheduler_enabled: false,
     });
     info!(
         host = %config.host,
@@ -77,8 +83,28 @@ async fn main() -> anyhow::Result<()> {
         .run(&pool)
         .await
         .context("database migrations failed during startup")?;
+    if config.youtube_import_enabled {
+        if let Err(err) = infra::youtube_import::dependency_check() {
+            warn!(error = %err, "youtube import dependencies are not healthy");
+        }
+    }
     info!("database connection established and migrations applied");
     let state = AppState { config, pool };
+
+    if state.config.youtube_import_scheduler_enabled {
+        let sync_every = (state.config.youtube_import_default_sync_interval_minutes.max(1) as u64) * 60;
+        tokio::spawn(async move {
+            jobs::scheduler::run_scheduler(vec![RecurringJob {
+                name: "youtube_playlist_sync".to_string(),
+                interval_seconds: sync_every,
+            }])
+            .await;
+        });
+        info!(
+            interval_seconds = sync_every,
+            "youtube import scheduler started"
+        );
+    }
 
     let app = Router::new()
         .route("/up", get(health::up))

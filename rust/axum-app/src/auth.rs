@@ -3,6 +3,7 @@ use axum::{
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
 };
+use sqlx::Row;
 use infra::auth::{decode_jwt, decode_subsonic_password, secure_compare, validate_subsonic_token};
 use serde::Deserialize;
 
@@ -35,6 +36,29 @@ pub fn require_jwt(headers: &HeaderMap, state: &AppState) -> Result<(), StatusCo
     let token = bearer_token(headers).ok_or(StatusCode::UNAUTHORIZED)?;
     decode_jwt(&token, &state.config.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
     Ok(())
+}
+
+pub async fn require_admin_jwt(
+    headers: &HeaderMap,
+    state: &AppState,
+) -> Result<infra::auth::JwtClaims, StatusCode> {
+    let token = bearer_token(headers).ok_or(StatusCode::UNAUTHORIZED)?;
+    let claims = decode_jwt(&token, &state.config.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let user_id = claims.user_id.to_string();
+    let row = sqlx::query("SELECT admin FROM users WHERE id = ? LIMIT 1")
+        .bind(user_id)
+        .fetch_optional(&state.pool)
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let Some(row) = row else {
+        return Err(StatusCode::UNAUTHORIZED);
+    };
+    let is_admin = row.try_get::<i64, _>("admin").unwrap_or(0) != 0;
+    if is_admin {
+        Ok(claims)
+    } else {
+        Err(StatusCode::FORBIDDEN)
+    }
 }
 
 pub async fn require_subsonic(

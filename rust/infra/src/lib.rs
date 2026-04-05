@@ -4,3 +4,4 @@ pub mod db;
 pub mod icecast;
 pub mod liquidsoap;
 pub mod youtube;
+pub mod youtube_import;

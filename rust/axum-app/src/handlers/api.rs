@@ -34,6 +34,7 @@ pub fn v1_router() -> Router<AppState> {
         .route("/auth/token", post(create_token))
         .route("/native/credentials", get(native_credentials))
         .route("/me", get(me))
+        .nest("/admin", super::youtube_import::router())
 }
 
 pub async fn create_token(

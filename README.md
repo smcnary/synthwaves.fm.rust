@@ -76,6 +76,11 @@ with app config env names (uppercase underscore format), including:
 - `ICECAST_ADMIN_USERNAME`
 - `ICECAST_ADMIN_PASSWORD`
 - `ICECAST_PUBLIC_BASE_URL` (optional) — public base URL for browser `<audio>` mounts, e.g. `https://stream.example.com` when the site is HTTPS or when `ICECAST_HOST` is an internal Docker hostname. If unset, listeners use `ICECAST_PROTOCOL` + `ICECAST_HOST` + `ICECAST_PORT`.
+- `YOUTUBE_IMPORT_ENABLED` (default `true`) — enables YouTube playlist-to-library imports.
+- `YOUTUBE_IMPORT_MAX_ITEMS_PER_RUN` (default `100`) — max videos processed per import run.
+- `YOUTUBE_IMPORT_DOWNLOAD_TIMEOUT_SECONDS` (default `180`) — yt-dlp socket timeout for per-video downloads.
+- `YOUTUBE_IMPORT_DEFAULT_SYNC_INTERVAL_MINUTES` (default `60`) — default cadence for source syncs and scheduler tick interval.
+- `YOUTUBE_IMPORT_SCHEDULER_ENABLED` (default `false`) — when enabled, axum spawns a background recurring sync worker.
 
 Post-deploy health check endpoint: `/up`.
 
@@ -212,3 +217,20 @@ Then verify:
   - set `ICECAST_PUBLIC_BASE_URL` to an HTTPS stream endpoint to avoid mixed content
 - Unauthorized (`401`) from internal endpoints:
   - ensure Bearer token exactly matches `LIQUIDSOAP_API_TOKEN`
+
+## YouTube Playlist Library Import (Admin API)
+
+Library import endpoints are JWT-authenticated and require an admin user (`users.admin = 1`):
+
+- `GET /api/v1/admin/youtube_sources` — list configured playlist sources.
+- `POST /api/v1/admin/youtube_sources` — create a source with `name`, `playlist_url`, `target_playlist_name`, optional `enabled`, `sync_interval_minutes`.
+- `PATCH /api/v1/admin/youtube_sources/:id` — update source settings.
+- `POST /api/v1/admin/youtube_sources/:id/run` — trigger an immediate import run.
+- `GET /api/v1/admin/youtube_sources/:id/runs` — list recent run history (`?limit=` supported).
+
+Import behavior:
+
+- New YouTube entries are downloaded with `yt-dlp` and persisted as `Track` rows + `active_storage_*` blob/attachment records.
+- Existing tracks with the same `youtube_video_id` are skipped (idempotent reruns).
+- Imported tracks are linked into the configured target playlist.
+- Scheduler runs skip sources that already have an in-flight run (`status = running`).

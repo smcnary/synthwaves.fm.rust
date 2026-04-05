@@ -19,6 +19,16 @@ pub struct AppConfig {
     /// `ICECAST_PROTOCOL` + `ICECAST_HOST` + `ICECAST_PORT` (needed behind TLS or when admin host is internal).
     #[serde(default)]
     pub icecast_public_base_url: Option<String>,
+    #[serde(default = "default_true")]
+    pub youtube_import_enabled: bool,
+    #[serde(default = "default_youtube_import_max_items_per_run")]
+    pub youtube_import_max_items_per_run: i64,
+    #[serde(default = "default_youtube_import_download_timeout_seconds")]
+    pub youtube_import_download_timeout_seconds: i64,
+    #[serde(default = "default_youtube_import_default_sync_interval_minutes")]
+    pub youtube_import_default_sync_interval_minutes: i64,
+    #[serde(default)]
+    pub youtube_import_scheduler_enabled: bool,
 }
 
 impl AppConfig {
@@ -36,6 +46,11 @@ impl AppConfig {
             .set_default("icecast_port", 8000)?
             .set_default("icecast_admin_username", "admin")?
             .set_default("icecast_admin_password", "hackme")?
+            .set_default("youtube_import_enabled", true)?
+            .set_default("youtube_import_max_items_per_run", 100)?
+            .set_default("youtube_import_download_timeout_seconds", 180)?
+            .set_default("youtube_import_default_sync_interval_minutes", 60)?
+            .set_default("youtube_import_scheduler_enabled", false)?
             .add_source(Environment::default().separator("_"))
             .build()?;
         Ok(cfg.try_deserialize()?)
@@ -56,4 +71,20 @@ impl AppConfig {
             self.icecast_port
         )
     }
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_youtube_import_max_items_per_run() -> i64 {
+    100
+}
+
+fn default_youtube_import_download_timeout_seconds() -> i64 {
+    180
+}
+
+fn default_youtube_import_default_sync_interval_minutes() -> i64 {
+    60
 }

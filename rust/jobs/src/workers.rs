@@ -89,3 +89,18 @@ pub async fn station_listener_sync_job() -> anyhow::Result<()> {
 pub async fn database_backup_job() -> anyhow::Result<()> {
     Ok(())
 }
+
+pub async fn youtube_playlist_sync_job() -> anyhow::Result<()> {
+    let cfg = infra::config::AppConfig::from_env()?;
+    if !cfg.youtube_import_enabled || !cfg.youtube_import_scheduler_enabled {
+        return Ok(());
+    }
+    let pool = infra::db::connect(&cfg.database_url).await?;
+    let source_ids =
+        infra::youtube_import::due_source_ids(&pool, cfg.youtube_import_default_sync_interval_minutes)
+            .await?;
+    for source_id in source_ids {
+        let _ = infra::youtube_import::run_source_import(&pool, &cfg, source_id, "scheduler").await;
+    }
+    Ok(())
+}
