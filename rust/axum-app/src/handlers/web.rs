@@ -45,6 +45,14 @@ struct RadioStationTemplate<'a> {
     internal_token: &'a str,
 }
 
+#[derive(Template)]
+#[template(path = "placeholder.html")]
+struct PlaceholderTemplate<'a> {
+    page_title: &'a str,
+    heading: &'a str,
+    description: &'a str,
+}
+
 #[derive(Debug, Clone)]
 struct RadioCard {
     id: i64,
@@ -81,6 +89,12 @@ pub fn router() -> Router<AppState> {
         .route("/radio/{id}", get(radio_station))
         .route("/radio/test", get(radio_test))
         .route("/library", get(library))
+        .route("/artists", get(artists))
+        .route("/albums", get(albums))
+        .route("/tracks", get(tracks))
+        .route("/playlists", get(playlists))
+        .route("/favorites", get(favorites))
+        .route("/my", get(my))
         .route("/stats", get(stats))
         .route("/search", get(search))
 }
@@ -156,12 +170,72 @@ pub async fn library() -> Html<String> {
     Html("<h1>Library</h1>".to_string())
 }
 
+pub async fn artists() -> Html<String> {
+    placeholder_page(
+        "Artists",
+        "Artists",
+        "Artist browsing and management UI is planned. This is a placeholder route.",
+    )
+}
+
+pub async fn albums() -> Html<String> {
+    placeholder_page(
+        "Albums",
+        "Albums",
+        "Album browsing and moderation UI is planned. This is a placeholder route.",
+    )
+}
+
+pub async fn tracks() -> Html<String> {
+    placeholder_page(
+        "Tracks",
+        "Tracks",
+        "Track management and deep metadata tools are planned. This is a placeholder route.",
+    )
+}
+
+pub async fn playlists() -> Html<String> {
+    placeholder_page(
+        "Playlists",
+        "Playlists",
+        "Playlist curation pages are planned. This is a placeholder route.",
+    )
+}
+
+pub async fn favorites() -> Html<String> {
+    placeholder_page(
+        "Favorites",
+        "Favorites",
+        "Favorites and likes pages are planned. This is a placeholder route.",
+    )
+}
+
+pub async fn my() -> Html<String> {
+    placeholder_page(
+        "My",
+        "My",
+        "User-personalized pages are planned. This is a placeholder route.",
+    )
+}
+
 pub async fn stats() -> Html<String> {
     Html("<h1>Stats</h1>".to_string())
 }
 
 pub async fn search() -> Html<String> {
     Html("<h1>Search</h1>".to_string())
+}
+
+fn placeholder_page(title: &str, heading: &str, description: &str) -> Html<String> {
+    Html(
+        PlaceholderTemplate {
+            page_title: title,
+            heading,
+            description,
+        }
+        .render()
+        .unwrap_or_else(|_| format!("<h1>{heading}</h1><p>{description}</p>")),
+    )
 }
 
 fn station_stream_url(config: &AppConfig, mount_point: &str) -> String {

@@ -5,13 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ station.name }} - Radio</title>
     <style>
+      * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
         color: #f8fafc;
         background: radial-gradient(circle at 20% 10%, #2a0d4e 0%, #0b1025 55%, #050814 100%);
       }
-      .wrap { max-width: 860px; margin: 0 auto; padding: 1.2rem; }
+      .app {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        min-height: 100vh;
+      }
+      .sidebar {
+        border-right: 1px solid rgba(124, 58, 237, 0.4);
+        background: linear-gradient(180deg, rgba(2, 6, 23, 0.94), rgba(3, 7, 18, 0.98));
+        padding: 0.9rem 0.7rem 1rem;
+      }
+      .brand {
+        display: block;
+        color: #f72585;
+        text-decoration: none;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.75rem;
+      }
+      .nav-list { list-style: none; margin: 0; padding: 0; }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: 100%;
+        color: #b9c7d9;
+        text-decoration: none;
+        padding: 0.16rem 0.3rem;
+        border-radius: 4px;
+        font-size: 0.86rem;
+      }
+      .nav-link:hover { color: #f8fafc; background: rgba(17, 24, 39, 0.6); }
+      .nav-link:focus-visible {
+        outline: 2px solid #22d3ee;
+        outline-offset: 1px;
+      }
+      .nav-link.active {
+        color: #67e8f9;
+        text-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+      }
+      .dot {
+        width: 0.42rem;
+        height: 0.42rem;
+        border-radius: 50%;
+        background: #ec4899;
+        box-shadow: 0 0 12px rgba(236, 72, 153, 0.65);
+      }
+      .nav-link.placeholder {
+        opacity: 0.68;
+        cursor: default;
+      }
+      .coming {
+        margin-left: auto;
+        font-size: 0.64rem;
+        color: #fda4af;
+      }
+      .content { min-width: 0; }
+      .wrap { max-width: 900px; margin: 0 auto; padding: 1.2rem; }
       .panel {
         background: rgba(10, 18, 40, 0.86);
         border: 1px solid rgba(148, 163, 184, 0.2);
@@ -83,7 +140,25 @@
     </style>
   </head>
   <body>
-    <main class="wrap">
+    <div class="app">
+      <aside class="sidebar">
+        <a class="brand" href="/">SYNTHWAVES FM</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a class="nav-link" href="/"><span class="dot"></span>Dashboard</a></li>
+            <li><a class="nav-link placeholder" href="/artists" title="Coming soon"><span class="dot"></span>Artists <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/albums" title="Coming soon"><span class="dot"></span>Albums <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/tracks" title="Coming soon"><span class="dot"></span>Tracks <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/playlists" title="Coming soon"><span class="dot"></span>Playlists <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/favorites" title="Coming soon"><span class="dot"></span>Favorites <span class="coming">soon</span></a></li>
+            <li><a class="nav-link active" href="/radio"><span class="dot"></span>Live Radio</a></li>
+            <li><a class="nav-link placeholder" href="/my" title="Coming soon"><span class="dot"></span>My <span class="coming">soon</span></a></li>
+            <li><a class="nav-link" href="/search"><span class="dot"></span>Search</a></li>
+            <li><a class="nav-link" href="/stats"><span class="dot"></span>Stats</a></li>
+          </ul>
+        </nav>
+      </aside>
+      <main class="content wrap">
       <a href="/radio" style="color:#93c5fd;">&larr; Back to all stations</a>
       <section class="panel hero">
         <h1>{{ station.name }}</h1>
@@ -139,7 +214,8 @@
         <input id="token" type="hidden" value="{{ internal_token }}" />
         <div id="response" class="response">Icecast URL: {{ station.stream_url }}</div>
       </section>
-    </main>
+      </main>
+    </div>
 
     <script>
       const stationId = {{ station.id }};

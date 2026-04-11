@@ -6,13 +6,70 @@
     <title>Live Radio</title>
     <style>
       :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        background: linear-gradient(180deg, #170b38, #0b1327 55%, #08101f);
-        color: #f8fafc;
+        font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+        background: radial-gradient(circle at 18% 5%, #23104e, #0b1327 56%, #08101a);
+        color: #dbe8f8;
       }
-      .wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+      .app {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        min-height: 100vh;
+      }
+      .sidebar {
+        border-right: 1px solid rgba(124, 58, 237, 0.4);
+        background: linear-gradient(180deg, rgba(2, 6, 23, 0.94), rgba(3, 7, 18, 0.98));
+        padding: 0.9rem 0.7rem 1rem;
+      }
+      .brand {
+        display: block;
+        color: #f72585;
+        text-decoration: none;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.75rem;
+      }
+      .nav-list { list-style: none; margin: 0; padding: 0; }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: 100%;
+        color: #b9c7d9;
+        text-decoration: none;
+        padding: 0.16rem 0.3rem;
+        border-radius: 4px;
+        font-size: 0.86rem;
+      }
+      .nav-link:hover { color: #f8fafc; background: rgba(17, 24, 39, 0.6); }
+      .nav-link:focus-visible {
+        outline: 2px solid #22d3ee;
+        outline-offset: 1px;
+      }
+      .nav-link.active {
+        color: #67e8f9;
+        text-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+      }
+      .dot {
+        width: 0.42rem;
+        height: 0.42rem;
+        border-radius: 50%;
+        background: #ec4899;
+        box-shadow: 0 0 12px rgba(236, 72, 153, 0.65);
+      }
+      .nav-link.placeholder {
+        opacity: 0.68;
+        cursor: default;
+      }
+      .coming {
+        margin-left: auto;
+        font-size: 0.64rem;
+        color: #fda4af;
+      }
+      .content { min-width: 0; }
+      .wrap { max-width: 1200px; margin: 0 auto; padding: 1.3rem; }
       h1 { margin: 0 0 0.3rem; font-size: 2rem; }
       .subtitle { margin: 0 0 1rem; color: #cbd5e1; }
       .player-panel {
@@ -114,7 +171,25 @@
     </style>
   </head>
   <body>
-    <main class="wrap">
+    <div class="app">
+      <aside class="sidebar">
+        <a class="brand" href="/">SYNTHWAVES FM</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a class="nav-link" href="/"><span class="dot"></span>Dashboard</a></li>
+            <li><a class="nav-link placeholder" href="/artists" title="Coming soon"><span class="dot"></span>Artists <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/albums" title="Coming soon"><span class="dot"></span>Albums <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/tracks" title="Coming soon"><span class="dot"></span>Tracks <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/playlists" title="Coming soon"><span class="dot"></span>Playlists <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/favorites" title="Coming soon"><span class="dot"></span>Favorites <span class="coming">soon</span></a></li>
+            <li><a class="nav-link active" href="/radio"><span class="dot"></span>Live Radio</a></li>
+            <li><a class="nav-link placeholder" href="/my" title="Coming soon"><span class="dot"></span>My <span class="coming">soon</span></a></li>
+            <li><a class="nav-link" href="/search"><span class="dot"></span>Search</a></li>
+            <li><a class="nav-link" href="/stats"><span class="dot"></span>Stats</a></li>
+          </ul>
+        </nav>
+      </aside>
+      <main class="content wrap">
       <h1>Radio <small style="font-size:0.8rem;color:#86efac;">{{ stations.len() }} live</small></h1>
       <p class="subtitle">Curated playlists, streaming around the clock. Pick a station and tune in.</p>
 
@@ -144,7 +219,8 @@
         {% endfor %}
       </section>
       {% endif %}
-    </main>
+      </main>
+    </div>
 
     <script>
       const player = document.getElementById("player");
@@ -171,6 +247,7 @@
           playStation(button.dataset.stationId, button.dataset.streamUrl)
         );
       }
+
     </script>
   </body>
 </html>

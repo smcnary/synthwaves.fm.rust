@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title }}</title>
+    <title>{{ page_title }}</title>
     <style>
       :root { color-scheme: dark; }
       * { box-sizing: border-box; }
@@ -48,10 +48,6 @@
         outline: 2px solid #22d3ee;
         outline-offset: 1px;
       }
-      .nav-link.active {
-        color: #67e8f9;
-        text-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
-      }
       .dot {
         width: 0.42rem;
         height: 0.42rem;
@@ -61,7 +57,6 @@
       }
       .nav-link.placeholder {
         opacity: 0.68;
-        cursor: default;
       }
       .coming {
         margin-left: auto;
@@ -69,37 +64,19 @@
         color: #fda4af;
       }
       .content {
-        padding: 1.2rem 1.25rem;
+        display: flex;
+        align-items: center;
+        padding: 1.2rem;
       }
-      .hero {
-        max-width: 920px;
+      .panel {
+        max-width: 800px;
         border: 1px solid rgba(148, 163, 184, 0.22);
         background: rgba(7, 12, 24, 0.7);
         border-radius: 10px;
         padding: 1rem;
       }
-      .hero h1 {
-        margin: 0 0 0.6rem;
-        color: #f8fafc;
-      }
-      .hero p { margin: 0 0 0.75rem; color: #bfdbfe; }
-      .link-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.55rem;
-      }
-      .pill {
-        text-decoration: none;
-        color: #67e8f9;
-        border: 1px solid rgba(34, 211, 238, 0.35);
-        border-radius: 999px;
-        padding: 0.25rem 0.65rem;
-        font-size: 0.78rem;
-      }
-      .pill:hover {
-        border-color: rgba(34, 211, 238, 0.7);
-        background: rgba(8, 47, 73, 0.4);
-      }
+      h1 { margin: 0 0 0.65rem; }
+      p { margin: 0; color: #bfdbfe; line-height: 1.5; }
     </style>
   </head>
   <body>
@@ -108,29 +85,23 @@
         <a class="brand" href="/">SYNTHWAVES FM</a>
         <nav aria-label="Primary">
           <ul class="nav-list">
-            <li><a class="nav-link active" href="/"><span class="dot"></span>Dashboard</a></li>
-            <li><a class="nav-link placeholder" href="/artists" title="Coming soon"><span class="dot"></span>Artists <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/albums" title="Coming soon"><span class="dot"></span>Albums <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/tracks" title="Coming soon"><span class="dot"></span>Tracks <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/playlists" title="Coming soon"><span class="dot"></span>Playlists <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/favorites" title="Coming soon"><span class="dot"></span>Favorites <span class="coming">soon</span></a></li>
+            <li><a class="nav-link" href="/"><span class="dot"></span>Dashboard</a></li>
+            <li><a class="nav-link placeholder" href="/artists"><span class="dot"></span>Artists <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/albums"><span class="dot"></span>Albums <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/tracks"><span class="dot"></span>Tracks <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/playlists"><span class="dot"></span>Playlists <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/favorites"><span class="dot"></span>Favorites <span class="coming">soon</span></a></li>
             <li><a class="nav-link" href="/radio"><span class="dot"></span>Live Radio</a></li>
-            <li><a class="nav-link placeholder" href="/my" title="Coming soon"><span class="dot"></span>My <span class="coming">soon</span></a></li>
+            <li><a class="nav-link placeholder" href="/my"><span class="dot"></span>My <span class="coming">soon</span></a></li>
             <li><a class="nav-link" href="/search"><span class="dot"></span>Search</a></li>
             <li><a class="nav-link" href="/stats"><span class="dot"></span>Stats</a></li>
           </ul>
         </nav>
       </aside>
       <main class="content">
-        <section class="hero">
-          <h1>{{ title }}</h1>
-          <p>Server-rendered by Axum + Askama. Browse real links and preview placeholder navigation for upcoming sections.</p>
-          <div class="link-row">
-            <a class="pill" href="/radio">Open Live Radio</a>
-            <a class="pill" href="/search">Search</a>
-            <a class="pill" href="/stats">Stats</a>
-            <a class="pill" href="/library">Library</a>
-          </div>
+        <section class="panel">
+          <h1>{{ heading }}</h1>
+          <p>{{ description }}</p>
         </section>
       </main>
     </div>
