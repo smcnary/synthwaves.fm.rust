@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title }}</title>
+    <title>{{ page_title }}</title>
     <style>
       :root { color-scheme: dark; }
       * { box-sizing: border-box; }
@@ -44,10 +44,6 @@
         font-size: 0.86rem;
       }
       .nav-link:hover { color: #f8fafc; background: rgba(17, 24, 39, 0.6); }
-      .nav-link:focus-visible {
-        outline: 2px solid #22d3ee;
-        outline-offset: 1px;
-      }
       .nav-link.active {
         color: #67e8f9;
         text-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
@@ -58,15 +54,6 @@
         border-radius: 50%;
         background: #ec4899;
         box-shadow: 0 0 12px rgba(236, 72, 153, 0.65);
-      }
-      .nav-link.placeholder {
-        opacity: 0.68;
-        cursor: default;
-      }
-      .coming {
-        margin-left: auto;
-        font-size: 0.64rem;
-        color: #fda4af;
       }
       .auth-box {
         margin-top: 1rem;
@@ -93,40 +80,57 @@
         text-decoration: none;
         cursor: pointer;
       }
-      .auth-btn:hover { border-color: rgba(34, 211, 238, 0.45); color: #67e8f9; }
       .auth-btn.logout { border-color: rgba(244, 114, 182, 0.45); color: #fda4af; }
       .content {
-        padding: 1.2rem 1.25rem;
+        padding: 1.3rem;
       }
-      .hero {
-        max-width: 920px;
+      .panel {
+        max-width: 520px;
         border: 1px solid rgba(148, 163, 184, 0.22);
         background: rgba(7, 12, 24, 0.7);
         border-radius: 10px;
         padding: 1rem;
       }
-      .hero h1 {
-        margin: 0 0 0.6rem;
+      h1 {
+        margin: 0 0 0.8rem;
         color: #f8fafc;
+        font-size: 1.25rem;
       }
-      .hero p { margin: 0 0 0.75rem; color: #bfdbfe; }
-      .link-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.55rem;
+      .field {
+        display: grid;
+        gap: 0.35rem;
+        margin-bottom: 0.8rem;
       }
-      .pill {
-        text-decoration: none;
+      label { font-size: 0.8rem; color: #bfdbfe; }
+      input {
+        width: 100%;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.7);
+        color: #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 0.55rem;
+      }
+      .submit {
+        border: 1px solid rgba(34, 211, 238, 0.45);
         color: #67e8f9;
-        border: 1px solid rgba(34, 211, 238, 0.35);
-        border-radius: 999px;
-        padding: 0.25rem 0.65rem;
-        font-size: 0.78rem;
-      }
-      .pill:hover {
-        border-color: rgba(34, 211, 238, 0.7);
         background: rgba(8, 47, 73, 0.4);
+        border-radius: 8px;
+        padding: 0.45rem 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
       }
+      .status {
+        margin-top: 0.7rem;
+        min-height: 1.1rem;
+        font-size: 0.8rem;
+        color: #93c5fd;
+      }
+      .switch {
+        margin-top: 0.8rem;
+        font-size: 0.8rem;
+        color: #bfdbfe;
+      }
+      .switch a { color: #67e8f9; }
     </style>
   </head>
   <body>
@@ -135,53 +139,51 @@
         <a class="brand" href="/">SYNTHWAVES FM</a>
         <nav aria-label="Primary">
           <ul class="nav-list">
-            <li><a class="nav-link active" href="/"><span class="dot"></span>Dashboard</a></li>
-            <li><a class="nav-link placeholder" href="/artists" title="Coming soon"><span class="dot"></span>Artists <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/albums" title="Coming soon"><span class="dot"></span>Albums <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/tracks" title="Coming soon"><span class="dot"></span>Tracks <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/playlists" title="Coming soon"><span class="dot"></span>Playlists <span class="coming">soon</span></a></li>
-            <li><a class="nav-link placeholder" href="/favorites" title="Coming soon"><span class="dot"></span>Favorites <span class="coming">soon</span></a></li>
+            <li><a class="nav-link" href="/"><span class="dot"></span>Dashboard</a></li>
             <li><a class="nav-link" href="/radio"><span class="dot"></span>Live Radio</a></li>
-            <li><a class="nav-link placeholder" href="/my" title="Coming soon"><span class="dot"></span>My <span class="coming">soon</span></a></li>
             <li><a class="nav-link" href="/search"><span class="dot"></span>Search</a></li>
             <li><a class="nav-link" href="/stats"><span class="dot"></span>Stats</a></li>
+            <li><a class="nav-link" href="/login"><span class="dot"></span>Login</a></li>
+            <li><a class="nav-link active" href="/register"><span class="dot"></span>Register</a></li>
           </ul>
         </nav>
         <section class="auth-box">
           <p id="authStatus" class="auth-status">Signed out</p>
           <div class="auth-actions">
-            <a id="loginLink" class="auth-btn" href="/login">Login</a>
-            <a id="registerLink" class="auth-btn" href="/register">Register</a>
             <button id="logoutBtn" class="auth-btn logout" type="button" hidden>Logout</button>
           </div>
         </section>
       </aside>
       <main class="content">
-        <section class="hero">
-          <h1>{{ title }}</h1>
-          <p>Server-rendered by Axum + Askama. Browse real links and preview placeholder navigation for upcoming sections.</p>
-          <div class="link-row">
-            <a class="pill" href="/radio">Open Live Radio</a>
-            <a class="pill" href="/search">Search</a>
-            <a class="pill" href="/stats">Stats</a>
-            <a class="pill" href="/library">Library</a>
-          </div>
+        <section class="panel">
+          <h1>Create account</h1>
+          <form id="registerForm">
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="field">
+              <label for="password">Password (8+ characters)</label>
+              <input id="password" name="password" type="password" minlength="8" autocomplete="new-password" required />
+            </div>
+            <button class="submit" type="submit">Register</button>
+          </form>
+          <p id="status" class="status"></p>
+          <p class="switch">Already have an account? <a href="/login">Log in</a></p>
         </section>
       </main>
     </div>
     <script>
       const JWT_KEY = "synthwaves.jwt";
-      const statusEl = document.getElementById("authStatus");
-      const loginLink = document.getElementById("loginLink");
-      const registerLink = document.getElementById("registerLink");
+      const authStatus = document.getElementById("authStatus");
       const logoutBtn = document.getElementById("logoutBtn");
+      const statusEl = document.getElementById("status");
+      const registerForm = document.getElementById("registerForm");
 
       async function refreshAuthState() {
         const token = localStorage.getItem(JWT_KEY);
         if (!token) {
-          statusEl.textContent = "Signed out";
-          loginLink.hidden = false;
-          registerLink.hidden = false;
+          authStatus.textContent = "Signed out";
           logoutBtn.hidden = true;
           return;
         }
@@ -190,15 +192,12 @@
             headers: { Authorization: `Bearer ${token}` }
           });
           if (!res.ok) throw new Error("unauthorized");
-          statusEl.textContent = "Signed in";
-          loginLink.hidden = true;
-          registerLink.hidden = true;
+          authStatus.textContent = "Signed in";
           logoutBtn.hidden = false;
+          statusEl.textContent = "Already signed in.";
         } catch (_) {
           localStorage.removeItem(JWT_KEY);
-          statusEl.textContent = "Signed out";
-          loginLink.hidden = false;
-          registerLink.hidden = false;
+          authStatus.textContent = "Signed out";
           logoutBtn.hidden = true;
         }
       }
@@ -206,6 +205,30 @@
       logoutBtn.addEventListener("click", () => {
         localStorage.removeItem(JWT_KEY);
         window.location.assign("/login");
+      });
+
+      registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        statusEl.textContent = "Creating account...";
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        try {
+          const res = await fetch("/api/v1/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok || !payload.token) {
+            statusEl.textContent = payload.error || "Registration failed.";
+            return;
+          }
+          localStorage.setItem(JWT_KEY, payload.token);
+          statusEl.textContent = "Success. Redirecting...";
+          window.location.assign("/");
+        } catch (_) {
+          statusEl.textContent = "Network error while registering.";
+        }
       });
 
       refreshAuthState();

@@ -67,6 +67,33 @@
         font-size: 0.64rem;
         color: #fda4af;
       }
+      .auth-box {
+        margin-top: 1rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+        padding-top: 0.7rem;
+      }
+      .auth-status {
+        margin: 0 0 0.45rem;
+        color: #93c5fd;
+        font-size: 0.74rem;
+      }
+      .auth-actions {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+      }
+      .auth-btn {
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        color: #cbd5e1;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        font-size: 0.74rem;
+        padding: 0.25rem 0.45rem;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .auth-btn:hover { border-color: rgba(34, 211, 238, 0.45); color: #67e8f9; }
+      .auth-btn.logout { border-color: rgba(244, 114, 182, 0.45); color: #fda4af; }
       .content { min-width: 0; }
       .wrap { max-width: 900px; margin: 0 auto; padding: 1.2rem; }
       .panel {
@@ -157,6 +184,14 @@
             <li><a class="nav-link" href="/stats"><span class="dot"></span>Stats</a></li>
           </ul>
         </nav>
+        <section class="auth-box">
+          <p id="authStatus" class="auth-status">Signed out</p>
+          <div class="auth-actions">
+            <a id="loginLink" class="auth-btn" href="/login">Login</a>
+            <a id="registerLink" class="auth-btn" href="/register">Register</a>
+            <button id="logoutBtn" class="auth-btn logout" type="button" hidden>Logout</button>
+          </div>
+        </section>
       </aside>
       <main class="content wrap">
       <a href="/radio" style="color:#93c5fd;">&larr; Back to all stations</a>
@@ -249,6 +284,45 @@
       listenBtn.addEventListener("click", playLiveStream);
       refreshStats();
       setInterval(refreshStats, 30000);
+
+      const JWT_KEY = "synthwaves.jwt";
+      const statusEl = document.getElementById("authStatus");
+      const loginLink = document.getElementById("loginLink");
+      const registerLink = document.getElementById("registerLink");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      async function refreshAuthState() {
+        const token = localStorage.getItem(JWT_KEY);
+        if (!token) {
+          statusEl.textContent = "Signed out";
+          loginLink.hidden = false;
+          registerLink.hidden = false;
+          logoutBtn.hidden = true;
+          return;
+        }
+        try {
+          const res = await fetch("/api/v1/me", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!res.ok) throw new Error("unauthorized");
+          statusEl.textContent = "Signed in";
+          loginLink.hidden = true;
+          registerLink.hidden = true;
+          logoutBtn.hidden = false;
+        } catch (_) {
+          localStorage.removeItem(JWT_KEY);
+          statusEl.textContent = "Signed out";
+          loginLink.hidden = false;
+          registerLink.hidden = false;
+          logoutBtn.hidden = true;
+        }
+      }
+
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem(JWT_KEY);
+        window.location.assign("/login");
+      });
+      refreshAuthState();
     </script>
   </body>
 </html>

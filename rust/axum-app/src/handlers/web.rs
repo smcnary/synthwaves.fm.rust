@@ -53,6 +53,18 @@ struct PlaceholderTemplate<'a> {
     description: &'a str,
 }
 
+#[derive(Template)]
+#[template(path = "login.html")]
+struct LoginTemplate<'a> {
+    page_title: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "register.html")]
+struct RegisterTemplate<'a> {
+    page_title: &'a str,
+}
+
 #[derive(Debug, Clone)]
 struct RadioCard {
     id: i64,
@@ -95,6 +107,8 @@ pub fn router() -> Router<AppState> {
         .route("/playlists", get(playlists))
         .route("/favorites", get(favorites))
         .route("/my", get(my))
+        .route("/login", get(login))
+        .route("/register", get(register))
         .route("/stats", get(stats))
         .route("/search", get(search))
 }
@@ -215,6 +229,26 @@ pub async fn my() -> Html<String> {
         "My",
         "My",
         "User-personalized pages are planned. This is a placeholder route.",
+    )
+}
+
+pub async fn login() -> Html<String> {
+    Html(
+        LoginTemplate {
+            page_title: "Login",
+        }
+        .render()
+        .unwrap_or_else(|_| "<h1>Login</h1>".to_string()),
+    )
+}
+
+pub async fn register() -> Html<String> {
+    Html(
+        RegisterTemplate {
+            page_title: "Register",
+        }
+        .render()
+        .unwrap_or_else(|_| "<h1>Register</h1>".to_string()),
     )
 }
 

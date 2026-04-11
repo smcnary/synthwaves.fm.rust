@@ -5,7 +5,7 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
-use infra::auth::{issue_jwt, verify_password};
+use infra::auth::{hash_password, issue_jwt, verify_password};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use uuid::Uuid;
@@ -19,6 +19,12 @@ pub struct TokenRequest {
     // Backward compatibility for old clients using api-key style names.
     pub client_id: Option<String>,
     pub secret_key: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RegisterRequest {
+    pub email: String,
+    pub password: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -36,9 +42,19 @@ pub struct ErrorResponse {
 pub fn v1_router() -> Router<AppState> {
     Router::new()
         .route("/auth/token", post(create_token))
+        .route("/auth/register", post(create_register))
         .route("/native/credentials", get(native_credentials))
         .route("/me", get(me))
         .nest("/admin", super::youtube_import::router())
+}
+
+fn issue_token_response(user_id: Uuid, jwt_secret: &str) -> Result<TokenResponse, StatusCode> {
+    let token = issue_jwt(user_id, Uuid::nil(), jwt_secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(TokenResponse {
+        token,
+        token_type: "Bearer".to_string(),
+        expires_in: 3600,
+    })
 }
 
 pub async fn create_token(
@@ -139,8 +155,8 @@ pub async fn create_token(
                 .into_response();
         }
     };
-    let token = match issue_jwt(user_id, Uuid::nil(), &state.config.jwt_secret) {
-        Ok(token) => token,
+    let token_response = match issue_token_response(user_id, &state.config.jwt_secret) {
+        Ok(payload) => payload,
         Err(_) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -153,13 +169,101 @@ pub async fn create_token(
     };
     (
         StatusCode::OK,
-        Json(TokenResponse {
-            token,
-            token_type: "Bearer".to_string(),
-            expires_in: 3600,
-        }),
+        Json(token_response),
     )
         .into_response()
+}
+
+pub async fn create_register(
+    State(state): State<AppState>,
+    Json(req): Json<RegisterRequest>,
+) -> impl IntoResponse {
+    let email = req.email.trim().to_lowercase();
+    if email.is_empty() || !email.contains('@') || req.password.trim().len() < 8 {
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(ErrorResponse {
+                error: "Email and password are required (password min 8 chars)".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    let existing_count = match sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM users WHERE lower(email_address) = lower(?)",
+    )
+    .bind(&email)
+    .fetch_one(&state.pool)
+    .await
+    {
+        Ok(count) => count,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    if existing_count > 0 {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "Email is already registered".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    let password_hash = match hash_password(req.password.trim()) {
+        Ok(hash) => hash,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    let user_id = Uuid::new_v4();
+    let inserted = sqlx::query(
+        r#"
+        INSERT INTO users (id, email_address, password_hash, admin, theme)
+        VALUES (?, ?, ?, 0, 'synthwave')
+        "#,
+    )
+    .bind(user_id.to_string())
+    .bind(&email)
+    .bind(password_hash)
+    .execute(&state.pool)
+    .await;
+    if inserted.is_err() {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: "Internal Server Error".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    let token_response = match issue_token_response(user_id, &state.config.jwt_secret) {
+        Ok(payload) => payload,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Internal Server Error".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    (StatusCode::CREATED, Json(token_response)).into_response()
 }
 
 pub async fn native_credentials() -> impl IntoResponse {
@@ -213,7 +317,7 @@ pub async fn subsonic_ping(
 
 #[cfg(test)]
 mod tests {
-    use super::{TokenRequest, create_token};
+    use super::{RegisterRequest, TokenRequest, create_register, create_token};
     use crate::app_state::AppState;
     use axum::{Json, body::to_bytes, extract::State, http::StatusCode, response::IntoResponse};
     use infra::{auth::hash_password, config::AppConfig};
@@ -354,6 +458,86 @@ mod tests {
         assert_eq!(value["token_type"], "Bearer");
         assert_eq!(value["expires_in"], 3600);
         assert!(value["token"].as_str().unwrap_or_default().len() > 16);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn create_register_creates_user_and_returns_token() -> anyhow::Result<()> {
+        let pool = setup_pool().await?;
+        let state = AppState {
+            config: test_config(),
+            pool: pool.clone(),
+        };
+        let resp = create_register(
+            State(state),
+            Json(RegisterRequest {
+                email: "new-user@example.com".to_string(),
+                password: "strongpassword".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(resp.status(), StatusCode::CREATED);
+
+        let created_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM users WHERE lower(email_address)=lower('new-user@example.com')",
+        )
+        .fetch_one(&pool)
+        .await?;
+        assert_eq!(created_count, 1);
+
+        let body = to_bytes(resp.into_body(), 1024 * 1024).await?;
+        let value: serde_json::Value = serde_json::from_slice(&body)?;
+        assert_eq!(value["token_type"], "Bearer");
+        assert!(value["token"].as_str().unwrap_or_default().len() > 16);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn create_register_rejects_duplicate_email() -> anyhow::Result<()> {
+        let pool = setup_pool().await?;
+        let password_hash = hash_password("password123")?;
+        sqlx::query("INSERT INTO users (id, email_address, password_hash, admin) VALUES (?, ?, ?, 0)")
+            .bind(Uuid::new_v4().to_string())
+            .bind("dupe@example.com")
+            .bind(password_hash)
+            .execute(&pool)
+            .await?;
+
+        let state = AppState {
+            config: test_config(),
+            pool,
+        };
+        let resp = create_register(
+            State(state),
+            Json(RegisterRequest {
+                email: "dupe@example.com".to_string(),
+                password: "anotherpassword".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(resp.status(), StatusCode::CONFLICT);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn create_register_rejects_invalid_payload() -> anyhow::Result<()> {
+        let pool = setup_pool().await?;
+        let state = AppState {
+            config: test_config(),
+            pool,
+        };
+        let resp = create_register(
+            State(state),
+            Json(RegisterRequest {
+                email: "invalid-email".to_string(),
+                password: "short".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(resp.status(), StatusCode::UNPROCESSABLE_ENTITY);
         Ok(())
     }
 }
